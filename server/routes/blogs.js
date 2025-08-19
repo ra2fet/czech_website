@@ -15,6 +15,21 @@ router.get('/', (req, res) => {
   });
 });
 
+// GET a single blog post by ID
+router.get('/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('SELECT * FROM blogs WHERE id = ?', [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching blog post:', err);
+      return res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Blog post not found' });
+    }
+    res.json(results[0]);
+  });
+});
+
 router.post('/', authenticateToken, (req, res) => {
   const { title, content, excerpt, image_url } = req.body;
 

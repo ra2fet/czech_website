@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Package,
@@ -8,13 +7,22 @@ import {
   LogOut,
   Menu,
   X,
-  FileText
+  FileText,
+  Mail,
+  Briefcase,
+  ClipboardList
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardHome } from './DashboardHome';
 import { ProductsManager } from './ProductsManager';
 import { LocationsManager } from './LocationsManager';
 import { BlogsManager } from './BlogsManager';
+import MessagesManager from './MessagesManager';
+import JobsManager from './JobsManager';
+import ApplicationsManager from './ApplicationsManager';
+import { FaqsManager } from './FaqsManager'; // Import FaqsManager
+import { HelpCircle, ShoppingCart } from 'lucide-react'; // Import HelpCircle and ShoppingCart icons
+import { OrdersManager } from './OrdersManager'; // Import OrdersManager
 
 export function AdminDashboard() {
   // State for sidebar visibility on mobile
@@ -28,6 +36,11 @@ export function AdminDashboard() {
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
+    { name: 'Messages', href: '/admin/messages', icon: Mail },
+    { name: 'Jobs', href: '/admin/jobs', icon: Briefcase },
+    { name: 'Applications', href: '/admin/applications', icon: ClipboardList },
+    { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle }, // Add new FAQ navigation item
+    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart }, // Add new Orders navigation item
   ];
 
   // Handle user sign out
@@ -115,6 +128,11 @@ export function AdminDashboard() {
           <Route path="products" element={<ProductsManager />} />
           <Route path="locations" element={<LocationsManager />} />
           <Route path="blog" element={<BlogsManager />} />
+          <Route path="messages" element={<MessagesManager />} />
+          <Route path="jobs" element={<JobsManager />} />
+          <Route path="applications" element={<ApplicationsManager />} />
+          <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
+          <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
         </Routes>
       </main>
     </div>

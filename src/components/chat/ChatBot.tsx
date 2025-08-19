@@ -1,34 +1,163 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send } from 'lucide-react';
+import config from '../../config'; // Import config
 
-const faqs = [
-  {
-    question: "What are your business hours?",
-    answer: "We are open Monday to Friday from 9:00 AM to 6:00 PM EST, Saturday from 10:00 AM to 2:00 PM EST, and closed on Sundays."
-  },
-  {
-    question: "How can I contact support?",
-    answer: "You can reach our support team through email at support@company.com or call us at +1 (234) 567-890 during business hours."
-  },
-  {
-    question: "Do you offer international shipping?",
-    answer: "Yes, we offer international shipping to most countries. Shipping rates and delivery times vary by location."
-  },
-  {
-    question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards, PayPal, and bank transfers for business accounts."
-  },
-  {
-    question: "What is your return policy?",
-    answer: "We offer a 30-day return policy for unused products in their original packaging. Please contact our support team to initiate a return."
-  }
-];
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 export const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ text: string; isUser: boolean }[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [localConversations, setLocalConversations] = useState([
+    {
+      question: "Hello",
+      answer: "Hi there! How can I help you today?"
+    },
+    {
+      question: "Hi",
+      answer: "Hi there! How can I help you today?"
+    },
+    {
+      question: "How are you?",
+      answer: "I'm a bot, so I don't have feelings, but I'm ready to assist you!"
+    },
+    {
+      question: "What is your name?",
+      answer: "I am a chatbot designed to help you with your questions."
+    },
+    {
+      question: "Thank you",
+      answer: "You're welcome! Is there anything else I can help you with?"
+    },
+    {
+      question: "Bye",
+      answer: "Goodbye! Have a great day!"
+    },
+    {
+      question: "What can you do?",
+      answer: "I can answer frequently asked questions and provide information about our products and services."
+    },
+    {
+      question: "Help",
+      answer: "I'm here to help! What do you need assistance with?"
+    },
+    {
+      question: "Can I track my order?",
+      answer: "Yes, once your order is shipped, you will receive a tracking number via email."
+    },
+    {
+      question: "Do you have a physical store?",
+      answer: "We primarily operate online, but we do have pop-up events. Check our 'Locations' page for updates!"
+    },
+    {
+      question: "What is your privacy policy?",
+      answer: "Our privacy policy can be found on our website's footer. It details how we handle your data."
+    },
+    {
+      question: "What is the weather like today?",
+      answer: "I am a chatbot and do not have access to real-time weather information. Please check a weather app or website."
+    },
+    {
+      question: "Tell me a joke.",
+      answer: "Why don't scientists trust atoms? Because they make up everything!"
+    },
+    {
+      question: "What is the capital of France?",
+      answer: "The capital of France is Paris."
+    },
+    {
+      question: "Who created you?",
+      answer: "I am a large language model, trained by Rafat Haroub."
+    },
+    {
+      question: "What is the meaning of life?",
+      answer: "The meaning of life is a philosophical question that has been debated for centuries. There is no single answer."
+    },
+    {
+      question: "Can you tell me about your company?",
+      answer: "We are a company dedicated to providing high-quality products and excellent customer service. You can find more information on our 'About Us' page."
+    },
+    {
+      question: "How do I place an order?",
+      answer: "You can place an order by browsing our products, adding them to your cart, and proceeding to checkout."
+    },
+    {
+      question: "What are your shipping options?",
+      answer: "We offer standard and express shipping options. Details on rates and delivery times are available during checkout."
+    },
+    {
+      question: "Do you offer discounts?",
+      answer: "We occasionally offer promotions and discounts. Please keep an eye on our website and social media for updates!"
+    },
+    {
+      question: "What is your favorite color?",
+      answer: "As an AI, I don't have a favorite color, but I find all colors fascinating!"
+    },
+    {
+      question: "How old are you?",
+      answer: "I don't have an age in the human sense. I was created recently."
+    },
+    {
+      question: "Are you a robot?",
+      answer: "I am an AI, a computer program, not a physical robot."
+    },
+    {
+      question: "Can you learn?",
+      answer: "Yes, I am constantly learning and improving based on the data I am trained on."
+    },
+    {
+      question: "What is your purpose?",
+      answer: "My purpose is to assist users by providing information and completing tasks."
+    },
+    {
+      question: "What is your favorite food?",
+      answer: "As an AI, I don't eat food, but I can help you find recipes!"
+    },
+    {
+      question: "Can you tell me a fun fact?",
+      answer: "Did you know that a group of owls is called a parliament?"
+    },
+    {
+      question: "What is the time now?",
+      answer: "I don't have real-time clock access, but you can check your device's time."
+    },
+    {
+      question: "How do I give feedback?",
+      answer: "You can give feedback by reporting an issue using the /reportbug slash command in the chat."
+    },
+    {
+      question: "What is your favorite animal?",
+      answer: "I don't have personal preferences, but I find all animals fascinating!"
+    },
+    {
+      question: "Can you help me with coding?",
+      answer: "I can provide information and examples related to coding, but I cannot write or debug code directly."
+    },
+    {
+      question: "What is the weather forecast?",
+      answer: "I cannot provide real-time weather forecasts. Please check a dedicated weather service."
+    }
+  ]);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const response = await config.axios.get(config.apiEndpoints.faqs);
+        setFaqs(response.data);
+      } catch (error) {
+        console.error('Error fetching FAQs:', error);
+        // Fallback to local FAQs if API fails
+        setFaqs([]); // Clear API FAQs if there's an error
+      }
+    };
+    fetchFaqs();
+  }, []);
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
@@ -36,17 +165,31 @@ export const ChatBot = () => {
     const userMessage = { text: inputValue, isUser: true };
     setMessages(prev => [...prev, userMessage]);
 
-    // Find matching FAQ
-    const matchingFaq = faqs.find(faq => 
-      faq.question.toLowerCase().includes(inputValue.toLowerCase()) ||
-      inputValue.toLowerCase().includes(faq.question.toLowerCase())
+    let botResponse = "I'm sorry, I couldn't find a specific answer to your question. Please contact our support team for more detailed assistance.";
+
+    // Check local conversations first
+    const matchingLocal = localConversations.find(conv =>
+      conv.question.toLowerCase().includes(inputValue.toLowerCase()) ||
+      inputValue.toLowerCase().includes(conv.question.toLowerCase())
     );
+
+    if (matchingLocal) {
+      botResponse = matchingLocal.answer;
+    } else {
+      // Then check API fetched FAQs
+      const matchingFaq = faqs.find(faq =>
+        faq.question.toLowerCase().includes(inputValue.toLowerCase()) ||
+        inputValue.toLowerCase().includes(faq.question.toLowerCase())
+      );
+
+      if (matchingFaq) {
+        botResponse = matchingFaq.answer;
+      }
+    }
 
     setTimeout(() => {
       const botMessage = {
-        text: matchingFaq 
-          ? matchingFaq.answer
-          : "I'm sorry, I couldn't find a specific answer to your question. Please contact our support team for more detailed assistance.",
+        text: botResponse,
         isUser: false
       };
       setMessages(prev => [...prev, botMessage]);
@@ -72,7 +215,7 @@ export const ChatBot = () => {
             className="bg-white rounded-lg shadow-xl w-80 mb-4"
           >
             <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center">
-              <h3 className="font-semibold">Chat Support</h3>
+              <h4 className="font-semibold">AI Chat Support (<span className='text-green-300 text-2xl'>•</span>online)</h4>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:text-gray-200 transition-colors"
@@ -98,8 +241,6 @@ export const ChatBot = () => {
                   </div>
                 </div>
               ) : (
-                <div>
-                  
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
@@ -113,28 +254,11 @@ export const ChatBot = () => {
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {message.text} 
+                        {message.text}
                       </div>
                     </div>
                   ))}
-
-                  {!message.isUser && faqs.map((faq, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setInputValue(faq.question)}
-                        className="block w-full text-left text-sm text-primary-600 hover:text-primary-700 mb-2 p-2 rounded hover:bg-gray-50"
-                      >
-                        {faq.question}
-                      </button>
-                    )) }
                 </div>
-                
-              
-                
-                
-                
-                </div>
-              
               )}
             </div>
             <div className="p-4 border-t">

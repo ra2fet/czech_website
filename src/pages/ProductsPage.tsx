@@ -1,17 +1,37 @@
 // src/components/ProductsPage.js
 import { useState, useRef, useEffect } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Package, ShoppingBag, Truck, Shield, Zap, DollarSign, ChevronDown } from 'lucide-react';
-import { PaymentForm } from '../components/payment/PaymentForm';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../contexts/CartContext';
 import toast from 'react-hot-toast';
 import config from '../config'; // Import config
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  image_url?: string;
+  retail_price: number;
+  wholesale_price: number;
+  created_at: string;
+  retail_specs?: {
+    dimensions: string;
+    weight: string;
+    material: string;
+  };
+  wholesale_specs?: {
+    quantity: number;
+    dimensions: string;
+    weight: string;
+    material: string;
+  };
+}
+
 export const ProductsPage = () => {
-  const [viewMode, setViewMode] = useState('retail');
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState([]);
+  const [viewMode, setViewMode] = useState<'retail' | 'wholesale'>('retail');
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
 
@@ -26,7 +46,7 @@ export const ProductsPage = () => {
     try {
       setLoading(true);
 
-      let data;
+      let data: Product[];
       if (config.useSupabase) {
         console.log('Fetching products from Supabase...');
         const { data: supabaseData, error: fetchError } = await supabase
@@ -39,12 +59,12 @@ export const ProductsPage = () => {
           console.error('Supabase error:', fetchError);
           throw new Error(`Database error: ${fetchError.message}`);
         }
-        data = supabaseData;
+        data = supabaseData as Product[];
       } else {
         console.log('Fetching products from API...');
         const response = await config.axios.get(config.apiEndpoints.products);
         console.log('API response:', response.data);
-        data = response.data;
+        data = response.data as Product[];
       }
 
       if (data && Array.isArray(data)) {
@@ -54,32 +74,36 @@ export const ProductsPage = () => {
         console.log('No data received or invalid format');
         setProducts([]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching products:', error);
-      toast.error(`Failed to fetch products: ${error.message}`);
+      if (error instanceof Error) {
+        toast.error(`Failed to fetch products: ${error.message}`);
+      } else {
+        toast.error('Failed to fetch products: An unknown error occurred');
+      }
     } finally {
       setLoading(false);
       console.log('Finished loading products');
     }
   };
 
-  const handleToggleViewMode = (mode) => {
+  const handleToggleViewMode = (mode: 'retail' | 'wholesale') => {
     setViewMode(mode);
   };
 
-  const toggleProductDetails = (productId) => {
+  const toggleProductDetails = (productId: string) => {
     setSelectedProduct(selectedProduct === productId ? null : productId);
   };
 
   // Handle adding product to cart
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product: Product) => {
     const price = viewMode === 'wholesale' ? product.wholesale_price : product.retail_price;
 
     addItem({
       productId: product.id,
       name: product.name,
       description: product.description,
-      image_url: product.image_url,
+      image_url: product.image_url || '', // Provide a default empty string if image_url is undefined
       price: price,
       type: viewMode,
     });
@@ -110,7 +134,7 @@ export const ProductsPage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-700 to-secondary-800 text-white py-24 md:py-32">
+      <section className="rafatbg  text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Premium Products</h1>
@@ -238,9 +262,9 @@ export const ProductsPage = () => {
                         src={product.image_url}
                         alt={product.name}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
+                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';
                         }}
                       />
                       <div
@@ -306,11 +330,11 @@ export const ProductsPage = () => {
                               <>
                                 <div className="flex items-center">
                                   <Package size={18} className="text-gray-500 mr-2" />
-                                  <span>Quantity per package: {product.wholesale_specs.quantity} units</span>
+                                  <span>Quantity per package: {product.wholesale_specs?.quantity} units</span>
                                 </div>
                                 <div className="flex items-center">
                                   <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>Material: {product.wholesale_specs.material}</span>
+                                  <span>Material: {product.wholesale_specs?.material}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -327,7 +351,7 @@ export const ProductsPage = () => {
                                   >
                                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                                   </svg>
-                                  <span>Package dimensions: {product.wholesale_specs.dimensions}</span>
+                                  <span>Package dimensions: {product.wholesale_specs?.dimensions}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -347,7 +371,7 @@ export const ProductsPage = () => {
                                     <line x1="9" y1="9" x2="9.01" y2="9"></line>
                                     <line x1="15" y1="9" x2="15.01" y2="9"></line>
                                   </svg>
-                                  <span>Total weight: {product.wholesale_specs.weight}</span>
+                                  <span>Total weight: {product.wholesale_specs?.weight}</span>
                                 </div>
                               </>
                             ) : (
@@ -367,7 +391,7 @@ export const ProductsPage = () => {
                                   >
                                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                                   </svg>
-                                  <span>Dimensions: {product.retail_specs.dimensions}</span>
+                                  <span>Dimensions: {product.retail_specs?.dimensions}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -387,11 +411,11 @@ export const ProductsPage = () => {
                                     <line x1="9" y1="9" x2="9.01" y2="9"></line>
                                     <line x1="15" y1="9" x2="15.01" y2="9"></line>
                                   </svg>
-                                  <span>Weight: {product.retail_specs.weight}</span>
+                                  <span>Weight: {product.retail_specs?.weight}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>Material: {product.retail_specs.material}</span>
+                                  <span>Material: {product.retail_specs?.material}</span>
                                 </div>
                               </>
                             )}

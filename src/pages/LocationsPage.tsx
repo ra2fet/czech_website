@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import config from '../config';
-import axios from '../api/axios';
 import toast from 'react-hot-toast';
 
 interface Location {
@@ -72,8 +71,13 @@ export const LocationsPage = () => {
         if (isNaN(latitude) || isNaN(longitude)) return null;
         return [latitude, longitude];
       }
-    } catch (error) {
-      return null;
+    } catch (error: unknown) {
+      console.error('Error fetching locations:', error);
+      if (error instanceof Error) {
+        toast.error(`Failed to fetch locations: ${error.message}`);
+      } else {
+        toast.error('Failed to fetch locations: An unknown error occurred');
+      }
     }
   };
 
@@ -155,7 +159,7 @@ export const LocationsPage = () => {
           </div>
 
           {/* Hero Section */}
-          <section className="relative bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white py-32">
+          <section className="relative rafatbg text-white py-32">
             <div className="container mx-auto px-6 relative z-10">
               <div className="max-w-5xl mx-auto text-center">
                 <motion.div
@@ -180,7 +184,7 @@ export const LocationsPage = () => {
           <div className="flex items-center justify-center py-32">
             <div className="text-center">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-lg opacity-20 animate-pulse"></div>
+                <div className="absolute inset-0 rafatbg rounded-full blur-lg opacity-20 animate-pulse"></div>
                 <Loader2 className="relative h-16 w-16 animate-spin text-blue-600 mx-auto mb-6" />
               </div>
               <p className="text-slate-600 text-xl font-medium">Discovering our global network...</p>
@@ -199,7 +203,7 @@ export const LocationsPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50">
-        <section className="bg-gradient-to-r from-slate-900 via-red-900 to-slate-900 text-white py-32">
+        <section className="rafatbg text-white py-32">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
               <motion.div
@@ -236,7 +240,7 @@ export const LocationsPage = () => {
   if (!locations || locations.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50">
-        <section className="bg-gradient-to-r from-slate-900 via-amber-900 to-slate-900 text-white py-32">
+        <section className="rafatbg text-white py-32">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
               <motion.div
@@ -282,7 +286,7 @@ export const LocationsPage = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white py-32 overflow-hidden">
+      <section className="relative rafatbg text-white py-32 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
@@ -733,7 +737,7 @@ export const LocationsPage = () => {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 text-white relative overflow-hidden">
+      <section className="py-20 rafatbg text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">

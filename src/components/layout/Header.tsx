@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../ui/Logo';
 import { CartIcon } from '../cart/CartIcon';
@@ -32,6 +32,7 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Products', href: '/products' },
+    { name: 'Blogs', href: '/blogs' },
     { name: 'Portfolio', href: '/portfolio' },
     { name: 'Locations', href: '/locations' },
     { name: 'Contact', href: '/contact' },

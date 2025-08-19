@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   html {
     @apply scroll-smooth;
@@ -33,6 +34,10 @@
 }
 
 @layer components {
+
+  .rafatbg{
+    @apply  bg-[#8B6B2035] bg-[url('/public/babo-packagebg2.jpg')]  bg-blend-multiply
+  }
   .btn {
     @apply inline-block px-6 py-3 rounded-md font-medium transition-all duration-300;
   }
@@ -97,4 +102,9 @@
 /* Product display styles */
 .product-grid {
   @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8;
+}
+
+
+.heros{
+  background-image: url('/public/babo-packagebg.jpg');
 }

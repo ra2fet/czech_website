@@ -83,7 +83,7 @@ export const PortfolioPage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-700 to-secondary-800 text-white py-24 md:py-32">
+      <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Portfolio</h1>

@@ -1,6 +1,5 @@
-import { useRef, createRef } from 'react';
-import { motion } from 'framer-motion';
-
+import { useRef } from 'react';
+ 
 import { VideoHero } from '../components/home/VideoHero';
 import { ProductsSection } from '../components/home/ProductsSection';
 import { NewsSection } from '../components/home/NewsSection';

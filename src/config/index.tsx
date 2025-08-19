@@ -20,6 +20,7 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+
 // Configuration object
 const config = {
   useSupabase: env.VITE_USE_SUPABASE === 'true' || false, // Convert string to boolean, default to false
@@ -32,6 +33,10 @@ const config = {
     blogs: '/blogs',
     locations: '/locations',
     products: '/products',
+    messages: '/contact/messages',
+    applications: '/contact/applications',
+    faqs: '/faqs',
+    orders: '/orders'
   },
   axios: axiosInstance,
 };

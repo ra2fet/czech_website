@@ -14,14 +14,17 @@
     "@supabase/supabase-js": "^2.39.7",
     "@tanstack/react-table": "^8.13.2",
     "axios": "^1.11.0",
+    "date-fns": "^4.1.0",
     "framer-motion": "^11.0.14",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
+    "react-confetti": "^6.4.0",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
     "react-leaflet": "^4.2.1",
-    "react-router-dom": "^6.22.3"
+    "react-router-dom": "^6.22.3",
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

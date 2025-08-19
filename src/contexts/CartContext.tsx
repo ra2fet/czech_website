@@ -35,15 +35,33 @@ interface CartContextType {
   clearCart: () => void;
 }
 
-// Initial cart state
-const initialState: CartState = {
-  items: [],
-  total: 0,
-  itemCount: 0,
+// Function to load state from localStorage
+const loadState = (): CartState => {
+  try {
+    const serializedState = localStorage.getItem('cartState');
+    if (serializedState === null) {
+      return { items: [], total: 0, itemCount: 0 };
+    }
+    return JSON.parse(serializedState);
+  } catch (error) {
+    console.error("Error loading cart state from localStorage:", error);
+    return { items: [], total: 0, itemCount: 0 };
+  }
+};
+
+// Function to save state to localStorage
+const saveState = (state: CartState) => {
+  try {
+    const serializedState = JSON.stringify(state);
+    localStorage.setItem('cartState', serializedState);
+  } catch (error) {
+    console.error("Error saving cart state to localStorage:", error);
+  }
 };
 
 // Cart reducer function
 const cartReducer = (state: CartState, action: CartAction): CartState => {
+  let newState: CartState;
   switch (action.type) {
     case 'ADD_ITEM': {
       const existingItemIndex = state.items.findIndex(
@@ -71,7 +89,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
-      return { items: newItems, total, itemCount };
+      newState = { items: newItems, total, itemCount };
+      break;
     }
 
     case 'REMOVE_ITEM': {
@@ -79,7 +98,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
-      return { items: newItems, total, itemCount };
+      newState = { items: newItems, total, itemCount };
+      break;
     }
 
     case 'UPDATE_QUANTITY': {
@@ -92,15 +112,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
 
-      return { items: newItems, total, itemCount };
+      newState = { items: newItems, total, itemCount };
+      break;
     }
 
     case 'CLEAR_CART':
-      return initialState;
+      newState = { items: [], total: 0, itemCount: 0 }; // Clear to empty, not initial state from localStorage
+      break;
 
     default:
-      return state;
+      newState = state;
   }
+  saveState(newState); // Save state to localStorage after every action
+  return newState;
 };
 
 // Create cart context
@@ -108,7 +132,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 // Cart provider component
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [state, dispatch] = useReducer(cartReducer, loadState()); // Load initial state from localStorage
 
   const addItem = (item: Omit<CartItem, 'id' | 'quantity'>) => {
     dispatch({ type: 'ADD_ITEM', payload: item });

@@ -1,6 +1,7 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path'); // Import the 'path' module
 require('dotenv').config();
 
 // Import route handlers
@@ -8,6 +9,9 @@ const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blogs');
 const locationRoutes = require('./routes/locations');
 const productRoutes = require('./routes/products');
+const contactRoutes = require('./routes/contact');
+const faqRoutes = require('./routes/faqs'); // Import the new FAQ routes
+const orderRoutes = require('./routes/orders'); // Import the new order routes
 
 const app = express();
 
@@ -22,11 +26,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve static files from the 'uploads' directory
+// Use path.join and __dirname for a more robust path resolution
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/faqs', faqRoutes); // Use the new FAQ routes
+app.use('/api/orders', orderRoutes); // Use the new order routes
 
 // Global Error Handler
 app.use((err, req, res, next) => {

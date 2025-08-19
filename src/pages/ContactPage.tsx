@@ -1,13 +1,22 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Phone, Mail, MapPin, Send, FileText, Users, CheckCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, FileText, Users, CheckCircle, XCircle } from 'lucide-react';
+import config from '../config';
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
 
 const ContactFormSection = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
-    phone: '',
+    phone: '', // Add phone to formData
     subject: '',
     message: '',
   });
@@ -17,21 +26,35 @@ const ContactFormSection = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('submitting');
     
-    // Simulate form submission
-    setTimeout(() => {
-      setFormStatus('success');
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
+    try {
+      const response = await config.axios.post('/contact/send-message', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone, // Send phone number
+        subject: formData.subject,
+        message: formData.message,
       });
-    }, 1500);
+      
+      if (response.status === 201) {
+        setFormStatus('success');
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+        });
+      } else {
+        setFormStatus('error');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setFormStatus('error');
+    }
   };
   
   return (
@@ -48,6 +71,18 @@ const ContactFormSection = () => {
           <div>
             <p className="font-bold">Message Sent Successfully!</p>
             <p>Thank you for contacting us. We'll get back to you shortly.</p>
+          </div>
+        </motion.div>
+      ) : formStatus === 'error' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-danger-100 border border-danger-300 text-danger-700 p-4 rounded-lg mb-6 flex items-center"
+        >
+          <XCircle size={24} className="text-danger-600 mr-3 flex-shrink-0" />
+          <div>
+            <p className="font-bold">Error Sending Message!</p>
+            <p>There was an issue sending your message. Please try again later.</p>
           </div>
         </motion.div>
       ) : (
@@ -157,57 +192,120 @@ const ContactFormSection = () => {
   );
 };
 
+interface Position {
+  id: number;
+  title: string;
+  description: string;
+  location: string;
+}
+
+interface JobApplicationFormData {
+  name: string;
+  email: string;
+  phone: string;
+  position_id: string;
+  resume_url: string;
+  cover_letter: string;
+}
+
 const JobApplicationSection = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<JobApplicationFormData>({
     name: '',
     email: '',
     phone: '',
-    position: '',
-    experience: '',
-    message: '',
-    resume: null as File | null,
+    position_id: '', // Changed from 'position' to 'position_id'
+    resume_url: '', // Changed from 'resume' to 'resume_url'
+    cover_letter: '', // Changed from 'message' to 'cover_letter'
   });
+  const [openPositions, setOpenPositions] = useState<Position[]>([]);
+  const [positionsLoading, setPositionsLoading] = useState(true);
+  const [positionsError, setPositionsError] = useState(false);
+  
+  useEffect(() => {
+    const fetchOpenPositions = async () => {
+      try {
+        const response = await config.axios.get('/contact/open-positions');
+        setOpenPositions(response.data);
+      } catch (error) {
+        console.error('Error fetching open positions:', error);
+        setPositionsError(true);
+      } finally {
+        setPositionsLoading(false);
+      }
+    };
+    fetchOpenPositions();
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFormData(prev => ({ ...prev, resume: e.target.files![0] }));
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('resume', file); // 'resume' must match the field name in multer upload.single('resume')
+
+      try {
+        const response = await config.axios.post('/contact/upload-resume', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        if (response.status === 200) {
+          setFormData(prev => ({ ...prev, resume_url: response.data.filePath }));
+          console.log('Resume uploaded successfully:', response.data.filePath);
+        } else {
+          console.error('Error uploading resume:', response.data.msg);
+          setFormStatus('error'); // Indicate an error in form status
+        }
+      } catch (error) {
+        console.error('Error uploading resume:', error);
+        setFormStatus('error'); // Indicate an error in form status
+      }
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('submitting');
+
+    if (!formData.resume_url) {
+      setFormStatus('error');
+      console.error('Resume not uploaded.');
+      return;
+    }
     
-    // Simulate form submission
-    setTimeout(() => {
-      setFormStatus('success');
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        position: '',
-        experience: '',
-        message: '',
-        resume: null,
+    try {
+      const response = await config.axios.post('/contact/apply-job', {
+        position_id: parseInt(formData.position_id),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        resume_url: formData.resume_url, // This will now be the path from the upload
+        cover_letter: formData.cover_letter,
       });
-    }, 1500);
+      
+      if (response.status === 201) {
+        setFormStatus('success');
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          position_id: '',
+          resume_url: '',
+          cover_letter: '',
+        });
+      } else {
+        setFormStatus('error');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      setFormStatus('error');
+    }
   };
-  
-  const positions = [
-    'Software Engineer',
-    'Product Manager',
-    'Marketing Specialist',
-    'Sales Representative',
-    'Customer Support',
-    'UI/UX Designer',
-    'Quality Assurance'
-  ];
   
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
@@ -223,6 +321,18 @@ const JobApplicationSection = () => {
           <div>
             <p className="font-bold">Application Submitted!</p>
             <p>Thank you for your interest in joining our team. We'll review your application and contact you soon.</p>
+          </div>
+        </motion.div>
+      ) : formStatus === 'error' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-danger-100 border border-danger-300 text-danger-700 p-4 rounded-lg mb-6 flex items-center"
+        >
+          <XCircle size={24} className="text-danger-600 mr-3 flex-shrink-0" />
+          <div>
+            <p className="font-bold">Error Submitting Application!</p>
+            <p>There was an issue with your application. Please try again later.</p>
           </div>
         </motion.div>
       ) : (
@@ -271,46 +381,31 @@ const JobApplicationSection = () => {
               />
             </div>
             <div>
-              <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="position_id" className="block text-sm font-medium text-gray-700 mb-1">
                 Position*
               </label>
-              <select
-                id="position"
-                name="position"
-                value={formData.position}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select a position</option>
-                {positions.map((position, index) => (
-                  <option key={index} value={position}>{position}</option>
-                ))}
-                <option value="other">Other</option>
-              </select>
+              {positionsLoading ? (
+                <p className="text-gray-500">Loading positions...</p>
+              ) : positionsError ? (
+                <p className="text-danger-600">Error loading positions. Please try again.</p>
+              ) : (
+                <select
+                  id="position_id"
+                  name="position_id"
+                  value={formData.position_id}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Select a position</option>
+                  {openPositions.map((position) => (
+                    <option key={position.id} value={position.id}>{position.title} ({position.location})</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
-              <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
-                Years of Experience*
-              </label>
-              <select
-                id="experience"
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select experience</option>
-                <option value="0-1">0-1 years</option>
-                <option value="1-3">1-3 years</option>
-                <option value="3-5">3-5 years</option>
-                <option value="5-10">5-10 years</option>
-                <option value="10+">10+ years</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="resume" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="resume_url" className="block text-sm font-medium text-gray-700 mb-1">
                 Resume/CV (PDF)*
               </label>
               <div className="flex items-center justify-center w-full">
@@ -320,12 +415,12 @@ const JobApplicationSection = () => {
                     <p className="mb-2 text-sm text-gray-500">
                       <span className="font-semibold">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500">PDF (MAX. 5MB)</p>
+                    <p className="text-xs text-gray-500">PDF (MAX. 10MB)</p>
                   </div>
                   <input
                     type="file"
-                    name="resume"
-                    id="resume"
+                    name="resume_url"
+                    id="resume_url"
                     accept=".pdf"
                     className="hidden"
                     onChange={handleFileChange}
@@ -333,23 +428,22 @@ const JobApplicationSection = () => {
                   />
                 </label>
               </div>
-              {formData.resume && (
+              {formData.resume_url && (
                 <p className="mt-2 text-sm text-gray-600">
-                  Selected file: {formData.resume.name}
+                  Selected file: {formData.resume_url.split('/').pop()}
                 </p>
               )}
             </div>
           </div>
           <div className="mb-6">
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-              Cover Letter*
+            <label htmlFor="cover_letter" className="block text-sm font-medium text-gray-700 mb-1">
+              Cover Letter
             </label>
             <textarea
-              id="message"
-              name="message"
-              value={formData.message}
+              id="cover_letter"
+              name="cover_letter"
+              value={formData.cover_letter}
               onChange={handleChange}
-              required
               rows={5}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             ></textarea>
@@ -392,7 +486,7 @@ export const ContactPage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-700 to-secondary-800 text-white py-24 md:py-32">
+      <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
@@ -558,28 +652,8 @@ export const ContactPage = () => {
                   <Users size={24} className="text-primary-600 mr-2" />
                   <h3 className="text-xl font-bold">Open Positions</h3>
                 </div>
-                <ul className="space-y-4">
-                  <li className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                    <h4 className="font-bold">Software Engineer</h4>
-                    <p className="text-sm text-gray-600">Full-time • New York</p>
-                  </li>
-                  <li className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                    <h4 className="font-bold">Product Manager</h4>
-                    <p className="text-sm text-gray-600">Full-time • Remote</p>
-                  </li>
-                  <li className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                    <h4 className="font-bold">UI/UX Designer</h4>
-                    <p className="text-sm text-gray-600">Full-time • San Francisco</p>
-                  </li>
-                  <li className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                    <h4 className="font-bold">Marketing Specialist</h4>
-                    <p className="text-sm text-gray-600">Full-time • London</p>
-                  </li>
-                  <li className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                    <h4 className="font-bold">Sales Representative</h4>
-                    <p className="text-sm text-gray-600">Full-time • Singapore</p>
-                  </li>
-                </ul>
+                {/* The JobApplicationSection handles its own loading/error/empty states */}
+                <p className="text-gray-500">Please refer to the application form for available positions.</p>
               </div>
             </motion.div>
             

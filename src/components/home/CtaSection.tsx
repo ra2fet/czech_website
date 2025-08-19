@@ -7,7 +7,7 @@ export const CtaSection = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-accent-800 text-white">
+    <section ref={ref} className="py-20 rafatbg text-white">
       <div className="container-custom">
         <div className="max-w-3xl mx-auto text-center">
           <motion.h2 
