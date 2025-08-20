@@ -14,7 +14,7 @@ const Logo = ({ isScrolled, isFooter = false }: LogoProps) => {
       transition={{ duration: 0.5 }}
     >
       <img 
-        src="/balogo2.png" 
+        src="./balogo2.png" 
         alt="Company Logo" 
         className={`transition-all duration-300 ${
           isScrolled ? 'h-8' : 'h-10'

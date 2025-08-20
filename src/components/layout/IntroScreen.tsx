@@ -113,7 +113,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onFinish }) => {
           <div className="relative w-64 h-64 rounded-full overflow-hidden backdrop-blur-sm shadow-2xl" 
                style={{backgroundColor: 'rgba(249, 201, 35, 0.1)', borderColor: 'rgba(249, 201, 35, 0.3)', borderWidth: '1px'}}>
             <img 
-              src="/logo_animate.gif" 
+              src="./logo_animate.gif" 
               alt="Loading Logo" 
               className="w-full h-full object-contain p-4 drop-shadow-2xl" 
             />غ
