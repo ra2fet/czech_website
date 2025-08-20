@@ -220,6 +220,7 @@ export const PaymentForm = ({ amount, onSuccess, onError, onBack }: PaymentFormP
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                   placeholder="1234 5678 9012 3456"
+                  maxLength={16}
                   required
                   aria-required="true"
                 />
