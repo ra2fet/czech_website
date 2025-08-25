@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const auth = require('../middleware/auth'); // Assuming you have an auth middleware
+const { authenticateToken, adminProtect } = require('../middleware/auth'); // Assuming you have an auth middleware
 
 // Get all FAQs
 router.get('/', async (req, res) => {
@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create a new FAQ (Admin only)
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticateToken, adminProtect, async (req, res) => {
   const { question, answer } = req.body;
   if (!question || !answer) {
     return res.status(400).json({ message: 'Question and answer are required' });
@@ -45,7 +45,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update an FAQ (Admin only)
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', authenticateToken, adminProtect, async (req, res) => {
   const { id } = req.params;
   const { question, answer } = req.body;
   if (!question || !answer) {
@@ -64,7 +64,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Delete an FAQ (Admin only)
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticateToken, adminProtect, async (req, res) => {
   const { id } = req.params;
   try {
     const [result] = await db.promise().query('DELETE FROM faqs WHERE id = ?', [id]);

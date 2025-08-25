@@ -4,8 +4,10 @@ import { motion, useInView } from 'framer-motion';
 import { Package, ShoppingBag, Truck, Shield, Zap, DollarSign, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 import toast from 'react-hot-toast';
 import config from '../config'; // Import config
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface Product {
   id: string;
@@ -33,7 +35,13 @@ export const ProductsPage = () => {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addItem } = useCart();
+  const { state: cartState, addItem, clearCart } = useCart(); // Get clearCart from useCart
+  const { user } = useAuth(); // Get user from useAuth
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // State for the confirmation dialog
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [productToAddToCart, setProductToAddToCart] = useState<Product | null>(null);
 
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
@@ -88,6 +96,17 @@ export const ProductsPage = () => {
   };
 
   const handleToggleViewMode = (mode: 'retail' | 'wholesale') => {
+    if (mode === 'wholesale') {
+      if (!user) {
+        toast.error('Please log in to access wholesale products.');
+        navigate('/signin'); // Redirect to login page
+        return;
+      }
+      if (user.userType !== 'company' || !user.isActive) {
+        toast.error('Wholesale products are only available for active company users.');
+        return;
+      }
+    }
     setViewMode(mode);
   };
 
@@ -97,19 +116,51 @@ export const ProductsPage = () => {
 
   // Handle adding product to cart
   const handleAddToCart = (product: Product) => {
-    const price = viewMode === 'wholesale' ? product.wholesale_price : product.retail_price;
+    const productType = viewMode;
+    const price = productType === 'wholesale' ? product.wholesale_price : product.retail_price;
+
+    // Check for mixed cart types
+    if (cartState.items.length > 0 && cartState.items[0].type !== productType) {
+      setProductToAddToCart(product);
+      setShowClearCartDialog(true);
+      return;
+    }
 
     addItem({
       productId: product.id,
       name: product.name,
       description: product.description,
-      image_url: product.image_url || '', // Provide a default empty string if image_url is undefined
+      image_url: product.image_url || '',
       price: price,
-      type: viewMode,
+      type: productType,
     });
 
-    toast.success(`${product.name} added to cart (${viewMode})`);
-    
+    toast.success(`${product.name} added to cart (${productType})`);
+  };
+
+  const confirmClearCart = () => {
+    clearCart();
+    if (productToAddToCart) {
+      const productType = viewMode;
+      const price = productType === 'wholesale' ? productToAddToCart.wholesale_price : productToAddToCart.retail_price;
+      addItem({
+        productId: productToAddToCart.id,
+        name: productToAddToCart.name,
+        description: productToAddToCart.description,
+        image_url: productToAddToCart.image_url || '',
+        price: price,
+        type: productType,
+      });
+      toast.success(`Cart cleared. ${productToAddToCart.name} added to cart (${productType})`);
+    }
+    setShowClearCartDialog(false);
+    setProductToAddToCart(null);
+  };
+
+  const cancelClearCart = () => {
+    setShowClearCartDialog(false);
+    setProductToAddToCart(null);
+    toast.error('Product not added to cart.');
   };
 
   const containerVariants = {
@@ -430,6 +481,32 @@ export const ProductsPage = () => {
           )}
         </div>
       </section>
+
+      {/* Clear Cart Confirmation Dialog */}
+      {showClearCartDialog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Clear Cart?</h3>
+            <p className="text-gray-600 mb-6">
+              Your cart contains products of a different type. Do you want to clear your cart and add this new product?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={confirmClearCart}
+                className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Confirm and Clear
+              </button>
+              <button
+                onClick={cancelClearCart}
+                className="px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

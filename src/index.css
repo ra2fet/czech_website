@@ -108,3 +108,32 @@
 .heros{
   background-image: url('/public/babo-packagebg.jpg');
 }
+
+/* @keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;  
+} */
+@keyframes marquee {
+
+
+  /* start fully outside on the left to right */
+  /* 0% { transform: translateX(-100%); } 
+  100% { transform: translateX(100%); } */
+
+  /* start fully outside on the right to left */
+    0% { transform: translateX(0); }   
+    100% { transform: translateX(-100%); } /* slide half the width (since duplicated) */
+}
+
+.animate-marquee {
+  display: inline-flex; /* Use inline-flex to align items in a row */
+  white-space: nowrap;          /* prevent line breaks */
+  animation: marquee 15s linear infinite;
+}
+ 
+
+ 

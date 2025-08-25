@@ -9,16 +9,22 @@ import { PortfolioPage } from './pages/PortfolioPage';
 import { LocationsPage } from './pages/LocationsPage';
 import { ContactPage } from './pages/ContactPage';
 import { BlogPostPage } from './pages/BlogPostPage'; // Import the new blog post page
-import { LoginPage } from './pages/admin/LoginPage';
+import { LoginPage } from './pages/LoginPage'; // Import the new general LoginPage
+import { AdminLoginPage } from './pages/admin/AdminLoginPage'; // Import the admin LoginPage
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { CustomerDashboard } from './pages/CustomerDashboard'; // Import CustomerDashboard
+import { CompanyDashboard } from './pages/CompanyDashboard'; // Import CompanyDashboard
 import { ScrollToTop } from './components/utils/ScrollToTop';
 import { ChatBot } from './components/chat/ChatBot';
-import { AuthProvider } from './contexts/AuthContext';
-import { CartProvider } from './contexts/CartContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider, useCart } from './contexts/CartContext';
 import { Toaster } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import IntroScreen from './components/layout/IntroScreen'; // Import IntroScreen
+import { RegisterPage } from './pages/RegisterPage'; // Import RegisterPage
+import { RegistrationPendingPage } from './pages/RegistrationPendingPage'; // Import RegistrationPendingPage
+import { OffersPage } from './pages/OffersPage'; // Import OffersPage
 
 
 function App() {
@@ -26,6 +32,8 @@ function App() {
   const [showIntro, setShowIntro] = useState(true); // New state for intro screen
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/company-dashboard') || location.pathname.startsWith('/signin') || location.pathname.startsWith('/register') || location.pathname.startsWith('/registration-pending');
+  const shouldHideIntro = isAdminRoute || isDashboardRoute;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,6 +47,12 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (shouldHideIntro) {
+      setShowIntro(false);
+    }
+  }, [shouldHideIntro]);
+
   const handleIntroFinish = () => {
     setShowIntro(false);
   };
@@ -46,10 +60,11 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        {showIntro && <IntroScreen onFinish={handleIntroFinish} />} {/* Render IntroScreen */}
+        <AuthAndCartHandler /> {/* New component to handle auth and cart logic */}
+        {showIntro && !shouldHideIntro && <IntroScreen onFinish={handleIntroFinish} />} {/* Render IntroScreen conditionally */}
         <div className="font-sans text-gray-900 bg-white">
           <ScrollToTop />
-          {!isAdminRoute && <Header scrollPosition={scrollPosition} />}
+          {!isAdminRoute && !isDashboardRoute && <Header scrollPosition={scrollPosition} />}
           <main>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -58,13 +73,33 @@ function App() {
               <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/locations" element={<LocationsPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
+              <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
               <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
-              <Route path="/admin/login" element={<LoginPage />} />
+              <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
+              <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
+              <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
               <Route
                 path="/admin/*"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute adminOnly={true}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <CustomerDashboard /> {/* Default dashboard for customers */}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/company-dashboard"
+                element={
+                  <ProtectedRoute companyOnly={true}> {/* Protect company dashboard */}
+                    <CompanyDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -77,6 +112,21 @@ function App() {
       </CartProvider>
     </AuthProvider>
   );
+}
+
+function AuthAndCartHandler() {
+  const { user } = useAuth();
+  const { clearCart } = useCart();
+
+  useEffect(() => {
+    if (user === null) {
+      // User has logged out (either manually or due to timeout)
+      clearCart();
+      console.log('Cart cleared due to user logout.');
+    }
+  }, [user, clearCart]);
+
+  return null; // This component doesn't render anything
 }
 
 export default App;

@@ -21,8 +21,14 @@ import MessagesManager from './MessagesManager';
 import JobsManager from './JobsManager';
 import ApplicationsManager from './ApplicationsManager';
 import { FaqsManager } from './FaqsManager'; // Import FaqsManager
-import { HelpCircle, ShoppingCart } from 'lucide-react'; // Import HelpCircle and ShoppingCart icons
+import { HelpCircle, ShoppingCart, Building, DollarSign, Truck, Gift } from 'lucide-react'; // Import HelpCircle, ShoppingCart, Building, DollarSign, Truck, and Gift icons
 import { OrdersManager } from './OrdersManager'; // Import OrdersManager
+import { CompanyManager } from './CompanyManager'; // Import CompanyManager
+import TaxFeesManager from './TaxFeesManager';
+import ShippingRatesManager from './ShippingRatesManager';
+import CouponCodesManager from './CouponCodesManager';
+import { OffersManager } from './OffersManager'; // Import OffersManager
+import AnnouncementsManager from './AnnouncementsManager'; // Import AnnouncementsManager
 
 export function AdminDashboard() {
   // State for sidebar visibility on mobile
@@ -41,6 +47,12 @@ export function AdminDashboard() {
     { name: 'Applications', href: '/admin/applications', icon: ClipboardList },
     { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle }, // Add new FAQ navigation item
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart }, // Add new Orders navigation item
+    { name: 'Companies', href: '/admin/companies', icon: Building }, // Add new Companies navigation item
+    { name: 'Tax Fees', href: '/admin/tax-fees', icon: DollarSign },
+    { name: 'Shipping Rates', href: '/admin/shipping-rates', icon: Truck },
+    { name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift },
+    { name: 'Offers', href: '/admin/offers', icon: Gift }, // Add new Offers navigation item
+    { name: 'Announcements', href: '/admin/announcements', icon: ClipboardList }, // Add new Announcements navigation item
   ];
 
   // Handle user sign out
@@ -133,6 +145,12 @@ export function AdminDashboard() {
           <Route path="applications" element={<ApplicationsManager />} />
           <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
           <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
+          <Route path="companies" element={<CompanyManager />} /> {/* Add new Companies route */}
+          <Route path="tax-fees" element={<TaxFeesManager />} />
+          <Route path="shipping-rates" element={<ShippingRatesManager />} />
+          <Route path="coupon-codes" element={<CouponCodesManager />} />
+          <Route path="offers" element={<OffersManager />} /> {/* Add new Offers route */}
+          <Route path="announcements" element={<AnnouncementsManager />} /> {/* Add new Announcements route */}
         </Routes>
       </main>
     </div>

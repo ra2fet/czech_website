@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
 import { PaymentForm } from '../payment/PaymentForm';
 import { PaymentSuccessDisplay } from '../payment/PaymentSuccessDisplay';
+import toast from 'react-hot-toast'; // Import toast
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -12,8 +15,12 @@ interface CartSidebarProps {
 
 export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { state, removeItem, updateQuantity, clearCart } = useCart();
+  const { user } = useAuth(); // Get user from AuthContext
+  const navigate = useNavigate(); // Initialize useNavigate
   const [showPayment, setShowPayment] = useState(false);
   const [showSuccessDisplay, setShowSuccessDisplay] = useState(false);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false); // New state for sign-in prompt
+
 
   const handlePaymentSuccess = () => {
     clearCart();
@@ -23,6 +30,21 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
 
   const handlePaymentError = (error: Error) => {
     console.error('Payment failed:', error);
+    toast.error('Payment failed. Please try again.');
+  };
+
+  const handleCheckoutClick = () => {
+    if (!user) {
+      setShowSignInPrompt(true);
+    } else {
+      setShowPayment(true);
+    }
+  };
+
+  const handleSignInRedirect = () => {
+    setShowSignInPrompt(false);
+    onClose(); // Close cart sidebar
+    navigate('/signin'); // Redirect to sign-in page
   };
 
   return (
@@ -78,10 +100,14 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
             ) : showPayment ? (
               <div className="flex-1 min-h-0">
                 <PaymentForm
-                  amount={Math.round(state.total * 100)}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                   onBack={() => setShowPayment(false)}
+                  couponCode={state.couponCode}
+                   couponId={state.couponId} 
+                  taxFee={state.taxFee}
+                  shippingFee={state.shippingFee}
+                  discount={state.discount}
                 />
               </div>
             ) : (
@@ -188,24 +214,20 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                     <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="font-semibold">${state.total.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Shipping</span>
-                        <span className="font-semibold text-green-600">Free</span>
+                        <span className="font-semibold">${state.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
                         <span>Total</span>
-                        <span className="text-blue-600">${state.total.toFixed(2)}</span>
+                        <span className="text-blue-600">${state.subtotal.toFixed(2)}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <button
-                        onClick={() => setShowPayment(true)}
+                        onClick={handleCheckoutClick}
                         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
-                        <span className="text-lg">Checkout • ${state.total.toFixed(2)}</span>
+                        <span className="text-lg">Checkout • ${state.subtotal.toFixed(2)}</span>
                       </button>
                       <button
                         onClick={clearCart}
@@ -219,6 +241,32 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               </>
             )}
           </motion.div>
+
+          {/* Sign-in Prompt Dialog */}
+          {showSignInPrompt && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+              <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Sign In Required</h3>
+                <p className="text-gray-600 mb-6">
+                  You need to sign in to proceed with checkout.
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <button
+                    onClick={handleSignInRedirect}
+                    className="px-5 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => setShowSignInPrompt(false)}
+                    className="px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </AnimatePresence>

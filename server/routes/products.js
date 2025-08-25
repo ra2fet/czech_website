@@ -1,7 +1,7 @@
 // routes/products.js
 const express = require('express');
 const db = require('../config/db');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, adminProtect } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, adminProtect, (req, res) => {
   const { name, description, image_url, retail_price, wholesale_price, retail_specs, wholesale_specs } = req.body;
 
   if (!name || !retail_price || !wholesale_price) {
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, (req, res) => {
   );
 });
 
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const { name, description, image_url, retail_price, wholesale_price, retail_specs, wholesale_specs } = req.body;
 
@@ -76,7 +76,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   );
 });
 
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
 
   db.query('DELETE FROM products WHERE id = ?', [id], (err, result) => {

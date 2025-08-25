@@ -1,7 +1,7 @@
 // routes/locations.js
 const express = require('express');
 const db = require('../config/db');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, adminProtect } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, adminProtect, (req, res) => {
   const { name, address, phone, email, image_url, position } = req.body;
 
   if (!name || !address) {
@@ -41,7 +41,7 @@ router.post('/', authenticateToken, (req, res) => {
   );
 });
 
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const { name, address, phone, email, image_url, position } = req.body;
 
@@ -71,7 +71,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   );
 });
 
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
 
   db.query('DELETE FROM locations WHERE id = ?', [id], (err, result) => {

@@ -1,7 +1,7 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); // Import the 'path' module
+const path = require('path');
 require('dotenv').config();
 
 // Import route handlers
@@ -10,8 +10,16 @@ const blogRoutes = require('./routes/blogs');
 const locationRoutes = require('./routes/locations');
 const productRoutes = require('./routes/products');
 const contactRoutes = require('./routes/contact');
-const faqRoutes = require('./routes/faqs'); // Import the new FAQ routes
-const orderRoutes = require('./routes/orders'); // Import the new order routes
+const faqRoutes = require('./routes/faqs');
+const orderRoutes = require('./routes/orders');
+const adminRoutes = require('./routes/admin');
+const addressRoutes = require('./routes/user_addresses');
+const taxFeeRoutes = require('./routes/taxFees');
+const shippingRateRoutes = require('./routes/shippingRates');
+const couponCodeRoutes = require('./routes/couponCodes');
+const provinceRoutes = require('./routes/provinces');
+const offerRoutes = require('./routes/offers');
+const announcementRoutes = require('./routes/announcements');
 
 const app = express();
 
@@ -19,7 +27,7 @@ const app = express();
 app.use(cors({
   origin:'*',
   // origin: process.env.NODE_ENV === 'production'
-  //   ? process.env.FRONTEND_PRODUCTION_URL || 'https://your-frontend-domain.com'
+  //   ? process.env.FRONTEND_PRODUCTION_URL || 'https://babonederland.com'
   //   :  process.env.FRONTEND_LOCAL_URL || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -36,8 +44,16 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/faqs', faqRoutes); // Use the new FAQ routes
-app.use('/api/orders', orderRoutes); // Use the new order routes
+app.use('/api/faqs', faqRoutes); 
+app.use('/api/orders', orderRoutes); 
+app.use('/api/admin', adminRoutes);
+app.use('/api/user_addresses', addressRoutes);
+app.use('/api/tax-fees', taxFeeRoutes);
+app.use('/api/shipping-rates', shippingRateRoutes);
+app.use('/api/coupon-codes', couponCodeRoutes);
+app.use('/api/provinces', provinceRoutes);
+app.use('/api/offers', offerRoutes); 
+app.use('/api/announcements', announcementRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

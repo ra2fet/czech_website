@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
-export function LoginPage() {
+export function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,6 +98,11 @@ export function LoginPage() {
             </button>
           </div>
         </form>
+         <div className="mt-6 text-center">
+          <Link to="/" className="font-medium text-primary-600 hover:text-primary-500">
+            Return to Home page
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

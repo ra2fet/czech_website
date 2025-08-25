@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db'); // Assuming db.js handles MySQL connection
-const auth = require('../middleware/auth'); // Import auth middleware
+const { authenticateToken, adminProtect } = require('../middleware/auth'); // Import auth middleware
 const multer = require('multer');
 const path = require('path');
 
@@ -120,7 +120,7 @@ router.post('/apply-job', (req, res) => {
 // @route   GET /api/contact/messages
 // @desc    Get all contact messages (Admin only)
 // @access  Private
-router.get('/messages', auth, (req, res) => {
+router.get('/messages', authenticateToken, adminProtect, (req, res) => {
   const sql = 'SELECT * FROM messages ORDER BY created_at DESC';
   db.query(sql, (err, results) => {
     if (err) {
@@ -134,7 +134,7 @@ router.get('/messages', auth, (req, res) => {
 // @route   DELETE /api/contact/messages/:id
 // @desc    Delete a contact message by ID (Admin only)
 // @access  Private
-router.delete('/messages/:id', auth, (req, res) => {
+router.delete('/messages/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const sql = 'DELETE FROM messages WHERE id = ?';
   db.query(sql, id, (err, result) => {
@@ -152,7 +152,7 @@ router.delete('/messages/:id', auth, (req, res) => {
 // @route   GET /api/contact/jobs
 // @desc    Get all open job positions (Admin only)
 // @access  Private
-router.get('/jobs', auth, (req, res) => {
+router.get('/jobs', authenticateToken, adminProtect, (req, res) => {
   const sql = 'SELECT * FROM open_positions ORDER BY created_at DESC';
   db.query(sql, (err, results) => {
     if (err) {
@@ -166,7 +166,7 @@ router.get('/jobs', auth, (req, res) => {
 // @route   POST /api/contact/jobs
 // @desc    Add a new job position (Admin only)
 // @access  Private
-router.post('/jobs', auth, (req, res) => {
+router.post('/jobs', authenticateToken, adminProtect, (req, res) => {
   const { title, description, requirements, location, salary_range, is_active } = req.body;
   if (!title || !description || !requirements) {
     return res.status(400).json({ msg: 'Please enter all required fields: title, description, requirements' });
@@ -185,7 +185,7 @@ router.post('/jobs', auth, (req, res) => {
 // @route   PUT /api/contact/jobs/:id
 // @desc    Update a job position by ID (Admin only)
 // @access  Private
-router.put('/jobs/:id', auth, (req, res) => {
+router.put('/jobs/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const { title, description, requirements, location, salary_range, is_active } = req.body;
   const updatedJob = { title, description, requirements, location, salary_range, is_active };
@@ -205,7 +205,7 @@ router.put('/jobs/:id', auth, (req, res) => {
 // @route   DELETE /api/contact/jobs/:id
 // @desc    Delete a job position by ID (Admin only)
 // @access  Private
-router.delete('/jobs/:id', auth, (req, res) => {
+router.delete('/jobs/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const sql = 'DELETE FROM open_positions WHERE id = ?';
   db.query(sql, id, (err, result) => {
@@ -223,7 +223,7 @@ router.delete('/jobs/:id', auth, (req, res) => {
 // @route   GET /api/contact/applications
 // @desc    Get all job applications (Admin only)
 // @access  Private
-router.get('/applications', auth, (req, res) => {
+router.get('/applications', authenticateToken, adminProtect, (req, res) => {
   const sql = 'SELECT ja.*, op.title as position_title FROM job_applications ja JOIN open_positions op ON ja.position_id = op.id ORDER BY ja.applied_at DESC';
   db.query(sql, (err, results) => {
     if (err) {
@@ -237,7 +237,7 @@ router.get('/applications', auth, (req, res) => {
 // @route   DELETE /api/contact/applications/:id
 // @desc    Delete a job application by ID (Admin only)
 // @access  Private
-router.delete('/applications/:id', auth, (req, res) => {
+router.delete('/applications/:id', authenticateToken, adminProtect, (req, res) => {
   const { id } = req.params;
   const sql = 'DELETE FROM job_applications WHERE id = ?';
   db.query(sql, id, (err, result) => {
