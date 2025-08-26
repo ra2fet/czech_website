@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import config from '../config';
 import { AxiosError } from 'axios';
@@ -11,7 +10,6 @@ interface ServerError {
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
-  const { signIn } = useAuth(); // Use signIn to automatically log in after registration
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
@@ -39,12 +37,13 @@ export const RegisterPage = () => {
       toast.success(response.data.message);
 
       // If registration is successful, attempt to sign in the user
-      // For companies, they will be redirected to a waiting page
+      // Handle redirection based on user type and verification status
       if (formData.userType === 'customer') {
-        await signIn(formData.email, formData.password);
-        navigate('/products'); // Redirect to products page after successful customer registration and login
+        // For customers, redirect to email verification page
+        navigate('/verify-email', { state: { email: formData.email } });
       } else {
-        navigate('/registration-pending'); // Redirect companies to a pending page
+        // For companies, redirect to a pending page (awaiting admin approval)
+        navigate('/registration-pending');
       }
     } catch (error) {
       console.error('Registration error:', error);

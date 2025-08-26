@@ -33,7 +33,7 @@ const errorResponse = (error: AxiosError<ServerError>) => {
     if (axiosError.response && axiosError.response.data && axiosError.response.data.error == "Access denied. No authentication token provided.") {
           console.log('unauth');
 
-            // location.reload();
+            location.reload();
     }
   
   if (error && error.response && error.response.data && error.response.data.error) {

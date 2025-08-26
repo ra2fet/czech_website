@@ -20,8 +20,15 @@ const couponCodeRoutes = require('./routes/couponCodes');
 const provinceRoutes = require('./routes/provinces');
 const offerRoutes = require('./routes/offers');
 const announcementRoutes = require('./routes/announcements');
+const ratingRoutes = require('./routes/ratings'); // Import the new ratings route
+const userRoutes = require('./routes/users'); // Import the new users route
+const newsletterRoutes = require('./routes/newsletter'); // Import the new newsletter route
+const initRatingEmailScheduler = require('./cron/ratingEmailScheduler'); // Import the scheduler
 
 const app = express();
+
+// Initialize scheduled tasks
+initRatingEmailScheduler();
 
 // Middleware
 app.use(cors({
@@ -54,6 +61,9 @@ app.use('/api/coupon-codes', couponCodeRoutes);
 app.use('/api/provinces', provinceRoutes);
 app.use('/api/offers', offerRoutes); 
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/ratings', ratingRoutes); // Use the new ratings route
+app.use('/api/users', userRoutes); // Use the new users route
+app.use('/api/newsletter', newsletterRoutes); // Use the new newsletter route
 
 // Global Error Handler
 app.use((err, req, res, next) => {

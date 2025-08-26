@@ -20,28 +20,45 @@ const authenticateToken = (req, res, next) => {
       return res.status(403).json({ error: 'Invalid token. Please log in again.' });
     }
 
-    // Verify user exists in database (if they are in the admins table, they are an admin)
-    db.query('SELECT id FROM admins WHERE id = ?', [user.id], (err, results) => {
+    // Check if the user is an admin
+    db.query('SELECT id, email FROM admins WHERE id = ?', [user.id], (err, adminResults) => {
       if (err) {
-        console.error('Auth Middleware: Database error during user verification:', err);
+        console.error('Auth Middleware: Database error during admin verification:', err);
         return res.status(500).json({ error: 'Database error during authentication.' });
       }
-      if (results.length === 0) {
-        console.log('Auth Middleware: User not found in admins table for ID:', user.id);
-        return res.status(403).json({ error: 'User not found or not an admin. Please log in again.' });
+
+      if (adminResults.length > 0) {
+        // User is an admin
+        req.user = { id: adminResults[0].id, email: adminResults[0].email, userType: 'admin' };
+        console.log('Auth Middleware: User authenticated as admin. User ID:', req.user.id);
+        return next();
       }
 
-      req.user = user; // Attach user object to request
-      console.log('Auth Middleware: User authenticated and found in admins table. User ID:', user.id);
-      next();
+      // If not an admin, check if they are a regular user
+      db.query('SELECT id, email, user_type FROM users WHERE id = ?', [user.id], (err, userResults) => {
+        if (err) {
+          console.error('Auth Middleware: Database error during user verification:', err);
+          return res.status(500).json({ error: 'Database error during authentication.' });
+        }
+
+        if (userResults.length === 0) {
+          console.log('Auth Middleware: User not found in either admins or users table for ID:', user.id);
+          return res.status(403).json({ error: 'User not found. Please log in again.' });
+        }
+
+        // User is a regular user
+        req.user = { id: userResults[0].id, email: userResults[0].email, userType: userResults[0].user_type };
+        console.log('Auth Middleware: User authenticated as regular user. User ID:', req.user.id, 'User Type:', req.user.userType);
+        next();
+      });
     });
   });
 };
 
 const adminProtect = (req, res, next) => {
-  // If authenticateToken successfully ran, req.user will be populated, meaning the user is an admin.
-  if (!req.user) {
-    console.log('Auth Middleware: Admin access denied. User not authenticated as admin.');
+  // Ensure user is authenticated and has admin privileges
+  if (!req.user || req.user.userType !== 'admin') {
+    console.log('Auth Middleware: Admin access denied. User not authenticated as admin or lacks privileges.');
     return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
   }
   console.log('Auth Middleware: Admin access granted for user ID:', req.user.id);

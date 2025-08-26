@@ -40,7 +40,11 @@ export const LoginPage = () => {
       console.error('Sign-in error:', error);
       const axiosError = error as AxiosError<ServerError>;
       if (axiosError.response && axiosError.response.data && axiosError.response.data.error) {
-        toast.error(axiosError.response.data.error);
+        const errorMessage = axiosError.response.data.error;
+        toast.error(errorMessage);
+        if (errorMessage === 'Please verify your email address to sign in.') {
+          navigate('/verify-email', { state: { email: formData.email } });
+        }
       } else {
         toast.error('Sign-in failed. Please check your credentials.');
       }

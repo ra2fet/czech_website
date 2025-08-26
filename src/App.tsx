@@ -22,9 +22,12 @@ import { CartProvider, useCart } from './contexts/CartContext';
 import { Toaster } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import IntroScreen from './components/layout/IntroScreen'; // Import IntroScreen
+import NewsletterPopup from './components/layout/NewsletterPopup'; // Import NewsletterPopup
 import { RegisterPage } from './pages/RegisterPage'; // Import RegisterPage
 import { RegistrationPendingPage } from './pages/RegistrationPendingPage'; // Import RegistrationPendingPage
+import { VerifyEmailPage } from './pages/VerifyEmailPage'; // Import VerifyEmailPage
 import { OffersPage } from './pages/OffersPage'; // Import OffersPage
+import RatingPage from './pages/RatingPage'; // Import RatingPage
 
 
 function App() {
@@ -32,7 +35,7 @@ function App() {
   const [showIntro, setShowIntro] = useState(true); // New state for intro screen
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/company-dashboard') || location.pathname.startsWith('/signin') || location.pathname.startsWith('/register') || location.pathname.startsWith('/registration-pending');
+  const isDashboardRoute = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/company-dashboard') || location.pathname.startsWith('/signin') || location.pathname.startsWith('/register') || location.pathname.startsWith('/registration-pending') || location.pathname.startsWith('/rate-order') || location.pathname.startsWith('/verify-email');
   const shouldHideIntro = isAdminRoute || isDashboardRoute;
 
   useEffect(() => {
@@ -62,6 +65,7 @@ function App() {
       <CartProvider>
         <AuthAndCartHandler /> {/* New component to handle auth and cart logic */}
         {showIntro && !shouldHideIntro && <IntroScreen onFinish={handleIntroFinish} />} {/* Render IntroScreen conditionally */}
+        {!showIntro && !shouldHideIntro && <NewsletterPopup />} {/* Render NewsletterPopup after intro and not on admin/dashboard routes */}
         <div className="font-sans text-gray-900 bg-white">
           <ScrollToTop />
           {!isAdminRoute && !isDashboardRoute && <Header scrollPosition={scrollPosition} />}
@@ -75,9 +79,11 @@ function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
               <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
+              <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}
               <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
               <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
               <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
+              <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
               <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
               <Route
                 path="/admin/*"

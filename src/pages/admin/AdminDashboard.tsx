@@ -10,7 +10,8 @@ import {
   FileText,
   Mail,
   Briefcase,
-  ClipboardList
+  ClipboardList,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardHome } from './DashboardHome';
@@ -29,6 +30,7 @@ import ShippingRatesManager from './ShippingRatesManager';
 import CouponCodesManager from './CouponCodesManager';
 import { OffersManager } from './OffersManager'; // Import OffersManager
 import AnnouncementsManager from './AnnouncementsManager'; // Import AnnouncementsManager
+import { UsersManager } from './UsersManager';
 
 export function AdminDashboard() {
   // State for sidebar visibility on mobile
@@ -39,6 +41,8 @@ export function AdminDashboard() {
   // Navigation items for sidebar
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Companies', href: '/admin/companies', icon: Building },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
@@ -47,7 +51,6 @@ export function AdminDashboard() {
     { name: 'Applications', href: '/admin/applications', icon: ClipboardList },
     { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle }, // Add new FAQ navigation item
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart }, // Add new Orders navigation item
-    { name: 'Companies', href: '/admin/companies', icon: Building }, // Add new Companies navigation item
     { name: 'Tax Fees', href: '/admin/tax-fees', icon: DollarSign },
     { name: 'Shipping Rates', href: '/admin/shipping-rates', icon: Truck },
     { name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift },
@@ -75,7 +78,7 @@ export function AdminDashboard() {
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-accent-900">Admin Panel</h1>
+            <h1 className="text-xl font-bold text-accent-900">Admin Panel CMS</h1>
             <button
               onClick={() => setIsSidebarOpen(false)}
               className="lg:hidden text-gray-500 hover:text-gray-600"
@@ -137,6 +140,8 @@ export function AdminDashboard() {
         <Routes>
           {/* Route definitions for different admin pages */}
           <Route index element={<DashboardHome />} />
+          <Route path="users" element={<UsersManager />} />
+          <Route path="companies" element={<CompanyManager />} /> {/* Add new Companies route */}
           <Route path="products" element={<ProductsManager />} />
           <Route path="locations" element={<LocationsManager />} />
           <Route path="blog" element={<BlogsManager />} />
@@ -145,7 +150,6 @@ export function AdminDashboard() {
           <Route path="applications" element={<ApplicationsManager />} />
           <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
           <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
-          <Route path="companies" element={<CompanyManager />} /> {/* Add new Companies route */}
           <Route path="tax-fees" element={<TaxFeesManager />} />
           <Route path="shipping-rates" element={<ShippingRatesManager />} />
           <Route path="coupon-codes" element={<CouponCodesManager />} />

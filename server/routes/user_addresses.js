@@ -4,7 +4,15 @@ const db = require('../config/db');
 const { authenticateToken, adminProtect } = require('../middleware/auth'); // Import auth middleware
 
 // Middleware to protect user-specific address routes
-router.use('/:userId', authenticateToken);
+// This middleware will ensure that only the authenticated user (or an admin) can access their own addresses.
+router.use('/:userId', authenticateToken, (req, res, next) => {
+    const { userId } = req.params;
+    // Ensure the authenticated user matches the userId in the URL or is an admin
+    if (req.user.id !== parseInt(userId) && req.user.userType !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. You can only access your own addresses.' });
+    }
+    next();
+});
 
 // Route to get addresses for a specific user
 router.get('/:userId', (req, res) => {
@@ -21,10 +29,9 @@ router.get('/:userId', (req, res) => {
             console.error('Error fetching user addresses:', err);
             return res.status(500).json({ message: 'Failed to fetch addresses', error: err.message });
         }
-        // Map province_name back to province for frontend compatibility if needed, or update frontend to use province_name
         const formattedAddresses = addresses.map(address => ({
             ...address,
-            province: address.province_name // Use province_name as province
+            province: address.province_name
         }));
         res.status(200).json(formattedAddresses);
     });

@@ -38,7 +38,7 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
     { name: 'Offers', href: '/offers' },
     { name: 'Blogs', href: '/blogs' },
     { name: 'Portfolio', href: '/portfolio' },
-    { name: 'Locations', href: '/locations' },
+    // { name: 'Locations', href: '/locations' },
     { name: 'Contact', href: '/contact' },
   ];
 
