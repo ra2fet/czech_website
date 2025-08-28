@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Tag, Clock, ShoppingCart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
   id: number;
@@ -25,6 +26,7 @@ interface Offer {
 }
 
 export const OffersPage = () => {
+  const { t } = useTranslation();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +39,8 @@ export const OffersPage = () => {
         setOffers(response.data);
       } catch (err) {
         console.error('Error fetching offers:', err);
-        setError('Failed to load offers. Please try again later.');
-        toast.error('Failed to load offers.');
+        setError(t('offers_failed_to_load'));
+        toast.error(t('offers_failed_to_load'));
       } finally {
         setLoading(false);
       }
@@ -68,7 +70,7 @@ export const OffersPage = () => {
       price: discountedPrice,
       type: 'offer', // Changed to 'offer' as per user's suggestion
     });
-    toast.success(`${product.name} added to cart!`);
+    toast.success(t('added_to_cart_toast', { productName: product.name }));
   };
 
   if (loading) {
@@ -93,9 +95,9 @@ export const OffersPage = () => {
       <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Exclusive Offers & Discounts</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('offers_hero_title')}</h1>
             <p className="text-xl opacity-90 mb-8">
-              Don't miss out on our limited-time special offers and incredible savings on your favorite products!
+              {t('offers_hero_subtitle')}
             </p>
           </div>
         </div>
@@ -103,11 +105,11 @@ export const OffersPage = () => {
 
       <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-10">Current Promotions</h1>
+          <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-10">{t('offers_current_promotions_title')}</h1>
 
           {offers.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-600 text-lg">No active offers available at the moment. Check back soon!</p>
+              <p className="text-gray-600 text-lg">{t('offers_no_offers_message')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -121,17 +123,17 @@ export const OffersPage = () => {
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                         offer.discount_type === 'percentage' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
                       }`}>
-                        {offer.discount_type === 'percentage' ? `${offer.discount_value}% OFF` : `$${Number(offer.discount_value).toFixed(0)} OFF`}
+                        {offer.discount_type === 'percentage' ? t('offers_percentage_off', { value: offer.discount_value }) : t('offers_amount_off', { value: Number(offer.discount_value).toFixed(0) })}
                       </span>
                     </div>
                     {offer.description && <p className="text-gray-600 mb-4">{offer.description}</p>}
                     
                     <div className="flex items-center text-sm text-gray-500 mb-4">
                       <Clock size={16} className="mr-2" />
-                      <span>Valid: {new Date(offer.start_date).toLocaleDateString()} - {new Date(offer.end_date).toLocaleDateString()}</span>
+                      <span>{t('offers_valid_period', { startDate: new Date(offer.start_date).toLocaleDateString(), endDate: new Date(offer.end_date).toLocaleDateString() })}</span>
                     </div>
 
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Products in this Offer:</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('offers_products_in_offer')}</h3>
                     <div className="space-y-4">
                       {offer.products.map((product) => {
                         const discountedPrice = calculateDiscountedPrice(product.price, offer);
@@ -148,7 +150,7 @@ export const OffersPage = () => {
                             <button
                               onClick={(e) => handleAddToCart(e, product, discountedPrice)}
                               className="ml-auto p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
-                              aria-label={`Add ${product.name} to cart`}
+                              aria-label={t('offers_add_to_cart_aria', { productName: product.name })}
                             >
                               <ShoppingCart size={20} />
                             </button>

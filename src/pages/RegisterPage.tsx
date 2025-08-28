@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import config from '../config';
 import { AxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 
 interface ServerError {
   error: string;
 }
 
 export const RegisterPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -51,7 +53,7 @@ export const RegisterPage = () => {
       if (axiosError.response && axiosError.response.data && axiosError.response.data.error) {
         toast.error(axiosError.response.data.error);
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error(t('auth_registration_failed'));
       }
     } finally {
       setLoading(false);
@@ -63,12 +65,12 @@ export const RegisterPage = () => {
       <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-xl shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            {t('auth_create_account_title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            {t('auth_create_account_description')}{' '}
             <Link to="/signin" className="font-medium text-primary-600 hover:text-primary-500">
-              sign in to your existing account
+              {t('auth_sign_in_title').toLowerCase()}
             </Link>
           </p>
         </div>
@@ -76,7 +78,7 @@ export const RegisterPage = () => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="fullName" className="sr-only">
-                Full Name
+                {t('auth_full_name_label')}
               </label>
               <input
                 id="fullName"
@@ -85,14 +87,14 @@ export const RegisterPage = () => {
                 autoComplete="name"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Full Name"
+                placeholder={t('auth_full_name_label')}
                 value={formData.fullName}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="phoneNumber" className="sr-only">
-                Phone Number
+                {t('auth_phone_number_label')}
               </label>
               <input
                 id="phoneNumber"
@@ -101,14 +103,14 @@ export const RegisterPage = () => {
                 autoComplete="tel"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Phone Number"
+                placeholder={t('auth_phone_number_label')}
                 value={formData.phoneNumber}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="email-address" className="sr-only">
-                Email address
+                {t('auth_email_label')}
               </label>
               <input
                 id="email-address"
@@ -117,14 +119,14 @@ export const RegisterPage = () => {
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder={t('auth_email_label')}
                 value={formData.email}
                 onChange={handleChange}
               />
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
-                Password
+                {t('auth_password_label')}
               </label>
               <input
                 id="password"
@@ -133,7 +135,7 @@ export const RegisterPage = () => {
                 autoComplete="new-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder={t('auth_password_label')}
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -142,7 +144,7 @@ export const RegisterPage = () => {
 
           <div>
             <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
-              Account Type
+              {t('auth_account_type_label')}
             </label>
             <select
               id="userType"
@@ -152,8 +154,8 @@ export const RegisterPage = () => {
               value={formData.userType}
               onChange={handleChange}
             >
-              <option value="customer">Customer</option>
-              <option value="company">Company</option>
+              <option value="customer">{t('auth_customer_option')}</option>
+              <option value="company">{t('auth_company_option')}</option>
             </select>
           </div>
 
@@ -161,7 +163,7 @@ export const RegisterPage = () => {
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
                 <label htmlFor="companyName" className="sr-only">
-                  Company Name
+                  {t('auth_company_name_label')}
                 </label>
                 <input
                   id="companyName"
@@ -170,14 +172,14 @@ export const RegisterPage = () => {
                   autoComplete="organization"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="Company Name"
+                  placeholder={t('auth_company_name_label')}
                   value={formData.companyName}
                   onChange={handleChange}
                 />
               </div>
               <div>
                 <label htmlFor="licenseNumber" className="sr-only">
-                  License Number
+                  {t('auth_license_number_label')}
                 </label>
                 <input
                   id="licenseNumber"
@@ -186,7 +188,7 @@ export const RegisterPage = () => {
                   autoComplete="off"
                   required
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                  placeholder="License Number"
+                  placeholder={t('auth_license_number_label')}
                   value={formData.licenseNumber}
                   onChange={handleChange}
                 />
@@ -200,7 +202,7 @@ export const RegisterPage = () => {
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               disabled={loading}
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? t('auth_creating_account_button') : t('auth_create_account_button')}
             </button>
           </div>
         </form>

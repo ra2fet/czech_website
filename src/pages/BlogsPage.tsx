@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { BookOpen, Calendar, User } from 'lucide-react'; // Icons for blog posts
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useTranslation } from 'react-i18next';
 
 interface Blog {
   id: string;
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast';
 import config from '../config'; // Import config
 
 export const BlogsPage = () => {
+  const { t } = useTranslation();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,9 +65,9 @@ export const BlogsPage = () => {
     } catch (error: unknown) {
       console.error('Error fetching blogs:', error);
       if (error instanceof Error) {
-        toast.error(`Failed to fetch blogs: ${error.message}`);
+        toast.error(`${t('failed_to_fetch_blogs')}: ${error.message}`);
       } else {
-        toast.error('Failed to fetch blogs: An unknown error occurred');
+        toast.error(t('failed_to_fetch_blogs_unknown_error'));
       }
     } finally {
       setLoading(false);
@@ -98,9 +100,9 @@ export const BlogsPage = () => {
       <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Latest Blog Posts</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('blogs_page_hero_title')}</h1>
             <p className="text-xl opacity-90 mb-8">
-              Stay updated with our insights, news, and stories on various topics.
+              {t('blogs_page_hero_subtitle')}
             </p>
           </div>
         </div>
@@ -118,15 +120,15 @@ export const BlogsPage = () => {
               <div className="bg-yellow-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <BookOpen size={32} className="text-yellow-600" />
               </div>
-              <h2 className="text-xl font-bold text-yellow-800 mb-4">No Blog Posts Available</h2>
+              <h2 className="text-xl font-bold text-yellow-800 mb-4">{t('no_blog_posts_available_title')}</h2>
               <p className="text-yellow-600 mb-6">
-                We're currently preparing new content. Please check back soon!
+                {t('no_blog_posts_available_message')}
               </p>
               <button
                 onClick={fetchBlogs}
                 className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
               >
-                Refresh
+                {t('refresh_button')}
               </button>
             </div>
           ) : (
@@ -169,7 +171,7 @@ export const BlogsPage = () => {
                         <p className="text-gray-600 mb-4">{blog.summary}</p>
                         <div className="flex items-center text-sm text-gray-500">
                           <User size={16} className="mr-1" />
-                          <span>{blog.author || 'Admin'}</span>
+                          <span>{blog.author || t('admin_label')}</span>
                           <Calendar size={16} className="ml-4 mr-1" />
                           <span>{new Date(blog.created_at).toLocaleDateString()}</span>
                         </div>
@@ -183,7 +185,7 @@ export const BlogsPage = () => {
                             navigate(`/blog/${blog.id}`, { state: { blog } }); // Pass blog object in state
                           }}
                         >
-                          Read More &rarr;
+                          {t('read_more_link')} &rarr;
                         </a>
                       </div>
                     </div>

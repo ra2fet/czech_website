@@ -5,6 +5,7 @@ import { BookOpen, Calendar, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import config from '../config';
+import { useTranslation } from 'react-i18next';
 
 interface Blog {
   id: string;
@@ -17,6 +18,7 @@ interface Blog {
 }
 
 export const BlogPostPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation(); // Get location object to access state
@@ -35,7 +37,7 @@ export const BlogPostPage = () => {
 
     const fetchBlogPost = async () => {
       if (!id) {
-        setError('Blog ID is missing.');
+        setError(t('blog_id_missing'));
         setLoading(false);
         return;
       }
@@ -64,16 +66,16 @@ export const BlogPostPage = () => {
         if (data) {
           setBlog(data);
         } else {
-          setError('Blog post not found.');
+          setError(t('blog_post_not_found_message'));
         }
       } catch (err) {
         console.error('Error fetching blog post:', err);
         if (err instanceof Error) {
-          setError(`Failed to load blog post: ${err.message}`);
+          setError(`${t('failed_to_load_blog_post')}: ${err.message}`);
         } else {
-          setError('Failed to load blog post: An unknown error occurred');
+          setError(t('failed_to_load_blog_post_unknown_error'));
         }
-        toast.error('Failed to load blog post.');
+        toast.error(t('failed_to_load_blog_post'));
       } finally {
         setLoading(false);
       }
@@ -94,13 +96,13 @@ export const BlogPostPage = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
         <BookOpen size={64} className="text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold text-red-800 mb-4">Error</h1>
+        <h1 className="text-2xl font-bold text-red-800 mb-4">{t('blog_post_error_title')}</h1>
         <p className="text-gray-700 mb-6">{error}</p>
         <button
           onClick={() => navigate('/blogs')}
           className="btn btn-primary"
         >
-          <ArrowLeft size={18} className="mr-2" /> Back to Blogs
+          <ArrowLeft size={18} className="mr-2" /> {t('back_to_blogs_button')}
         </button>
       </div>
     );
@@ -110,13 +112,13 @@ export const BlogPostPage = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
         <BookOpen size={64} className="text-yellow-500 mb-4" />
-        <h1 className="text-2xl font-bold text-yellow-800 mb-4">Blog Post Not Found</h1>
-        <p className="text-gray-700 mb-6">The blog post you are looking for does not exist or has been removed.</p>
+        <h1 className="text-2xl font-bold text-yellow-800 mb-4">{t('blog_post_not_found_title')}</h1>
+        <p className="text-gray-700 mb-6">{t('blog_post_not_found_message')}</p>
         <button
           onClick={() => navigate('/blogs')}
           className="btn btn-primary"
         >
-          <ArrowLeft size={18} className="mr-2" /> Back to Blogs
+          <ArrowLeft size={18} className="mr-2" /> {t('back_to_blogs_button')}
         </button>
       </div>
     );
@@ -134,7 +136,7 @@ export const BlogPostPage = () => {
           onClick={() => navigate('/blogs')}
           className="flex items-center text-primary-600 hover:text-primary-800 transition-colors p-6 pb-0"
         >
-          <ArrowLeft size={20} className="mr-2" /> Back to Blogs
+          <ArrowLeft size={20} className="mr-2" /> {t('back_to_blogs_button')}
         </button>
         {blog.image_url && (
           <img
@@ -147,7 +149,7 @@ export const BlogPostPage = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{blog.title}</h1>
           <div className="flex items-center text-sm text-gray-500 mb-6">
             <User size={16} className="mr-1" />
-            <span>{blog.author || 'Admin'}</span>
+            <span>{blog.author || t('admin_label')}</span>
             <Calendar size={16} className="ml-4 mr-1" />
             <span>{new Date(blog.created_at).toLocaleDateString()}</span>
           </div>

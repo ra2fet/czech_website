@@ -1,4 +1,3 @@
-// src/components/ProductsPage.js
 import { useState, useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Package, ShoppingBag, Truck, Shield, Zap, DollarSign, ChevronDown } from 'lucide-react';
@@ -8,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 import toast from 'react-hot-toast';
 import config from '../config'; // Import config
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useTranslation } from 'react-i18next';
 
 interface Product {
   id: string;
@@ -31,6 +31,7 @@ interface Product {
 }
 
 export const ProductsPage = () => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'retail' | 'wholesale'>('retail');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -85,9 +86,9 @@ export const ProductsPage = () => {
     } catch (error: unknown) {
       console.error('Error fetching products:', error);
       if (error instanceof Error) {
-        toast.error(`Failed to fetch products: ${error.message}`);
+        toast.error(`${t('failed_to_fetch_products')}: ${error.message}`);
       } else {
-        toast.error('Failed to fetch products: An unknown error occurred');
+        toast.error(t('failed_to_fetch_products_unknown_error'));
       }
     } finally {
       setLoading(false);
@@ -98,12 +99,12 @@ export const ProductsPage = () => {
   const handleToggleViewMode = (mode: 'retail' | 'wholesale') => {
     if (mode === 'wholesale') {
       if (!user) {
-        toast.error('Please log in to access wholesale products.');
+        toast.error(t('login_to_access_wholesale'));
         navigate('/signin'); // Redirect to login page
         return;
       }
       if (user.userType !== 'company' || !user.isActive) {
-        toast.error('Wholesale products are only available for active company users.');
+        toast.error(t('wholesale_for_company_users_only'));
         return;
       }
     }
@@ -135,7 +136,7 @@ export const ProductsPage = () => {
       type: productType,
     });
 
-    toast.success(`${product.name} added to cart (${productType})`);
+    toast.success(`${product.name} ${t('added_to_cart_toast')} (${productType})`);
   };
 
   const confirmClearCart = () => {
@@ -151,7 +152,7 @@ export const ProductsPage = () => {
         price: price,
         type: productType,
       });
-      toast.success(`Cart cleared. ${productToAddToCart.name} added to cart (${productType})`);
+      toast.success(`${t('cart_cleared_toast')} ${productToAddToCart.name} ${t('added_to_cart_toast')} (${productType})`);
     }
     setShowClearCartDialog(false);
     setProductToAddToCart(null);
@@ -160,7 +161,7 @@ export const ProductsPage = () => {
   const cancelClearCart = () => {
     setShowClearCartDialog(false);
     setProductToAddToCart(null);
-    toast.error('Product not added to cart.');
+    toast.error(t('product_not_added_toast'));
   };
 
   const containerVariants = {
@@ -188,10 +189,9 @@ export const ProductsPage = () => {
       <section className="rafatbg  text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Premium Products</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('products_page_hero_title')}</h1>
             <p className="text-xl opacity-90 mb-8">
-              Discover our range of high-quality products designed to meet your business needs
-              with exceptional performance and reliability.
+              {t('products_page_hero_subtitle')}
             </p>
           </div>
         </div>
@@ -201,7 +201,7 @@ export const ProductsPage = () => {
       <section className="bg-gray-100 py-6 border-b border-gray-200">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <h2 className="text-2xl font-bold mb-4 md:mb-0">Product Catalog</h2>
+            <h2 className="text-2xl font-bold mb-4 md:mb-0">{t('product_catalog_title')}</h2>
             <div className="flex">
               <button
                 onClick={() => handleToggleViewMode('retail')}
@@ -212,7 +212,7 @@ export const ProductsPage = () => {
                 }`}
               >
                 <ShoppingBag size={18} className="mr-2" />
-                Retail
+                {t('retail_mode')}
               </button>
               <button
                 onClick={() => handleToggleViewMode('wholesale')}
@@ -223,7 +223,7 @@ export const ProductsPage = () => {
                 }`}
               >
                 <Package size={18} className="mr-2" />
-                Wholesale
+                {t('wholesale_mode')}
               </button>
             </div>
           </div>
@@ -238,20 +238,20 @@ export const ProductsPage = () => {
               <div className="bg-primary-100 p-4 rounded-full mb-4">
                 <Truck size={32} className="text-primary-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Fast Shipping</h3>
+              <h3 className="text-xl font-bold mb-2">{t('fast_shipping_title')}</h3>
               <p className="text-gray-600">
                 {viewMode === 'wholesale'
-                  ? 'Dedicated logistics for wholesale orders'
-                  : 'Quick delivery to your doorstep'}
+                  ? t('fast_shipping_wholesale_desc')
+                  : t('fast_shipping_retail_desc')}
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
               <div className="bg-primary-100 p-4 rounded-full mb-4">
                 <Shield size={32} className="text-primary-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Quality Guaranteed</h3>
+              <h3 className="text-xl font-bold mb-2">{t('quality_guaranteed_title')}</h3>
               <p className="text-gray-600">
-                All products undergo rigorous quality testing before shipping
+                {t('quality_guaranteed_desc')}
               </p>
             </div>
             <div className="flex flex-col items-center text-center">
@@ -259,12 +259,12 @@ export const ProductsPage = () => {
                 <DollarSign size={32} className="text-primary-600" />
               </div>
               <h3 className="text-xl font-bold mb-2">
-                {viewMode === 'wholesale' ? 'Volume Discounts' : 'Competitive Pricing'}
+                {viewMode === 'wholesale' ? t('volume_discounts_title') : t('competitive_pricing_title')}
               </h3>
               <p className="text-gray-600">
                 {viewMode === 'wholesale'
-                  ? 'Significant savings on bulk orders'
-                  : 'Premium quality at reasonable prices'}
+                  ? t('volume_discounts_desc')
+                  : t('competitive_pricing_desc')}
               </p>
             </div>
           </div>
@@ -283,15 +283,15 @@ export const ProductsPage = () => {
               <div className="bg-yellow-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Package size={32} className="text-yellow-600" />
               </div>
-              <h2 className="text-xl font-bold text-yellow-800 mb-4">No Products Available</h2>
+              <h2 className="text-xl font-bold text-yellow-800 mb-4">{t('no_products_available_title')}</h2>
               <p className="text-yellow-600 mb-6">
-                We're currently updating our product catalog. Please check back soon.
+                {t('no_products_available_message')}
               </p>
               <button
                 onClick={fetchProducts}
                 className="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
               >
-                Refresh
+                {t('refresh_button')}
               </button>
             </div>
           ) : (
@@ -338,7 +338,7 @@ export const ProductsPage = () => {
                               : `$${product.retail_price}`}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {viewMode === 'wholesale' ? 'Wholesale price' : 'Per unit'}
+                            {viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}
                           </div>
                         </div>
                       </div>
@@ -348,7 +348,7 @@ export const ProductsPage = () => {
                           onClick={() => toggleProductDetails(product.id)}
                           className="flex items-center text-primary-600 font-medium hover:text-primary-700 mb-4 sm:mb-0"
                         >
-                          {selectedProduct === product.id ? 'Hide Details' : 'View Details'}
+                          {selectedProduct === product.id ? t('hide_details_button') : t('view_details_button')}
                           <ChevronDown
                             size={16}
                             className={`ml-1 transition-transform duration-300 ${
@@ -360,7 +360,7 @@ export const ProductsPage = () => {
                           onClick={() => handleAddToCart(product)}
                           className="btn btn-primary"
                         >
-                          Add to Cart
+                          {t('add_to_cart_button')}
                         </button>
                       </div>
 
@@ -374,18 +374,18 @@ export const ProductsPage = () => {
                           className="mt-6 pt-4 border-t border-gray-200"
                         >
                           <h4 className="text-lg font-bold mb-3">
-                            {viewMode === 'wholesale' ? 'Wholesale Package Specifications' : 'Product Specifications'}
+                            {viewMode === 'wholesale' ? t('wholesale_specs_title') : t('product_specs_title')}
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {viewMode === 'wholesale' ? (
                               <>
                                 <div className="flex items-center">
                                   <Package size={18} className="text-gray-500 mr-2" />
-                                  <span>Quantity per package: {product.wholesale_specs?.quantity} units</span>
+                                  <span>{t('quantity_per_package')} {product.wholesale_specs?.quantity} {t('units_label')}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>Material: {product.wholesale_specs?.material}</span>
+                                  <span>{t('material_label')} {product.wholesale_specs?.material}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -402,7 +402,7 @@ export const ProductsPage = () => {
                                   >
                                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                                   </svg>
-                                  <span>Package dimensions: {product.wholesale_specs?.dimensions}</span>
+                                  <span>{t('package_dimensions_label')} {product.wholesale_specs?.dimensions}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -422,7 +422,7 @@ export const ProductsPage = () => {
                                     <line x1="9" y1="9" x2="9.01" y2="9"></line>
                                     <line x1="15" y1="9" x2="15.01" y2="9"></line>
                                   </svg>
-                                  <span>Total weight: {product.wholesale_specs?.weight}</span>
+                                  <span>{t('total_weight_label')} {product.wholesale_specs?.weight}</span>
                                 </div>
                               </>
                             ) : (
@@ -442,7 +442,7 @@ export const ProductsPage = () => {
                                   >
                                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                                   </svg>
-                                  <span>Dimensions: {product.retail_specs?.dimensions}</span>
+                                  <span>{t('dimensions_label')} {product.retail_specs?.dimensions}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <svg
@@ -462,11 +462,11 @@ export const ProductsPage = () => {
                                     <line x1="9" y1="9" x2="9.01" y2="9"></line>
                                     <line x1="15" y1="9" x2="15.01" y2="9"></line>
                                   </svg>
-                                  <span>Weight: {product.retail_specs?.weight}</span>
+                                  <span>{t('weight_label')} {product.retail_specs?.weight}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>Material: {product.retail_specs?.material}</span>
+                                  <span>{t('material_label')} {product.retail_specs?.material}</span>
                                 </div>
                               </>
                             )}
@@ -486,22 +486,22 @@ export const ProductsPage = () => {
       {showClearCartDialog && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Clear Cart?</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{t('clear_cart_dialog_title')}</h3>
             <p className="text-gray-600 mb-6">
-              Your cart contains products of a different type. Do you want to clear your cart and add this new product?
+              {t('clear_cart_dialog_message')}
             </p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={confirmClearCart}
                 className="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
-                Confirm and Clear
+                {t('confirm_clear_cart_button')}
               </button>
               <button
                 onClick={cancelClearCart}
                 className="px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
               >
-                Cancel
+                {t('cancel_button')}
               </button>
             </div>
           </div>

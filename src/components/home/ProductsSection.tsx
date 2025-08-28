@@ -3,9 +3,19 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useTranslation } from 'react-i18next';
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  // Add other product properties as needed
+}
 
 export const ProductsSection = () => {
-  const [products, setProducts] = useState([]);
+  const { t } = useTranslation();
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
   const ref = useRef(null);
@@ -61,7 +71,7 @@ export const ProductsSection = () => {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-bold mb-4 text-accent-900"
           >
-            Our Featured Products
+            {t('products_section_title')}
           </motion.h2>
           <motion.div 
             initial={{ opacity: 0 }}
@@ -75,8 +85,7 @@ export const ProductsSection = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="max-w-2xl mx-auto text-gray-600"
           >
-            Discover our sustainable range of products designed to meet your business needs
-            with uncompromising quality and innovation.
+            {t('products_section_subtitle')}
           </motion.p>
         </div>
         
@@ -111,7 +120,7 @@ export const ProductsSection = () => {
                     to={`/products`} 
                     className="inline-flex items-center text-primary-600 font-medium hover:text-secondary-500 transition-colors"
                   >
-                    Buy Now <ArrowRight size={16} className="ml-1" />
+                    {t('buy_now_button')} <ArrowRight size={16} className="ml-1" />
                   </Link>
                 </div>
               </motion.div>
@@ -121,7 +130,7 @@ export const ProductsSection = () => {
         
         <div className="text-center mt-12">
           <Link to="/products" className="bg-primary-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-primary-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
-            View All Products
+            {t('view_all_products_button')}
           </Link>
         </div>
       </div>

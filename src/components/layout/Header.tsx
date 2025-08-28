@@ -7,12 +7,16 @@ import { CartIcon } from '../cart/CartIcon';
 import { CartSidebar } from '../cart/CartSidebar';
 import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
 import AnnouncementMarquee from './AnnouncementMarquee'; // Import AnnouncementMarquee
+import LanguageSwitcher from './LanguageSwitcher'; // Import LanguageSwitcher
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   scrollPosition: number;
+  showIntro?: boolean;
 }
 
-export const Header = ({ scrollPosition }: HeaderProps) => {
+export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,23 +37,23 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
   };
 
   const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Products', href: '/products' },
-    { name: 'Offers', href: '/offers' },
-    { name: 'Blogs', href: '/blogs' },
-    { name: 'Portfolio', href: '/portfolio' },
-    // { name: 'Locations', href: '/locations' },
-    { name: 'Contact', href: '/contact' },
+    { name: t('home'), href: '/' },
+    { name: t('products'), href: '/products' },
+    { name: t('offers'), href: '/offers' },
+    { name: t('blogs'), href: '/blogs' },
+    { name: t('portfolio'), href: '/portfolio' },
+    // { name: 'Locations', href: '/locations' }, // Uncomment and translate if needed
+    { name: t('contact'), href: '/contact' },
   ];
 
   return (
-    <>       <AnnouncementMarquee />
-
-    <header 
-      className={`fixed ${isScrolled?'top-0':'top-8'} w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-transparent py-4'
-      }`}
-    >
+    <>
+      <AnnouncementMarquee />
+      <header 
+        className={`fixed ${isScrolled?'top-0':'top-8'} w-full z-50 transition-all duration-300 ${
+          isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-transparent py-4'
+        } ${showIntro ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      >
       <div className="container-custom flex items-center justify-between">
         <div className="flex-shrink-0">
           <Link to="/" className="block">
@@ -58,7 +62,7 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
         </div>
         
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex space-x-6 xl:space-x-8">
+        <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -76,8 +80,9 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
           ))}
         </nav>
         
-        {/* Cart Icon, Login/User Icon and Mobile Menu Button */}
+        {/* Cart Icon, Login/User Icon, Language Switcher and Mobile Menu Button */}
         <div className="flex items-center space-x-4">
+          <LanguageSwitcher isScrolled={isScrolled} />
           <CartIcon onClick={() => setIsCartOpen(true)} isScrolled={isScrolled} />
           
           {user ? (
@@ -126,13 +131,16 @@ export const Header = ({ scrollPosition }: HeaderProps) => {
               ))}
               {user ? (
                 <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
               ) : (
                 <Link to="/signin" className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                  Sign In
+                  {t('signIn')}
                 </Link>
               )}
+              <div className="py-2">
+                <LanguageSwitcher isScrolled={true} /> {/* Always scrolled style for mobile menu */}
+              </div>
             </div>
           </motion.div>
         )}

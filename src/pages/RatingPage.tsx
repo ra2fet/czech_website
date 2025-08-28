@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import config from '../config';
 import { Star } from 'lucide-react';
 import { AxiosError } from 'axios'; // Import AxiosError type
+import { useTranslation } from 'react-i18next';
 
 // Simple Toast Component
 const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ message, type, onClose }) => {
@@ -31,6 +32,7 @@ interface Order {
 }
 
 const RatingPage: React.FC = () => {
+  const { t } = useTranslation();
   const { ratingToken } = useParams<{ ratingToken: string }>(); // Only extract ratingToken
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
@@ -52,7 +54,7 @@ const RatingPage: React.FC = () => {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!ratingToken) {
-        setError('Invalid rating link. Missing rating token.');
+        setError(t('rating_invalid_link_error'));
         setLoading(false);
         return;
       }
@@ -63,7 +65,7 @@ const RatingPage: React.FC = () => {
         setOrder(response.data);
 
         if (response.data.rating_token_used) {
-          setError('This order has already been rated. Thank you for your feedback!');
+          setError(t('rating_already_rated_error'));
           setLoading(false);
           return;
         }
@@ -79,11 +81,11 @@ const RatingPage: React.FC = () => {
         console.error('Error fetching order details:', err);
         const axiosError = err as AxiosError<{ message: string }>;
         if (axiosError.response) {
-          showToast(axiosError.response.data.message || 'Failed to load order details.', 'error');
+          showToast(axiosError.response.data.message || t('rating_failed_to_load'), 'error');
         } else if (err instanceof Error) {
           showToast(err.message, 'error');
         } else {
-          setError('Failed to load order details due to an unknown error.');
+          setError(t('rating_failed_to_load'));
         }
       } finally {
         setLoading(false);
@@ -109,18 +111,18 @@ const RatingPage: React.FC = () => {
 
   const handleSubmitRatings = async () => {
     if (!order || !ratingToken) { // Check if order is available
-      setError('Invalid rating link. Order details not loaded.');
+      setError(t('rating_invalid_link_error'));
       return;
     }
 
     if (overallRating === 0) {
-      showToast('Please provide an overall rating for your order.', 'error');
+      showToast(t('rating_provide_overall_error'), 'error');
       return;
     }
 
     const allProductsRated = Object.values(productRatings).every(pr => pr.rating > 0);
     if (!allProductsRated) {
-      showToast('Please rate all products in your order.', 'error');
+      showToast(t('rating_rate_all_products_error'), 'error');
       return;
     }
 
@@ -143,7 +145,7 @@ const RatingPage: React.FC = () => {
         productRatings: formattedProductRatings,
       });
 
-      setMessage('Thank you for your feedback! Your ratings have been submitted.');
+      setMessage(t('rating_thank_you_message'));
       // Optionally redirect or disable form
       setTimeout(() => navigate('/'), 3000);
 
@@ -151,11 +153,11 @@ const RatingPage: React.FC = () => {
       console.error('Error submitting ratings:', err);
       const axiosError = err as AxiosError<{ message: string }>;
       if (axiosError.response) {
-        showToast(axiosError.response.data.message || 'Failed to submit ratings. This link might have expired or been used.', 'error');
+        showToast(axiosError.response.data.message || t('rating_submit_failed'), 'error');
       } else if (err instanceof Error) {
         showToast(err.message, 'error');
       } else {
-        showToast('Failed to submit ratings due to an unknown error.', 'error');
+        showToast(t('rating_submit_unknown_error'), 'error');
       }
     } finally {
       setSubmitting(false);
@@ -163,7 +165,7 @@ const RatingPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading order details...</div>;
+    return <div className="flex justify-center items-center h-screen">{t('rating_loading_order')}</div>;
   }
   if (error) {
     return <div className="flex justify-center items-center h-screen text-red-600">{error}</div>;
@@ -190,13 +192,12 @@ const RatingPage: React.FC = () => {
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Order Not Found or Already Rated</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">{t('rating_order_not_found_title')}</h2>
           <p className="text-gray-600 mb-6">
-            We couldn't find the order you're looking for, or it has already been rated.
-            Thank you for your feedback!
+            {t('rating_order_not_found_message')}
           </p>
           <Link to="/" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-            Return to Home Page
+            {t('rating_return_home_button')}
           </Link>
         </div>
       </div>
@@ -205,13 +206,13 @@ const RatingPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Rate Your Order #{order.id}</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">{t('rating_page_title')} #{order.id}</h1>
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Order Details</h2>
-        <p><strong>Order Date:</strong> {new Date(order.order_date).toLocaleDateString()}</p>
-        <p><strong>Total Amount:</strong> ${Number(order.total_amount).toFixed(2)}</p>
+        <h2 className="text-2xl font-semibold mb-4">{t('rating_order_info_title')}</h2>
+        <p><strong>{t('rating_order_date', { date: new Date(order.order_date).toLocaleDateString() })}</strong></p>
+        <p><strong>{t('rating_order_total', { amount: Number(order.total_amount).toFixed(2) })}</strong></p>
 
-        <h3 className="text-xl font-semibold mt-6 mb-3">Overall Order Rating</h3>
+        <h3 className="text-xl font-semibold mt-6 mb-3">{t('rating_overall_experience_title')}</h3>
         <div className="flex items-center space-x-1 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
             <Star
@@ -224,12 +225,12 @@ const RatingPage: React.FC = () => {
         </div>
         <textarea
           className="w-full mt-4 p-2 border rounded-md"
-          placeholder="Add a comment for your overall order (optional)"
+          placeholder={t('rating_overall_comment_placeholder')}
           value={overallComment}
           onChange={(e) => setOverallComment(e.target.value)}
         />
 
-        <h3 className="text-xl font-semibold mt-6 mb-3">Product Ratings</h3>
+        <h3 className="text-xl font-semibold mt-6 mb-3">{t('rating_product_ratings_title')}</h3>
         <div className="space-y-6">
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center border-b pb-4">
@@ -250,7 +251,7 @@ const RatingPage: React.FC = () => {
                 </div>
                 <textarea
                   className="w-full mt-2 p-2 border rounded-md"
-                  placeholder="Add a comment for this product (optional)"
+                  placeholder={t('rating_optional_comment_placeholder')}
                   value={productRatings[item.id]?.comment || ''}
                   onChange={(e) => handleProductCommentChange(item.id, e.target.value)}
                 />
@@ -264,7 +265,7 @@ const RatingPage: React.FC = () => {
           disabled={submitting}
           className="mt-8 w-full bg-primary-600 text-white py-3 rounded-md font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? 'Submitting...' : 'Submit All Ratings'}
+          {submitting ? t('rating_submitting_button') : t('rating_submit_button')}
         </button>
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

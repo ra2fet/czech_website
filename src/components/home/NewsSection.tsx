@@ -3,11 +3,22 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useTranslation } from 'react-i18next';
+
+interface Blog {
+  id: string;
+  title: string;
+  excerpt: string;
+  image_url: string;
+  created_at: string;
+  // Add other blog properties as needed
+}
 
 export const NewsSection = () => {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
-  const [blogs, setBlogs] = useState([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -60,7 +71,7 @@ export const NewsSection = () => {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-bold mb-4 text-accent-900"
           >
-            Latest News & Updates
+            {t('news_section_title')}
           </motion.h2>
           <motion.div 
             initial={{ opacity: 0 }}
@@ -74,7 +85,7 @@ export const NewsSection = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="max-w-2xl mx-auto text-gray-600"
           >
-            Stay updated with the latest developments, product launches, and company initiatives.
+            {t('news_section_subtitle')}
           </motion.p>
         </div>
         
@@ -90,7 +101,7 @@ export const NewsSection = () => {
             </div>
           ) : blogs.length === 0 ? (
             <div className="col-span-3 text-center py-12 text-gray-500">
-              No blog posts found
+              {t('no_blog_posts_found')}
             </div>
           ) : (
             blogs.map((blog) => (
@@ -119,7 +130,7 @@ export const NewsSection = () => {
                     to={`/blog/${blog.id}`}
                     className="inline-flex items-center text-primary-600 font-medium hover:text-secondary-500 transition-colors"
                   >
-                    Read More <ArrowRight size={16} className="ml-1" />
+                    {t('read_more_button')} <ArrowRight size={16} className="ml-1" />
                   </Link>
                 </div>
               </motion.div>

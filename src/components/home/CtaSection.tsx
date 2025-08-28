@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export const CtaSection = () => {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
@@ -16,7 +18,7 @@ export const CtaSection = () => {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl font-bold mb-6"
           >
-            Ready to Grow Your Business Sustainably?
+            {t('cta_title')}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -24,8 +26,7 @@ export const CtaSection = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-lg md:text-xl opacity-90 mb-8"
           >
-            Our sustainable solutions are designed to help your business reach new heights.
-            Join thousands of satisfied customers worldwide.
+            {t('cta_subtitle')}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -37,13 +38,13 @@ export const CtaSection = () => {
               to="/products" 
               className="bg-secondary-500 text-accent-900 px-8 py-4 rounded-lg font-bold hover:bg-secondary-400 transition-all duration-300 transform hover:scale-105"
             >
-              Explore Products
+              {t('explore_products_cta')}
             </Link>
             <Link 
               to="/contact" 
               className="bg-transparent border-2 border-secondary-500 text-secondary-500 px-8 py-4 rounded-lg font-bold hover:bg-secondary-500 hover:text-accent-900 transition-all duration-300"
             >
-              Contact Sales
+              {t('contact_sales_cta')}
             </Link>
           </motion.div>
         </div>

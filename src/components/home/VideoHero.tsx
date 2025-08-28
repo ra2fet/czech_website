@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VideoHeroProps {
   scrollToContent: () => void;
 }
 
 export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
+  const { t } = useTranslation();
   const [currentVideo, setCurrentVideo] = useState(0);
   
   const videos = [
@@ -41,7 +43,7 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
             className="object-cover w-full h-full"
           >
             <source src={video} type="video/mp4" />
-            Your browser does not support the video tag.
+            {t('video_not_supported')}
           </video>
         </div>
       ))}
@@ -54,16 +56,16 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           className="text-center px-4 max-w-4xl"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            Sustainable Solutions for Your Business
+            {t('video_hero_title')}
           </h1>
           <p className="text-xl md:text-2xl opacity-90 mb-8">
-            Delivering excellence through sustainable innovation and quality since 2010
+            {t('video_hero_subtitle')}
           </p>
           <button 
             className="bg-secondary-500 text-accent-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-secondary-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
             onClick={() => window.location.href = '/products'}
           >
-            Explore Our Products
+            {t('explore_products_button')}
           </button>
         </motion.div>
         
@@ -75,7 +77,7 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           onClick={scrollToContent}
           whileHover={{ y: 5 }}
         >
-          <span className="text-white text-sm mb-2">Scroll Down</span>
+          <span className="text-white text-sm mb-2">{t('scroll_down')}</span>
           <ChevronDown className="text-white animate-bounce" size={24} />
         </motion.button>
       </div>

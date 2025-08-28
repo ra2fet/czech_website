@@ -1,77 +1,79 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, Check, Award, Target, Users, Lightbulb } from 'lucide-react';
-
-// Company values data
-const values = [
-  {
-    icon: <Target size={32} className="text-primary-600" />,
-    title: 'Excellence',
-    description: 'We strive for excellence in everything we do, from product development to customer service.'
-  },
-  {
-    icon: <Award size={32} className="text-primary-600" />,
-    title: 'Quality',
-    description: 'Quality is at the heart of our business. We use only the finest materials and processes.'
-  },
-  {
-    icon: <Lightbulb size={32} className="text-primary-600" />,
-    title: 'Innovation',
-    description: 'We constantly innovate to bring you cutting-edge solutions that drive your business forward.'
-  },
-  {
-    icon: <Users size={32} className="text-primary-600" />,
-    title: 'Customer Focus',
-    description: 'Our customers are our priority. We listen to your needs and develop solutions accordingly.'
-  }
-];
-
-// Projects data
-const projects = [
-  {
-    id: 1,
-    title: 'Enterprise Technology Upgrade',
-    client: 'Global Manufacturing Corp',
-    description: 'Implemented a comprehensive technology solution that improved efficiency by 35% and reduced operational costs by 28%.',
-    image: 'https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-  },
-  {
-    id: 2,
-    title: 'Supply Chain Optimization',
-    client: 'Logistics International',
-    description: 'Developed a custom solution that streamlined the supply chain process, resulting in 40% faster delivery times and improved customer satisfaction.',
-    image: 'https://images.pexels.com/photos/2977565/pexels-photo-2977565.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-  },
-  {
-    id: 3,
-    title: 'Smart Factory Implementation',
-    client: 'TechIndustries Ltd',
-    description: 'Transformed traditional manufacturing facilities into smart factories with IoT integration, increasing production output by 45%.',
-    image: 'https://images.pexels.com/photos/3862130/pexels-photo-3862130.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
-  }
-];
-
-// Achievements data
-const achievements = [
-  {
-    number: '15+',
-    label: 'Years of Experience'
-  },
-  {
-    number: '500+',
-    label: 'Satisfied Clients'
-  },
-  {
-    number: '1000+',
-    label: 'Projects Completed'
-  },
-  {
-    number: '25+',
-    label: 'Industry Awards'
-  }
-];
+import { useTranslation } from 'react-i18next';
 
 export const PortfolioPage = () => {
+  const { t } = useTranslation();
+  
+  // Company values data
+  const values = [
+    {
+      icon: <Target size={32} className="text-primary-600" />,
+      title: t('portfolio_value_excellence_title'),
+      description: t('portfolio_value_excellence_desc')
+    },
+    {
+      icon: <Award size={32} className="text-primary-600" />,
+      title: t('portfolio_value_quality_title'),
+      description: t('portfolio_value_quality_desc')
+    },
+    {
+      icon: <Lightbulb size={32} className="text-primary-600" />,
+      title: t('portfolio_value_innovation_title'),
+      description: t('portfolio_value_innovation_desc')
+    },
+    {
+      icon: <Users size={32} className="text-primary-600" />,
+      title: t('portfolio_value_customer_focus_title'),
+      description: t('portfolio_value_customer_focus_desc')
+    }
+  ];
+  
+  // Projects data
+  const projects = [
+    {
+      id: 1,
+      title: t('portfolio_project_enterprise_title'),
+      client: t('portfolio_project_enterprise_client'),
+      description: t('portfolio_project_enterprise_desc'),
+      image: 'https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    },
+    {
+      id: 2,
+      title: t('portfolio_project_supply_chain_title'),
+      client: t('portfolio_project_supply_chain_client'),
+      description: t('portfolio_project_supply_chain_desc'),
+      image: 'https://images.pexels.com/photos/2977565/pexels-photo-2977565.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    },
+    {
+      id: 3,
+      title: t('portfolio_project_smart_factory_title'),
+      client: t('portfolio_project_smart_factory_client'),
+      description: t('portfolio_project_smart_factory_desc'),
+      image: 'https://images.pexels.com/photos/3862130/pexels-photo-3862130.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'
+    }
+  ];
+  
+  // Achievements data
+  const achievements = [
+    {
+      number: '15+',
+      label: t('portfolio_achievement_years_experience')
+    },
+    {
+      number: '500+',
+      label: t('portfolio_achievement_satisfied_clients')
+    },
+    {
+      number: '1000+',
+      label: t('portfolio_achievement_projects_completed')
+    },
+    {
+      number: '25+',
+      label: t('portfolio_achievement_industry_awards')
+    }
+  ];
   const valuesRef = useRef(null);
   const projectsRef = useRef(null);
   const achievementsRef = useRef(null);
@@ -86,10 +88,9 @@ export const PortfolioPage = () => {
       <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Portfolio</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('portfolio_hero_title')}</h1>
             <p className="text-xl opacity-90 mb-8">
-              Discover our company's values, achievements, and the impactful projects we've completed
-              for clients across various industries.
+              {t('portfolio_hero_subtitle')}
             </p>
           </div>
         </div>
@@ -105,7 +106,7 @@ export const PortfolioPage = () => {
               transition={{ duration: 0.6 }}
               className="text-3xl md:text-4xl font-bold mb-4"
             >
-              Our Core Values
+              {t('portfolio_core_values_title')}
             </motion.h2>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -119,8 +120,7 @@ export const PortfolioPage = () => {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="max-w-2xl mx-auto text-gray-600"
             >
-              Our values are the foundation of everything we do. They guide our decisions,
-              shape our culture, and define how we work with our clients and each other.
+              {t('portfolio_core_values_subtitle')}
             </motion.p>
           </div>
           
@@ -174,7 +174,7 @@ export const PortfolioPage = () => {
               transition={{ duration: 0.6 }}
               className="text-3xl md:text-4xl font-bold mb-4"
             >
-              Featured Projects
+              {t('portfolio_featured_projects_title')}
             </motion.h2>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -188,8 +188,7 @@ export const PortfolioPage = () => {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="max-w-2xl mx-auto text-gray-600"
             >
-              Our track record of success speaks for itself. Here are some of our most
-              impactful projects that have transformed our clients' businesses.
+              {t('portfolio_featured_projects_subtitle')}
             </motion.p>
           </div>
           
@@ -211,27 +210,27 @@ export const PortfolioPage = () => {
                 </div>
                 <div className="md:w-1/2 p-8 flex flex-col justify-center">
                   <h3 className="text-2xl font-bold mb-2">{project.title}</h3>
-                  <p className="text-primary-600 font-medium mb-4">Client: {project.client}</p>
+                  <p className="text-primary-600 font-medium mb-4">{t('portfolio_client_label')} {project.client}</p>
                   <p className="text-gray-600 mb-6">{project.description}</p>
                   <ul className="space-y-2 mb-6">
                     <li className="flex items-start">
                       <Check size={20} className="text-success-500 mr-2 flex-shrink-0 mt-1" />
-                      <span>Custom implementation tailored to client needs</span>
+                      <span>{t('portfolio_project_custom_implementation')}</span>
                     </li>
                     <li className="flex items-start">
                       <Check size={20} className="text-success-500 mr-2 flex-shrink-0 mt-1" />
-                      <span>Seamless integration with existing systems</span>
+                      <span>{t('portfolio_project_seamless_integration')}</span>
                     </li>
                     <li className="flex items-start">
                       <Check size={20} className="text-success-500 mr-2 flex-shrink-0 mt-1" />
-                      <span>Comprehensive training and support</span>
+                      <span>{t('portfolio_project_comprehensive_support')}</span>
                     </li>
                   </ul>
                   <a 
                     href="#" 
                     className="inline-flex items-center text-primary-600 font-medium hover:text-primary-700 transition-colors"
                   >
-                    View Case Study <ArrowRight size={16} className="ml-1" />
+                    {t('portfolio_view_case_study')} <ArrowRight size={16} className="ml-1" />
                   </a>
                 </div>
               </motion.div>
@@ -245,17 +244,16 @@ export const PortfolioPage = () => {
         <div className="container-custom">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Start Your Project?
+              {t('portfolio_cta_title')}
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              Let's work together to transform your business with our proven solutions 
-              and expertise. Contact us today to discuss your project.
+              {t('portfolio_cta_subtitle')}
             </p>
             <a 
               href="/contact" 
               className="btn btn-primary"
             >
-              Get in Touch
+              {t('portfolio_cta_get_in_touch')}
             </a>
           </div>
         </div>

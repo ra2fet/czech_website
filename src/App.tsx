@@ -58,6 +58,8 @@ function App() {
 
   const handleIntroFinish = () => {
     setShowIntro(false);
+    // Ensure page starts from top when intro disappears
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -68,7 +70,7 @@ function App() {
         {!showIntro && !shouldHideIntro && <NewsletterPopup />} {/* Render NewsletterPopup after intro and not on admin/dashboard routes */}
         <div className="font-sans text-gray-900 bg-white">
           <ScrollToTop />
-          {!isAdminRoute && !isDashboardRoute && <Header scrollPosition={scrollPosition} />}
+          {!isAdminRoute && !isDashboardRoute && !showIntro && <Header scrollPosition={scrollPosition} />}
           <main>
             <Routes>
               <Route path="/" element={<HomePage />} />

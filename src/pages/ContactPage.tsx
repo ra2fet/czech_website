@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Phone, Mail, MapPin, Send, FileText, Users, CheckCircle, XCircle } from 'lucide-react';
 import config from '../config';
+import { useTranslation } from 'react-i18next';
 
 interface ContactFormData {
   name: string;
@@ -12,6 +13,7 @@ interface ContactFormData {
 }
 
 const ContactFormSection = () => {
+  const { t } = useTranslation();
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
@@ -31,7 +33,7 @@ const ContactFormSection = () => {
     setFormStatus('submitting');
     
     try {
-      const response = await config.axios.post('/contact/send-message', {
+      const response = await config.axios.post('contact/send-message', {
         name: formData.name,
         email: formData.email,
         phone: formData.phone, // Send phone number
@@ -59,7 +61,7 @@ const ContactFormSection = () => {
   
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
-      <h3 className="text-2xl font-bold mb-6">Send Us a Message</h3>
+      <h3 className="text-2xl font-bold mb-6">{t('contact_send_message_title')}</h3>
       
       {formStatus === 'success' ? (
         <motion.div
@@ -69,8 +71,8 @@ const ContactFormSection = () => {
         >
           <CheckCircle size={24} className="text-success-600 mr-3 flex-shrink-0" />
           <div>
-            <p className="font-bold">Message Sent Successfully!</p>
-            <p>Thank you for contacting us. We'll get back to you shortly.</p>
+            <p className="font-bold">{t('contact_message_sent_success_title')}</p>
+            <p>{t('contact_message_sent_success_description')}</p>
           </div>
         </motion.div>
       ) : formStatus === 'error' ? (
@@ -81,8 +83,8 @@ const ContactFormSection = () => {
         >
           <XCircle size={24} className="text-danger-600 mr-3 flex-shrink-0" />
           <div>
-            <p className="font-bold">Error Sending Message!</p>
-            <p>There was an issue sending your message. Please try again later.</p>
+            <p className="font-bold">{t('contact_message_sent_error_title')}</p>
+            <p>{t('contact_message_sent_error_description')}</p>
           </div>
         </motion.div>
       ) : (
@@ -90,7 +92,7 @@ const ContactFormSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Your Name*
+                {t('contact_your_name_label')}
               </label>
               <input
                 type="text"
@@ -104,7 +106,7 @@ const ContactFormSection = () => {
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address*
+                {t('contact_email_address_label')}
               </label>
               <input
                 type="email"
@@ -118,7 +120,7 @@ const ContactFormSection = () => {
             </div>
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
+                {t('contact_phone_number_label')}
               </label>
               <input
                 type="tel"
@@ -131,7 +133,7 @@ const ContactFormSection = () => {
             </div>
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                Subject*
+                {t('contact_subject_label')}
               </label>
               <select
                 id="subject"
@@ -141,18 +143,18 @@ const ContactFormSection = () => {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="">Select a subject</option>
-                <option value="general">General Inquiry</option>
-                <option value="product">Product Information</option>
-                <option value="support">Technical Support</option>
-                <option value="partnership">Partnership Opportunities</option>
-                <option value="other">Other</option>
+                <option value="">{t('contact_select_subject_option')}</option>
+                <option value="general">{t('contact_general_inquiry_option')}</option>
+                <option value="product">{t('contact_product_information_option')}</option>
+                <option value="support">{t('contact_technical_support_option')}</option>
+                <option value="partnership">{t('contact_partnership_opportunities_option')}</option>
+                <option value="other">{t('contact_other_option')}</option>
               </select>
             </div>
           </div>
           <div className="mb-6">
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-              Your Message*
+              {t('contact_your_message_label')}
             </label>
             <textarea
               id="message"
@@ -177,12 +179,12 @@ const ContactFormSection = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Sending...
+                {t('contact_sending_button')}
               </>
             ) : (
               <>
                 <Send size={18} className="mr-2" />
-                Send Message
+                {t('contact_send_message_button')}
               </>
             )}
           </button>
@@ -209,6 +211,7 @@ interface JobApplicationFormData {
 }
 
 const JobApplicationSection = () => {
+  const { t } = useTranslation();
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState<JobApplicationFormData>({
     name: '',
@@ -274,7 +277,7 @@ const JobApplicationSection = () => {
 
     if (!formData.resume_url) {
       setFormStatus('error');
-      console.error('Resume not uploaded.');
+      console.error(t('job_resume_not_uploaded_error'));
       return;
     }
     
@@ -309,7 +312,7 @@ const JobApplicationSection = () => {
   
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
-      <h3 className="text-2xl font-bold mb-6">Apply for a Job</h3>
+      <h3 className="text-2xl font-bold mb-6">{t('job_apply_title')}</h3>
       
       {formStatus === 'success' ? (
         <motion.div
@@ -319,8 +322,8 @@ const JobApplicationSection = () => {
         >
           <CheckCircle size={24} className="text-success-600 mr-3 flex-shrink-0" />
           <div>
-            <p className="font-bold">Application Submitted!</p>
-            <p>Thank you for your interest in joining our team. We'll review your application and contact you soon.</p>
+            <p className="font-bold">{t('job_application_success_title')}</p>
+            <p>{t('job_application_success_description')}</p>
           </div>
         </motion.div>
       ) : formStatus === 'error' ? (
@@ -331,8 +334,8 @@ const JobApplicationSection = () => {
         >
           <XCircle size={24} className="text-danger-600 mr-3 flex-shrink-0" />
           <div>
-            <p className="font-bold">Error Submitting Application!</p>
-            <p>There was an issue with your application. Please try again later.</p>
+            <p className="font-bold">{t('job_application_error_title')}</p>
+            <p>{t('job_application_error_description')}</p>
           </div>
         </motion.div>
       ) : (
@@ -340,7 +343,7 @@ const JobApplicationSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Your Name*
+                {t('job_your_name_label')}
               </label>
               <input
                 type="text"
@@ -354,7 +357,7 @@ const JobApplicationSection = () => {
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address*
+                {t('job_email_address_label')}
               </label>
               <input
                 type="email"
@@ -368,7 +371,7 @@ const JobApplicationSection = () => {
             </div>
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number*
+                {t('job_phone_number_label')}
               </label>
               <input
                 type="tel"
@@ -382,12 +385,12 @@ const JobApplicationSection = () => {
             </div>
             <div>
               <label htmlFor="position_id" className="block text-sm font-medium text-gray-700 mb-1">
-                Position*
+                {t('job_position_label')}
               </label>
               {positionsLoading ? (
-                <p className="text-gray-500">Loading positions...</p>
+                <p className="text-gray-500">{t('job_loading_positions')}</p>
               ) : positionsError ? (
-                <p className="text-danger-600">Error loading positions. Please try again.</p>
+                <p className="text-danger-600">{t('job_error_loading_positions')}</p>
               ) : (
                 <select
                   id="position_id"
@@ -397,7 +400,7 @@ const JobApplicationSection = () => {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  <option value="">Select a position</option>
+                  <option value="">{t('job_select_position_option')}</option>
                   {openPositions.map((position) => (
                     <option key={position.id} value={position.id}>{position.title} ({position.location})</option>
                   ))}
@@ -406,16 +409,16 @@ const JobApplicationSection = () => {
             </div>
             <div>
               <label htmlFor="resume_url" className="block text-sm font-medium text-gray-700 mb-1">
-                Resume/CV (PDF)*
+                {t('job_resume_label')}
               </label>
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                <label className="flex flex-col items-center justify-center  pt-5 w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <FileText size={24} className="text-gray-400 mb-2" />
                     <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
+                      <span className="font-semibold">{t('job_click_to_upload')}</span> {t('job_or_drag_and_drop')}
                     </p>
-                    <p className="text-xs text-gray-500">PDF (MAX. 10MB)</p>
+                    <p className="text-xs text-gray-500">{t('job_pdf_max_size')}</p>
                   </div>
                   <input
                     type="file"
@@ -430,14 +433,14 @@ const JobApplicationSection = () => {
               </div>
               {formData.resume_url && (
                 <p className="mt-2 text-sm text-gray-600">
-                  Selected file: {formData.resume_url.split('/').pop()}
+                  {t('job_selected_file')} {formData.resume_url.split('/').pop()}
                 </p>
               )}
             </div>
           </div>
           <div className="mb-6">
             <label htmlFor="cover_letter" className="block text-sm font-medium text-gray-700 mb-1">
-              Cover Letter
+              {t('job_cover_letter_label')}
             </label>
             <textarea
               id="cover_letter"
@@ -461,12 +464,12 @@ const JobApplicationSection = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Submitting...
+                {t('job_submitting_button')}
               </>
             ) : (
               <>
                 <Send size={18} className="mr-2" />
-                Submit Application
+                {t('job_submit_application_button')}
               </>
             )}
           </button>
@@ -477,6 +480,7 @@ const JobApplicationSection = () => {
 };
 
 export const ContactPage = () => {
+  const { t } = useTranslation();
   const contactRef = useRef(null);
   const jobsRef = useRef(null);
   
@@ -489,10 +493,9 @@ export const ContactPage = () => {
       <section className="rafatbg text-white py-24 md:py-32">
         <div className="container-custom">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('contact_page_hero_title')}</h1>
             <p className="text-xl opacity-90 mb-8">
-              Have questions or need more information? Get in touch with our team and we'll
-              be happy to assist you.
+              {t('contact_page_hero_subtitle')}
             </p>
           </div>
         </div>
@@ -511,8 +514,8 @@ export const ContactPage = () => {
               <div className="inline-flex justify-center items-center w-16 h-16 mb-4 rounded-full bg-primary-100">
                 <Phone size={28} className="text-primary-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Phone</h3>
-              <p className="text-gray-600 mb-2">Call us for quick inquiries</p>
+              <h3 className="text-xl font-bold mb-2">{t('contact_phone_title')}</h3>
+              <p className="text-gray-600 mb-2">{t('contact_phone_description')}</p>
               <a href="tel:+12345678900" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
                 +1 (234) 567-8900
               </a>
@@ -527,8 +530,8 @@ export const ContactPage = () => {
               <div className="inline-flex justify-center items-center w-16 h-16 mb-4 rounded-full bg-primary-100">
                 <Mail size={28} className="text-primary-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Email</h3>
-              <p className="text-gray-600 mb-2">Send us a detailed message</p>
+              <h3 className="text-xl font-bold mb-2">{t('contact_email_title')}</h3>
+              <p className="text-gray-600 mb-2">{t('contact_email_description')}</p>
               <a href="mailto:info@company.com" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
                 info@company.com
               </a>
@@ -543,8 +546,8 @@ export const ContactPage = () => {
               <div className="inline-flex justify-center items-center w-16 h-16 mb-4 rounded-full bg-primary-100">
                 <MapPin size={28} className="text-primary-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Headquarters</h3>
-              <p className="text-gray-600 mb-2">Visit our main office</p>
+              <h3 className="text-xl font-bold mb-2">{t('contact_headquarters_title')}</h3>
+              <p className="text-gray-600 mb-2">{t('contact_headquarters_description')}</p>
               <address className="not-italic text-primary-600">
                 123 Business Avenue,<br />
                 Suite 100, New York, NY 10001
@@ -567,9 +570,9 @@ export const ContactPage = () => {
               transition={{ delay: 0.9, duration: 0.6 }}
               className="bg-gray-100 p-8 rounded-lg flex flex-col justify-center"
             >
-              <h3 className="text-2xl font-bold mb-6">We're Here to Help</h3>
+              <h3 className="text-2xl font-bold mb-6">{t('contact_here_to_help_title')}</h3>
               <p className="text-gray-700 mb-6">
-                Our customer support team is available to assist you with any questions or concerns you may have about our products and services.
+                {t('contact_here_to_help_description')}
               </p>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start">
@@ -577,8 +580,8 @@ export const ContactPage = () => {
                     <CheckCircle size={20} className="text-primary-600" />
                   </div>
                   <div>
-                    <h4 className="font-bold">Product Support</h4>
-                    <p className="text-gray-600">Get help with product specifications, usage, and troubleshooting.</p>
+                    <h4 className="font-bold">{t('contact_product_support_title')}</h4>
+                    <p className="text-gray-600">{t('contact_product_support_description')}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -586,8 +589,8 @@ export const ContactPage = () => {
                     <CheckCircle size={20} className="text-primary-600" />
                   </div>
                   <div>
-                    <h4 className="font-bold">Sales Inquiries</h4>
-                    <p className="text-gray-600">Speak with our sales team about bulk orders, pricing, and customization.</p>
+                    <h4 className="font-bold">{t('contact_sales_inquiries_title')}</h4>
+                    <p className="text-gray-600">{t('contact_sales_inquiries_description')}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -595,16 +598,16 @@ export const ContactPage = () => {
                     <CheckCircle size={20} className="text-primary-600" />
                   </div>
                   <div>
-                    <h4 className="font-bold">Partnership Opportunities</h4>
-                    <p className="text-gray-600">Explore potential collaboration and partnership opportunities.</p>
+                    <h4 className="font-bold">{t('contact_partnership_opportunities_title')}</h4>
+                    <p className="text-gray-600">{t('contact_partnership_opportunities_description')}</p>
                   </div>
                 </div>
               </div>
               <div className="text-sm text-gray-600">
-                <p className="font-bold mb-1">Business Hours:</p>
-                <p>Monday - Friday: 9:00 AM - 6:00 PM EST</p>
-                <p>Saturday: 10:00 AM - 2:00 PM EST</p>
-                <p>Sunday: Closed</p>
+                <p className="font-bold mb-1">{t('contact_business_hours_title')}</p>
+                <p>{t('contact_business_hours_mon_fri')}</p>
+                <p>{t('contact_business_hours_sat')}</p>
+                <p>{t('contact_business_hours_sun')}</p>
               </div>
             </motion.div>
           </div>
@@ -621,7 +624,7 @@ export const ContactPage = () => {
               transition={{ duration: 0.6 }}
               className="text-3xl md:text-4xl font-bold mb-4"
             >
-              Join Our Team
+              {t('contact_join_our_team_title')}
             </motion.h2>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -635,8 +638,7 @@ export const ContactPage = () => {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="max-w-2xl mx-auto text-gray-600"
             >
-              We're always looking for talented individuals to join our growing team.
-              Check out our open positions and submit your application.
+              {t('contact_join_our_team_description')}
             </motion.p>
           </div>
           
@@ -650,10 +652,10 @@ export const ContactPage = () => {
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
                   <Users size={24} className="text-primary-600 mr-2" />
-                  <h3 className="text-xl font-bold">Open Positions</h3>
+                  <h3 className="text-xl font-bold">{t('contact_open_positions_title')}</h3>
                 </div>
                 {/* The JobApplicationSection handles its own loading/error/empty states */}
-                <p className="text-gray-500">Please refer to the application form for available positions.</p>
+                <p className="text-gray-500">{t('contact_open_positions_message')}</p>
               </div>
             </motion.div>
             
