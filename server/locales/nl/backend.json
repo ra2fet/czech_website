@@ -1,0 +1,133 @@
+{
+  "errors": {
+    "validation": {
+      "required": "{{field}} is verplicht",
+      "invalid_email": "Voer een geldig e-mailadres in",
+      "invalid_price": "Prijs moet een geldig getal zijn",
+      "min_length": "{{field}} moet minimaal {{min}} tekens lang zijn",
+      "max_length": "{{field}} mag niet meer dan {{max}} tekens bevatten",
+      "invalid_format": "{{field}} heeft een ongeldig formaat",
+      "passwords_not_match": "Wachtwoorden komen niet overeen"
+    },
+    "auth": {
+      "unauthorized": "Ongeautoriseerde toegang",
+      "invalid_credentials": "Ongeldige inloggegevens",
+      "token_expired": "Authenticatietoken is verlopen",
+      "insufficient_permissions": "Onvoldoende rechten voor deze actie",
+      "user_not_found": "Gebruiker niet gevonden",
+      "email_already_exists": "E-mailadres bestaat al",
+      "login_failed": "Inloggen mislukt. Controleer uw gegevens",
+      "account_not_verified": "Verifieer uw e-mailadres om in te loggen",
+      "account_pending_approval": "Uw bedrijfsaccount wacht op goedkeuring van de beheerder"
+    },
+    "resources": {
+      "not_found": "{{resource}} niet gevonden",
+      "creation_failed": "Kon {{resource}} niet aanmaken",
+      "update_failed": "Kon {{resource}} niet bijwerken",
+      "deletion_failed": "Kon {{resource}} niet verwijderen",
+      "fetch_failed": "Kon {{resource}} niet ophalen",
+      "already_exists": "{{resource}} bestaat al"
+    },
+    "database": {
+      "connection_error": "Database verbindingsfout",
+      "query_failed": "Database query mislukt",
+      "transaction_failed": "Database transactie mislukt"
+    },
+    "file": {
+      "upload_failed": "Bestand uploaden mislukt",
+      "invalid_format": "Ongeldig bestandsformaat",
+      "size_exceeded": "Bestandsgrootte overschrijdt de maximale limiet"
+    },
+    "general": {
+      "internal_error": "Interne serverfout",
+      "bad_request": "Ongeldige aanvraag",
+      "not_found": "Bron niet gevonden",
+      "method_not_allowed": "Methode niet toegestaan"
+    }
+  },
+  "success": {
+    "resources": {
+      "created": "{{resource}} succesvol aangemaakt",
+      "updated": "{{resource}} succesvol bijgewerkt",
+      "deleted": "{{resource}} succesvol verwijderd",
+      "fetched": "{{resource}} succesvol opgehaald"
+    },
+    "auth": {
+      "login_success": "Succesvol ingelogd",
+      "logout_success": "Succesvol uitgelogd",
+      "registration_success": "Registratie succesvol voltooid",
+      "password_reset": "Wachtwoord reset e-mail succesvol verzonden",
+      "password_updated": "Wachtwoord succesvol bijgewerkt"
+    },
+    "email": {
+      "sent": "E-mail succesvol verzonden",
+      "newsletter_subscribed": "Succesvol aangemeld voor nieuwsbrief",
+      "contact_submitted": "Contactformulier succesvol verstuurd"
+    },
+    "general": {
+      "operation_completed": "Operatie succesvol voltooid",
+      "data_saved": "Gegevens succesvol opgeslagen"
+    }
+  },
+  "email": {
+    "subjects": {
+      "welcome": "Welkom bij {{company}}",
+      "password_reset": "Wachtwoord Reset Verzoek",
+      "order_confirmation": "Bestellingsbevestiging #{{orderNumber}}",
+      "newsletter": "Nieuwsbrief Abonnement",
+      "contact_inquiry": "Nieuwe Contact Aanvraag",
+      "rating_request": "Beoordeel uw recente bestelling"
+    },
+    "templates": {
+      "greeting": "Hallo {{name}}",
+      "thank_you": "Bedankt voor uw zaken",
+      "regards": "Met vriendelijke groet",
+      "team_signature": "Het {{company}} Team"
+    },
+    "verification_failed": "Verificatie e-mail verzenden mislukt. Probeer opnieuw"
+  },
+  "resources": {
+    "product": "Product",
+    "products": "Producten",
+    "user": "Gebruiker",
+    "users": "Gebruikers",
+    "order": "Bestelling",
+    "orders": "Bestellingen",
+    "blog": "Blog Bericht",
+    "blogs": "Blog Berichten",
+    "announcement": "Aankondiging",
+    "announcements": "Aankondigingen",
+    "faq": "Veelgestelde Vraag",
+    "faqs": "Veelgestelde Vragen",
+    "location": "Locatie",
+    "locations": "Locaties",
+    "offer": "Aanbieding",
+    "offers": "Aanbiedingen",
+    "coupon": "Kortingscode",
+    "coupons": "Kortingscodes",
+    "province": "Provincie",
+    "provinces": "Provincies",
+    "position": "Functie",
+    "positions": "Functies",
+    "rating": "Beoordeling",
+    "ratings": "Beoordelingen",
+    "address": "Adres",
+    "addresses": "Adressen"
+  },
+  "validation": {
+    "fields": {
+      "name": "Naam",
+      "email": "E-mail",
+      "password": "Wachtwoord",
+      "title": "Titel",
+      "content": "Inhoud",
+      "description": "Beschrijving",
+      "price": "Prijs",
+      "address": "Adres",
+      "phone": "Telefoonnummer",
+      "message": "Bericht",
+      "question": "Vraag",
+      "answer": "Antwoord"
+    }
+  }
+}

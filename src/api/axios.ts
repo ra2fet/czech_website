@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import i18n from '../i18n';
 
 interface ApiError {
   error: string;
@@ -6,6 +7,20 @@ interface ApiError {
 
 const instance = axios.create({
   baseURL: 'http://localhost:5001/api',
+});
+
+// Add request interceptor to include language header
+instance.interceptors.request.use((config) => {
+  // Set Accept-Language header based on current language
+  config.headers['Accept-Language'] = i18n.language;
+  
+  // Add auth token if available
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return config;
 });
 
 instance.interceptors.response.use(

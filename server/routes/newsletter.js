@@ -6,8 +6,16 @@ const router = express.Router();
 router.post('/subscribe', (req, res) => {
   const { email } = req.body;
 
-  if (!email || !email.includes('@')) {
-    return res.status(400).json({ message: 'Please provide a valid email address.' });
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!email) {
+    validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
+  } else if (!email.includes('@')) {
+    validationErrors.push(req.t('errors.validation.invalid_email'));
+  }
+
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
   // Check if email is already subscribed
@@ -15,11 +23,11 @@ router.post('/subscribe', (req, res) => {
   db.query(checkQuery, [email], (err, results) => {
     if (err) {
       console.error('Database error checking subscription:', err);
-      return res.status(500).json({ message: 'Server error during subscription check.' });
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
 
     if (results.length > 0) {
-      return res.status(409).json({ message: 'Email already subscribed.' });
+      return res.status(409).json({ error: req.t('errors.resources.already_exists', { resource: 'Email subscription' }) });
     }
 
     // Insert new subscription
@@ -27,9 +35,9 @@ router.post('/subscribe', (req, res) => {
     db.query(insertQuery, [email], (err, result) => {
       if (err) {
         console.error('Database error inserting subscription:', err);
-        return res.status(500).json({ message: 'Server error during subscription.' });
+        return res.status(500).json({ error: req.t('errors.database.connection_error') });
       }
-      res.status(200).json({ message: 'Subscription successful!' });
+      res.status(200).json({ message: req.t('success.email.newsletter_subscribed') });
     });
   });
 });

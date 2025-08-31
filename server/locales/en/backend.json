@@ -1,0 +1,133 @@
+{
+  "errors": {
+    "validation": {
+      "required": "{{field}} is required",
+      "invalid_email": "Please provide a valid email address",
+      "invalid_price": "Price must be a valid number",
+      "min_length": "{{field}} must be at least {{min}} characters long",
+      "max_length": "{{field}} must not exceed {{max}} characters",
+      "invalid_format": "{{field}} has an invalid format",
+      "passwords_not_match": "Passwords do not match"
+    },
+    "auth": {
+      "unauthorized": "Unauthorized access",
+      "invalid_credentials": "Invalid credentials provided",
+      "token_expired": "Authentication token has expired",
+      "insufficient_permissions": "Insufficient permissions for this action",
+      "user_not_found": "User not found",
+      "email_already_exists": "Email address already exists",
+      "login_failed": "Login failed. Please check your credentials",
+      "account_not_verified": "Please verify your email address to sign in",
+      "account_pending_approval": "Your company account is awaiting admin approval"
+    },
+    "resources": {
+      "not_found": "{{resource}} not found",
+      "creation_failed": "Failed to create {{resource}}",
+      "update_failed": "Failed to update {{resource}}",
+      "deletion_failed": "Failed to delete {{resource}}",
+      "fetch_failed": "Failed to fetch {{resource}}",
+      "already_exists": "{{resource}} already exists"
+    },
+    "database": {
+      "connection_error": "Database connection error",
+      "query_failed": "Database query failed",
+      "transaction_failed": "Database transaction failed"
+    },
+    "file": {
+      "upload_failed": "File upload failed",
+      "invalid_format": "Invalid file format",
+      "size_exceeded": "File size exceeds the maximum limit"
+    },
+    "general": {
+      "internal_error": "Internal server error",
+      "bad_request": "Bad request",
+      "not_found": "Resource not found",
+      "method_not_allowed": "Method not allowed"
+    }
+  },
+  "success": {
+    "resources": {
+      "created": "{{resource}} created successfully",
+      "updated": "{{resource}} updated successfully",
+      "deleted": "{{resource}} deleted successfully",
+      "fetched": "{{resource}} retrieved successfully"
+    },
+    "auth": {
+      "login_success": "Login successful",
+      "logout_success": "Logout successful",
+      "registration_success": "Registration completed successfully",
+      "password_reset": "Password reset email sent successfully",
+      "password_updated": "Password updated successfully"
+    },
+    "email": {
+      "sent": "Email sent successfully",
+      "newsletter_subscribed": "Successfully subscribed to newsletter",
+      "contact_submitted": "Contact form submitted successfully"
+    },
+    "general": {
+      "operation_completed": "Operation completed successfully",
+      "data_saved": "Data saved successfully"
+    }
+  },
+  "email": {
+    "subjects": {
+      "welcome": "Welcome to {{company}}",
+      "password_reset": "Password Reset Request",
+      "order_confirmation": "Order Confirmation #{{orderNumber}}",
+      "newsletter": "Newsletter Subscription",
+      "contact_inquiry": "New Contact Inquiry",
+      "rating_request": "Rate Your Recent Order"
+    },
+    "templates": {
+      "greeting": "Hello {{name}}",
+      "thank_you": "Thank you for your business",
+      "regards": "Best regards",
+      "team_signature": "The {{company}} Team"
+    },
+    "verification_failed": "Failed to send verification email. Please try again"
+  },
+  "resources": {
+    "product": "Product",
+    "products": "Products",
+    "user": "User",
+    "users": "Users",
+    "order": "Order",
+    "orders": "Orders",
+    "blog": "Blog Post",
+    "blogs": "Blog Posts",
+    "announcement": "Announcement",
+    "announcements": "Announcements",
+    "faq": "FAQ",
+    "faqs": "FAQs",
+    "location": "Location",
+    "locations": "Locations",
+    "offer": "Offer",
+    "offers": "Offers",
+    "coupon": "Coupon Code",
+    "coupons": "Coupon Codes",
+    "province": "Province",
+    "provinces": "Provinces",
+    "position": "Job Position",
+    "positions": "Job Positions",
+    "rating": "Rating",
+    "ratings": "Ratings",
+    "address": "Address",
+    "addresses": "Addresses"
+  },
+  "validation": {
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "title": "Title",
+      "content": "Content",
+      "description": "Description",
+      "price": "Price",
+      "address": "Address",
+      "phone": "Phone Number",
+      "message": "Message",
+      "question": "Question",
+      "answer": "Answer"
+    }
+  }
+}

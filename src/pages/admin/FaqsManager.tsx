@@ -4,27 +4,73 @@ import { PlusCircle, Edit, Trash2, Save, XCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import config from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
+  id: number;
+  question: string; // Default language question
+  answer: string; // Default language answer
+  created_at: string;
+  updated_at: string;
+  translations?: { 
+    [key: string]: { 
+      question: string; 
+      answer: string; 
+    } 
+  };
+}
+
+interface FaqFormState {
+  translations: { 
+    [key: string]: { 
+      question: string; 
+      answer: string; 
+    } 
+  };
 }
 
 export const FaqsManager = () => {
   const { user } = useAuth();
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentFaq, setCurrentFaq] = useState<FAQ | null>(null);
-  const [newQuestion, setNewQuestion] = useState('');
-  const [newAnswer, setNewAnswer] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const [formState, setFormState] = useState<FaqFormState>({
+    translations: {},
+  });
+
   useEffect(() => {
-    fetchFaqs();
-  }, [user]);
+    if (!loadingLanguages) {
+      fetchFaqs();
+    }
+  }, [user, loadingLanguages]);
+
+  useEffect(() => {
+    if (currentFaq && languages.length > 0) {
+      const existingTranslations: { [key: string]: { question: string; answer: string; } } = {};
+      languages.forEach(lang => {
+        existingTranslations[lang.code] = {
+          question: currentFaq.translations?.[lang.code]?.question || '',
+          answer: currentFaq.translations?.[lang.code]?.answer || '',
+        };
+      });
+      setFormState({
+        translations: existingTranslations,
+      });
+    } else if (languages.length > 0) {
+      const initialTranslations: { [key: string]: { question: string; answer: string; } } = {};
+      languages.forEach(lang => {
+        initialTranslations[lang.code] = { question: '', answer: '' };
+      });
+      setFormState({
+        translations: initialTranslations,
+      });
+    }
+  }, [currentFaq, languages]);
 
   const fetchFaqs = async () => {
     if (!user) {
@@ -35,10 +81,8 @@ export const FaqsManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await config.axios.get(config.apiEndpoints.faqs, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setFaqs(response.data);
+      const response = await config.axios.get('faqs/admin');
+      setFaqs(response.data || []);
     } catch (err) {
       console.error('Error fetching FAQs:', err);
       setError('Failed to fetch FAQs.');
@@ -49,45 +93,38 @@ export const FaqsManager = () => {
   };
 
   const openModal = (faq?: FAQ) => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
     setCurrentFaq(faq || null);
-    setNewQuestion(faq ? faq.question : '');
-    setNewAnswer(faq ? faq.answer : '');
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setCurrentFaq(null);
-    setNewQuestion('');
-    setNewAnswer('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestion.trim() || !newAnswer.trim()) {
-      toast.error('Question and Answer cannot be empty.');
+    
+    if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.question.trim() || !formState.translations[defaultLanguage.code]?.answer.trim()) {
+      toast.error(`Question and answer in default language (${defaultLanguage?.name || 'English'}) are required.`);
       return;
     }
 
     setIsSaving(true);
     try {
+      const payload = {
+        translations: formState.translations,
+      };
+
       if (currentFaq) {
-        // Update FAQ
-        await config.axios.put(`${config.apiEndpoints.faqs}/${currentFaq.id}`, {
-          question: newQuestion,
-          answer: newAnswer,
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await config.axios.put(`faqs/${currentFaq.id}`, payload);
         toast.success('FAQ updated successfully!');
       } else {
-        // Create new FAQ
-        await config.axios.post(config.apiEndpoints.faqs, {
-          question: newQuestion,
-          answer: newAnswer,
-        }, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
+        await config.axios.post('faqs', payload);
         toast.success('FAQ created successfully!');
       }
       fetchFaqs();
@@ -100,14 +137,12 @@ export const FaqsManager = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this FAQ?')) {
       return;
     }
     try {
-      await config.axios.delete(`${config.apiEndpoints.faqs}/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await config.axios.delete(`faqs/${id}`);
       toast.success('FAQ deleted successfully!');
       fetchFaqs();
     } catch (err) {
@@ -116,7 +151,20 @@ export const FaqsManager = () => {
     }
   };
 
-  if (loading) {
+  const handleTranslationChange = (langCode: string, field: 'question' | 'answer', value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: {
+          ...prev.translations[langCode],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  if (loading || loadingLanguages) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="w-10 h-10 animate-spin text-primary-600" />
@@ -216,32 +264,37 @@ export const FaqsManager = () => {
                 {currentFaq ? 'Edit FAQ' : 'Add New FAQ'}
               </h2>
               <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="question" className="block text-gray-700 text-sm font-bold mb-2">
-                    Question:
-                  </label>
-                  <input
-                    type="text"
-                    id="question"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value={newQuestion}
-                    onChange={(e) => setNewQuestion(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-6">
-                  <label htmlFor="answer" className="block text-gray-700 text-sm font-bold mb-2">
-                    Answer:
-                  </label>
-                  <textarea
-                    id="answer"
-                    rows={4}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value={newAnswer}
-                    onChange={(e) => setNewAnswer(e.target.value)}
-                    required
-                  ></textarea>
-                </div>
+                {languages.map(lang => (
+                  <div key={lang.code} className="space-y-2 border p-4 rounded-md mb-4">
+                    <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
+                    <div className="mb-4">
+                      <label htmlFor={`question-${lang.code}`} className="block text-gray-700 text-sm font-bold mb-2">
+                        Question ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                      </label>
+                      <input
+                        type="text"
+                        id={`question-${lang.code}`}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formState.translations[lang.code]?.question || ''}
+                        onChange={(e) => handleTranslationChange(lang.code, 'question', e.target.value)}
+                        required={lang.is_default}
+                      />
+                    </div>
+                    <div className="mb-6">
+                      <label htmlFor={`answer-${lang.code}`} className="block text-gray-700 text-sm font-bold mb-2">
+                        Answer ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                      </label>
+                      <textarea
+                        id={`answer-${lang.code}`}
+                        rows={4}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formState.translations[lang.code]?.answer || ''}
+                        onChange={(e) => handleTranslationChange(lang.code, 'answer', e.target.value)}
+                        required={lang.is_default}
+                      />
+                    </div>
+                  </div>
+                ))}
                 <div className="flex justify-end space-x-4">
                   <button
                     type="button"

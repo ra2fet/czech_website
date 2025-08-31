@@ -15,11 +15,26 @@ const generateVerificationCode = () => {
 
 router.post('/register-admin', async (req, res) => {
   const { email, password } = req.body;
+  
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
+  if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
+  
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
+  }
+  
   try {
     // Check if admin already exists
     db.query('SELECT * FROM admins WHERE email = ?', [email], async (err, results) => {
-      if (err) return res.status(500).json({ error: 'Database error' });
-      if (results.length > 0) return res.status(400).json({ error: 'Admin already exists' });
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: req.t('errors.database.connection_error') });
+      }
+      if (results.length > 0) {
+        return res.status(400).json({ error: req.t('errors.auth.email_already_exists') });
+      }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,26 +42,40 @@ router.post('/register-admin', async (req, res) => {
         'INSERT INTO admins (email, password) VALUES (?, ?)',
         [email, hashedPassword],
         (err, result) => {
-          if (err) return res.status(500).json({ error: `Failed to register admin ${err}` });
-          res.status(201).json({ message: 'Admin registered successfully' });
+          if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: req.t('errors.resources.creation_failed', { resource: 'Admin' }) });
+          }
+          res.status(201).json({ message: req.t('success.auth.registration_success') });
         }
       );
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Server error:', error);
+    res.status(500).json({ error: req.t('errors.general.internal_error') });
   }
 });
 
 router.post('/register', async (req, res) => {
   const { fullName, phoneNumber, email, password, userType, companyName, licenseNumber } = req.body;
 
-  // Basic validation
-  if (!fullName || !phoneNumber || !email || !password || !userType) {
-    return res.status(400).json({ error: 'All required fields must be provided.' });
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!fullName) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('name') }));
+  if (!phoneNumber) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('phone') }));
+  if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
+  if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
+  if (!userType) validationErrors.push(req.t('errors.validation.required', { field: 'User type' }));
+  
+  if (userType === 'company' && !companyName) {
+    validationErrors.push(req.t('errors.validation.required', { field: 'Company name' }));
+  }
+  if (userType === 'company' && !licenseNumber) {
+    validationErrors.push(req.t('errors.validation.required', { field: 'License number' }));
   }
 
-  if (userType === 'company' && (!companyName || !licenseNumber)) {
-    return res.status(400).json({ error: 'Company name and license number are required for company registration.' });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
   try {
@@ -54,10 +83,10 @@ router.post('/register', async (req, res) => {
     db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
       if (err) {
         console.error('Database error during user check:', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: req.t('errors.database.connection_error') });
       }
       if (results.length > 0) {
-        return res.status(400).json({ error: 'User with this email already exists.' });
+        return res.status(400).json({ error: req.t('errors.auth.email_already_exists') });
       }
 
       // Hash password
@@ -78,7 +107,7 @@ router.post('/register', async (req, res) => {
         async (err, result) => {
           if (err) {
             console.error('Database error during user registration:', err);
-            return res.status(500).json({ error: `Failed to register user: ${err.message}` });
+            return res.status(500).json({ error: req.t('errors.resources.creation_failed', { resource: req.getResource('user') }) });
           }
 
           const userId = result.insertId;
@@ -90,9 +119,9 @@ router.post('/register', async (req, res) => {
             } catch (emailError) {
               console.error('Error sending verification email:', emailError);
               // Optionally, rollback user creation or mark for manual review if email sending fails
-              return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+              return res.status(500).json({ error: req.t('errors.email.verification_failed') });
             }
-            res.status(201).json({ message: 'Customer registered successfully. Please check your email to verify your account.' });
+            res.status(201).json({ message: req.t('success.auth.registration_success') });
           } else if (userType === 'company') {
             db.query(
               'INSERT INTO companies (user_id, company_name, license_number) VALUES (?, ?, ?)',
@@ -102,11 +131,11 @@ router.post('/register', async (req, res) => {
                   console.error('Database error during company registration:', err);
                   // Rollback user creation if company creation fails
                   db.query('DELETE FROM users WHERE id = ?', [userId], () => {
-                    return res.status(500).json({ error: `Failed to register company: ${err.message}` });
+                    return res.status(500).json({ error: req.t('errors.resources.creation_failed', { resource: 'Company' }) });
                   });
                   return;
                 }
-                res.status(201).json({ message: 'Company registered successfully. Awaiting admin approval.' });
+                res.status(201).json({ message: req.t('success.auth.registration_success') });
               }
             );
           }
@@ -115,7 +144,7 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Server error during registration:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: req.t('errors.general.internal_error') });
   }
 });
 
@@ -124,9 +153,13 @@ router.post('/register', async (req, res) => {
 router.post('/signin', async (req, res) => {
   const { email, password } = req.body || {};
 
-  // Validate input
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
+  if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
+  
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
   try {
@@ -135,7 +168,7 @@ router.post('/signin', async (req, res) => {
     db.query('SELECT id, email, password, "admin" as user_type, TRUE as is_active FROM admins WHERE email = ?', [email], async (err, adminResults) => {
       if (err) {
         console.error('Database error (admins table):', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: req.t('errors.database.connection_error') });
       }
 
       let user = null;
@@ -149,7 +182,7 @@ router.post('/signin', async (req, res) => {
         db.query('SELECT id, full_name, email, password, user_type, is_active, is_verified, verification_code FROM users WHERE email = ?', [email], async (err, userResults) => {
           if (err) {
             console.error('Database error (users table):', err);
-            return res.status(500).json({ error: 'Database error' });
+            return res.status(500).json({ error: req.t('errors.database.connection_error') });
           }
 
           if (userResults.length > 0) {
@@ -158,29 +191,29 @@ router.post('/signin', async (req, res) => {
           }
 
           if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: req.t('errors.auth.invalid_credentials') });
           }
 
           // Verify password
           const isValidPassword = await bcrypt.compare(password, user.password);
           if (!isValidPassword) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: req.t('errors.auth.invalid_credentials') });
           }
 
           // Check if customer account is verified
           if (userSource === 'user' && user.user_type === 'customer' && !user.is_verified) {
-            return res.status(403).json({ error: 'Please verify your email address to sign in.' });
+            return res.status(403).json({ error: req.t('errors.auth.account_not_verified') });
           }
 
           // Check if company account is active (only for companies)
           if (userSource === 'user' && user.user_type === 'company' && !user.is_active) {
-            return res.status(403).json({ error: 'Your company account is awaiting admin approval.' });
+            return res.status(403).json({ error: req.t('errors.auth.account_pending_approval') });
           }
 
           // Check for JWT_SECRET
           if (!process.env.JWT_SECRET) {
             console.error('JWT_SECRET is not defined');
-            return res.status(500).json({ error: 'Server configuration error' });
+            return res.status(500).json({ error: req.t('errors.general.internal_error') });
           }
 
           // Generate JWT token with user type, active status, and verified status
@@ -194,6 +227,7 @@ router.post('/signin', async (req, res) => {
           res.json({
             token,
             user: { id: user.id, email: user.email, userType: user.user_type, isActive: user.is_active, isVerified: user.is_verified },
+            message: req.t('success.auth.login_success')
           });
         });
       }

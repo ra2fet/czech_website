@@ -7,17 +7,21 @@ const { authenticateToken } = require('../middleware/auth');
 router.post('/', (req, res) => {
     const { orderId, ratingToken, overallRating, overallComment, productRatings } = req.body;
 
+    // Validation with localized messages
+    const validationErrors = [];
+    if (!orderId) validationErrors.push(req.t('errors.validation.required', { field: 'Order ID' }));
+    if (!ratingToken) validationErrors.push(req.t('errors.validation.required', { field: 'Rating Token' }));
+    if (!overallRating) validationErrors.push(req.t('errors.validation.required', { field: 'Overall Rating' }));
+    if (!productRatings) validationErrors.push(req.t('errors.validation.required', { field: 'Product Ratings' }));
 
-    // const userId = req.user.id; // Assuming userId is available from authenticateToken middleware
-
-    if (!orderId || !ratingToken || !overallRating || !productRatings) {
-        return res.status(400).json({ message: 'Missing required rating information.' });
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ errors: validationErrors });
     }
 
     db.beginTransaction((err) => {
         if (err) {
             console.error('Error starting transaction:', err);
-            return res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+            return res.status(500).json({ error: req.t('errors.database.transaction_failed') });
         }
 
         // 1. Validate the rating token and check if it's already used
@@ -28,14 +32,14 @@ router.post('/', (req, res) => {
                 if (err) {
                     db.rollback(() => {
                         console.error('Error validating rating token, rolling back:', err);
-                        res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+                        res.status(500).json({ error: req.t('errors.database.query_failed') });
                     });
                     return;
                 }
 
                 if (orders.length === 0) {
                     db.rollback(() => {
-                        res.status(404).json({ message: 'Order or rating token not found or invalid.' });
+                        res.status(404).json({ error: req.t('errors.resources.not_found', { resource: 'Order or rating token' }) });
                     });
                     return;
                 }
@@ -54,7 +58,7 @@ router.post('/', (req, res) => {
 
                 if (order.rating_token_used) {
                     db.rollback(() => {
-                        res.status(409).json({ message: 'This rating link has already been used.' });
+                        res.status(409).json({ error: req.t('errors.resources.already_exists', { resource: 'Rating submission' }) });
                     });
                     return;
                 }
@@ -67,7 +71,7 @@ router.post('/', (req, res) => {
                         if (err) {
                             db.rollback(() => {
                                 console.error('Error inserting overall rating, rolling back:', err);
-                                res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+                                res.status(500).json({ error: req.t('errors.database.query_failed') });
                             });
                             return;
                         }
@@ -82,7 +86,7 @@ router.post('/', (req, res) => {
                                     if (err) {
                                         db.rollback(() => {
                                             console.error('Error marking rating token as used, rolling back:', err);
-                                            res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+                                            res.status(500).json({ error: req.t('errors.database.query_failed') });
                                         });
                                         return;
                                     }
@@ -90,10 +94,10 @@ router.post('/', (req, res) => {
                                         if (commitErr) {
                                             db.rollback(() => {
                                                 console.error('Error committing transaction (no product ratings), rolling back:', commitErr);
-                                                res.status(500).json({ message: 'Failed to submit ratings', error: commitErr.message });
+                                                res.status(500).json({ error: req.t('errors.database.transaction_failed') });
                                             });
                                         } else {
-                                            res.status(200).json({ message: 'Ratings submitted successfully!' });
+                                            res.status(200).json({ message: req.t('success.resources.created', { resource: req.getResource('rating', true) }) });
                                         }
                                     });
                                 }
@@ -110,7 +114,7 @@ router.post('/', (req, res) => {
                                     if (err) {
                                         db.rollback(() => {
                                             console.error('Error inserting product rating, rolling back:', err);
-                                            res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+                                            res.status(500).json({ error: req.t('errors.database.query_failed') });
                                         });
                                         return;
                                     }
@@ -124,7 +128,7 @@ router.post('/', (req, res) => {
                                                 if (err) {
                                                     db.rollback(() => {
                                                         console.error('Error marking rating token as used, rolling back:', err);
-                                                        res.status(500).json({ message: 'Failed to submit ratings', error: err.message });
+                                                        res.status(500).json({ error: req.t('errors.database.query_failed') });
                                                     });
                                                     return;
                                                 }
@@ -132,10 +136,10 @@ router.post('/', (req, res) => {
                                                     if (commitErr) {
                                                         db.rollback(() => {
                                                             console.error('Error committing transaction, rolling back:', commitErr);
-                                                            res.status(500).json({ message: 'Failed to submit ratings', error: commitErr.message });
+                                                            res.status(500).json({ error: req.t('errors.database.transaction_failed') });
                                                         });
                                                     } else {
-                                                        res.status(200).json({ message: 'Ratings submitted successfully!' });
+                                                        res.status(200).json({ message: req.t('success.resources.created', { resource: req.getResource('rating', true) }) });
                                                     }
                                                 });
                                             }

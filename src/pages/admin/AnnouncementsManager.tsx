@@ -1,50 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import config from '../../config'; // Using config for axios instance
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext'; // Import useLanguage
 import toast from 'react-hot-toast'; // Using react-hot-toast
 import { PlusCircle, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
+
 interface Announcement {
   id: number;
-  message: string;
+  message: string; // This will be the default language message
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  translations?: { [key: string]: { message: string } }; // Add translations field
 }
 
 interface AnnouncementFormState {
-  message: string;
   is_active: boolean;
+  translations: { [key: string]: { message: string } };
 }
 
 const AnnouncementsManager: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage(); // Use LanguageContext
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentAnnouncement, setCurrentAnnouncement] = useState<Announcement | null>(null);
   const [formState, setFormState] = useState<AnnouncementFormState>({
-    message: '',
     is_active: true,
+    translations: {},
   });
 
   useEffect(() => {
     if (!authLoading && (!user || user.userType !== 'admin')) {
-      // Handle unauthorized access, e.g., redirect to login or show an error
       toast.error('Unauthorized access. Only administrators can manage announcements.');
       setLoading(false);
       return;
     }
-    if (user && user.userType === 'admin') {
+    if (user && user.userType === 'admin' && !loadingLanguages) {
       fetchAnnouncements();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, loadingLanguages]); // Add loadingLanguages to dependencies
 
   const fetchAnnouncements = async () => {
     setLoading(true);
     try {
-      const response = await config.axios.get('announcements');
+      const response = await config.axios.get('announcements/admin');
       setAnnouncements(response.data);
     } catch (error) {
       console.error('Error fetching announcements:', error);
@@ -55,49 +58,72 @@ const AnnouncementsManager: React.FC = () => {
   };
 
   const handleAddAnnouncementClick = () => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
     setIsEditing(false);
     setCurrentAnnouncement(null);
+    const initialTranslations: { [key: string]: { message: string } } = {};
+    languages.forEach(lang => {
+      initialTranslations[lang.code] = { message: '' };
+    });
     setFormState({
-      message: '',
       is_active: true,
+      translations: initialTranslations,
     });
     setShowModal(true);
   };
 
   const handleEditAnnouncementClick = (announcement: Announcement) => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
     setIsEditing(true);
     setCurrentAnnouncement(announcement);
+    const existingTranslations: { [key: string]: { message: string } } = {};
+    languages.forEach(lang => {
+      existingTranslations[lang.code] = { message: announcement.translations?.[lang.code]?.message || '' };
+    });
     setFormState({
-      message: announcement.message,
       is_active: announcement.is_active,
+      translations: existingTranslations,
     });
     setShowModal(true);
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      setFormState(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-    } else {
-      setFormState(prev => ({ ...prev, [name]: value }));
-    }
+  const handleTranslationChange = (langCode: string, value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: { message: value }
+      }
+    }));
   };
   
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formState.message.trim()) {
-      toast.error('Announcement message cannot be empty.');
+    if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.message.trim()) {
+      toast.error(`Announcement message in default language (${defaultLanguage?.name || 'English'}) cannot be empty.`);
       return;
     }
 
     try {
+      const payload = {
+        is_active: formState.is_active,
+        message: formState.translations[defaultLanguage.code]?.message, // Default language message
+        translations: formState.translations, // All translations
+      };
+
       if (isEditing && currentAnnouncement) {
-        await config.axios.put(`announcements/${currentAnnouncement.id}`, formState);
+        await config.axios.put(`announcements/${currentAnnouncement.id}`, payload);
         toast.success('Announcement updated successfully!');
       } else {
-        await config.axios.post('announcements', formState);
+        await config.axios.post('announcements', payload);
         toast.success('Announcement created successfully!');
       }
       setShowModal(false);
@@ -123,9 +149,12 @@ const AnnouncementsManager: React.FC = () => {
 
   const handleToggleActive = async (announcement: Announcement) => {
     try {
+      // When toggling active status, we need to send the current message for the default language
+      const messageToSend = announcement.translations?.[defaultLanguage?.code || 'en']?.message || announcement.message;
+
       await config.axios.put(
         `announcements/${announcement.id}`,
-        { ...announcement, is_active: !announcement.is_active }
+        { message: messageToSend, is_active: !announcement.is_active }
       );
       toast.success(`Announcement ${announcement.is_active ? 'deactivated' : 'activated'} successfully!`);
       fetchAnnouncements();
@@ -135,7 +164,7 @@ const AnnouncementsManager: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || loadingLanguages) { // Also check loadingLanguages
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -171,7 +200,9 @@ const AnnouncementsManager: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {announcements.map((announcement) => (
                 <tr key={announcement.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{announcement.message}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {announcement.message} {/* Display default language message */}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {announcement.is_active ? <Eye size={18} className="text-green-500" /> : <EyeOff size={18} className="text-red-500" />}
                   </td>
@@ -218,25 +249,29 @@ const AnnouncementsManager: React.FC = () => {
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-2xl font-bold mb-6">{isEditing ? 'Edit Announcement' : 'Add New Announcement'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700">Announcement Message</label>
-                <textarea
-                  name="message"
-                  id="message"
-                  value={formState.message}
-                  onChange={handleFormChange}
-                  rows={3}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  required
-                ></textarea>
-              </div>
+              {languages.map(lang => (
+                <div key={lang.code}>
+                  <label htmlFor={`message-${lang.code}`} className="block text-sm font-medium text-gray-700">
+                    Announcement Message ({lang.name}) {lang.is_default && '*'}
+                  </label>
+                  <textarea
+                    name={`message-${lang.code}`}
+                    id={`message-${lang.code}`}
+                    value={formState.translations[lang.code]?.message || ''}
+                    onChange={(e) => handleTranslationChange(lang.code, e.target.value)}
+                    rows={3}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    required={lang.is_default}
+                  ></textarea>
+                </div>
+              ))}
               <div className="flex items-center">
                 <input
                   id="is_active"
                   name="is_active"
                   type="checkbox"
                   checked={formState.is_active}
-                  onChange={handleFormChange}
+                  onChange={(e) => setFormState(prev => ({ ...prev, is_active: e.target.checked }))}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">

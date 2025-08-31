@@ -3,13 +3,13 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
-  MapPin,
+  // MapPin,
   LogOut,
   Menu,
   X,
   FileText,
   Mail,
-  Briefcase,
+  Briefcase, 
   ClipboardList,
   Users
 } from 'lucide-react';
@@ -22,7 +22,7 @@ import MessagesManager from './MessagesManager';
 import JobsManager from './JobsManager';
 import ApplicationsManager from './ApplicationsManager';
 import { FaqsManager } from './FaqsManager'; // Import FaqsManager
-import { HelpCircle, ShoppingCart, Building, DollarSign, Truck, Gift } from 'lucide-react'; // Import HelpCircle, ShoppingCart, Building, DollarSign, Truck, and Gift icons
+import { HelpCircle, ShoppingCart, Building, DollarSign, Truck, Gift, Settings } from 'lucide-react';
 import { OrdersManager } from './OrdersManager'; // Import OrdersManager
 import { CompanyManager } from './CompanyManager'; // Import CompanyManager
 import TaxFeesManager from './TaxFeesManager';
@@ -31,6 +31,7 @@ import CouponCodesManager from './CouponCodesManager';
 import { OffersManager } from './OffersManager'; // Import OffersManager
 import AnnouncementsManager from './AnnouncementsManager'; // Import AnnouncementsManager
 import { UsersManager } from './UsersManager';
+import { FeatureManager } from './FeatureManager';
 
 export function AdminDashboard() {
   // State for sidebar visibility on mobile
@@ -44,7 +45,7 @@ export function AdminDashboard() {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Companies', href: '/admin/companies', icon: Building },
     { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Locations', href: '/admin/locations', icon: MapPin },
+    // { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Messages', href: '/admin/messages', icon: Mail },
     { name: 'Jobs', href: '/admin/jobs', icon: Briefcase },
@@ -56,6 +57,8 @@ export function AdminDashboard() {
     { name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift },
     { name: 'Offers', href: '/admin/offers', icon: Gift }, // Add new Offers navigation item
     { name: 'Announcements', href: '/admin/announcements', icon: ClipboardList }, // Add new Announcements navigation item
+    { name: 'Feature Settings', href: '/admin/features', icon: Settings },
+
   ];
 
   // Handle user sign out
@@ -155,6 +158,7 @@ export function AdminDashboard() {
           <Route path="coupon-codes" element={<CouponCodesManager />} />
           <Route path="offers" element={<OffersManager />} /> {/* Add new Offers route */}
           <Route path="announcements" element={<AnnouncementsManager />} /> {/* Add new Announcements route */}
+          <Route path="features" element={<FeatureManager />} />
         </Routes>
       </main>
     </div>

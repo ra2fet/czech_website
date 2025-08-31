@@ -1,79 +1,100 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, XCircle, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-// import axios from '../../api/axios';
 import toast from 'react-hot-toast';
-import config from '../../config'; // Import config
+import config from '../../config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Location {
   id: number;
-  name: string;
-  address: string;
+  name: string; // Default language name
+  address: string; // Default language address
   phone: string;
   email: string;
   image_url: string;
   latitude: number;
   longitude: number;
   position: string;
+  created_at: string;
+  updated_at: string;
+  translations?: { 
+    [key: string]: { 
+      name: string; 
+      address: string; 
+    } 
+  };
+}
+
+interface LocationFormState {
+  phone: string;
+  email: string;
+  image_url: string;
+  position: string;
+  translations: { 
+    [key: string]: { 
+      name: string; 
+      address: string; 
+    } 
+  };
 }
 
 export function LocationsManager() {
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
+  const [formState, setFormState] = useState<LocationFormState>({
     phone: '',
     email: '',
     image_url: '',
-    position: ''
+    position: '',
+    translations: {},
   });
 
   useEffect(() => {
-    fetchLocations();
-  }, []);
+    if (!loadingLanguages) {
+      fetchLocations();
+    }
+  }, [loadingLanguages]);
 
   useEffect(() => {
-    if (currentLocation) {
-      setFormData({
-        name: currentLocation.name,
-        address: currentLocation.address,
+    if (currentLocation && languages.length > 0) {
+      const existingTranslations: { [key: string]: { name: string; address: string; } } = {};
+      languages.forEach(lang => {
+        existingTranslations[lang.code] = {
+          name: currentLocation.translations?.[lang.code]?.name || '',
+          address: currentLocation.translations?.[lang.code]?.address || '',
+        };
+      });
+      setFormState({
         phone: currentLocation.phone || '',
         email: currentLocation.email || '',
         image_url: currentLocation.image_url || '',
-        position: currentLocation.position ? `(${currentLocation.latitude},${currentLocation.longitude})` : ''
+        position: currentLocation.position ? `(${currentLocation.latitude},${currentLocation.longitude})` : '',
+        translations: existingTranslations,
       });
-    } else {
-      setFormData({
-        name: '',
-        address: '',
+    } else if (languages.length > 0) {
+      const initialTranslations: { [key: string]: { name: string; address: string; } } = {};
+      languages.forEach(lang => {
+        initialTranslations[lang.code] = { name: '', address: '' };
+      });
+      setFormState({
         phone: '',
         email: '',
         image_url: '',
-        position: ''
+        position: '',
+        translations: initialTranslations,
       });
     }
-  }, [currentLocation]);
+  }, [currentLocation, languages]);
 
   const fetchLocations = async () => {
     setLoading(true);
     try {
-      if (config.useSupabase) {
-        const { data, error } = await supabase
-          .from('locations')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setLocations(data || []);
-      } else {
-        const response = await config.axios.get(config.apiEndpoints.locations);
-        setLocations(response.data || []);
-      }
+      const response = await config.axios.get('locations/admin');
+      setLocations(response.data || []);
     } catch (error) {
       toast.error('Error fetching locations');
       console.error('Error:', error);
@@ -84,35 +105,30 @@ export function LocationsManager() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.name.trim() || !formState.translations[defaultLanguage.code]?.address.trim()) {
+      toast.error(`Name and address in default language (${defaultLanguage?.name || 'English'}) are required.`);
+      return;
+    }
+
     setSubmitting(true);
-
     try {
-      if (config.useSupabase) {
-        let error;
-        if (currentLocation) {
-          const { error: updateError } = await supabase
-            .from('locations')
-            .update(formData)
-            .eq('id', currentLocation.id);
-          error = updateError;
-        } else {
-          const { error: insertError } = await supabase
-            .from('locations')
-            .insert([formData]);
-          error = insertError;
-        }
+      const payload = {
+        phone: formState.phone,
+        email: formState.email,
+        image_url: formState.image_url,
+        position: formState.position,
+        translations: formState.translations,
+      };
 
-        if (error) throw error;
+      if (currentLocation) {
+        await config.axios.put(`locations/${currentLocation.id}`, payload);
+        toast.success('Location updated successfully');
       } else {
-        const locationData = { ...formData };
-        if (currentLocation) {
-          await config.axios.put(`${config.apiEndpoints.locations}/${currentLocation.id}`, locationData);
-        } else {
-          await config.axios.post(config.apiEndpoints.locations, locationData);
-        }
+        await config.axios.post('locations', payload);
+        toast.success('Location created successfully');
       }
-
-      toast.success(currentLocation ? 'Location updated successfully' : 'Location created successfully');
+      
       setIsModalOpen(false);
       fetchLocations();
     } catch (error) {
@@ -126,16 +142,7 @@ export function LocationsManager() {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this location?')) {
       try {
-        if (config.useSupabase) {
-          const { error } = await supabase
-            .from('locations')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-        } else {
-          await config.axios.delete(`${config.apiEndpoints.locations}/${id}`);
-        }
+        await config.axios.delete(`locations/${id}`);
         toast.success('Location deleted successfully');
         fetchLocations();
       } catch (error) {
@@ -147,7 +154,29 @@ export function LocationsManager() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTranslationChange = (langCode: string, field: 'name' | 'address', value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: {
+          ...prev.translations[langCode],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const openModal = (location?: Location) => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
+    setCurrentLocation(location || null);
+    setIsModalOpen(true);
   };
 
 
@@ -156,10 +185,7 @@ export function LocationsManager() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-accent-900">Locations Management</h2>
         <button
-          onClick={() => {
-            setCurrentLocation(null);
-            setIsModalOpen(true);
-          }}
+          onClick={() => openModal()}
           className="btn btn-primary flex items-center"
         >
           <Plus size={20} className="mr-2" />
@@ -231,10 +257,7 @@ export function LocationsManager() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => {
-                            setCurrentLocation(location);
-                            setIsModalOpen(true);
-                          }}
+                          onClick={() => openModal(location)}
                           className="text-primary-600 hover:text-primary-900"
                         >
                           <Pencil size={18} />
@@ -270,32 +293,35 @@ export function LocationsManager() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name*
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address*
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                  rows={2}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              {languages.map(lang => (
+                <div key={lang.code} className="space-y-2 border p-4 rounded-md">
+                  <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                    </label>
+                    <input
+                      type="text"
+                      value={formState.translations[lang.code]?.name || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'name', e.target.value)}
+                      required={lang.is_default}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                    </label>
+                    <textarea
+                      value={formState.translations[lang.code]?.address || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'address', e.target.value)}
+                      required={lang.is_default}
+                      rows={2}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+              ))}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -304,7 +330,7 @@ export function LocationsManager() {
                   <input
                     type="tel"
                     name="phone"
-                    value={formData.phone}
+                    value={formState.phone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
@@ -316,7 +342,7 @@ export function LocationsManager() {
                   <input
                     type="email"
                     name="email"
-                    value={formData.email}
+                    value={formState.email}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
@@ -329,7 +355,7 @@ export function LocationsManager() {
                 <input
                   type="url"
                   name="image_url"
-                  value={formData.image_url}
+                  value={formState.image_url}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
@@ -341,7 +367,7 @@ export function LocationsManager() {
                 <input
                   type="text"
                   name="position"
-                  value={formData.position}
+                  value={formState.position}
                   onChange={handleInputChange}
                   placeholder="(0,0)"
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"

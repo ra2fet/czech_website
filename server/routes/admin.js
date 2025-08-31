@@ -180,18 +180,25 @@ router.get('/dashboard/counts', async (req, res) => {
 // New route for dashboard statistics
 router.get('/dashboard', async (req, res) => {
   const { filter, from_date, to_date } = req.query;
+  const languageCode = req.language || 'en';
   let dateCondition = '';
+  let dateConditionWithoutWhere = '';
 
   if (filter === 'Today') {
     dateCondition = 'WHERE DATE(order_date) = CURDATE()';
+    dateConditionWithoutWhere = 'AND DATE(order_date) = CURDATE()';
   } else if (filter === 'Yesterday') {
     dateCondition = 'WHERE DATE(order_date) = CURDATE() - INTERVAL 1 DAY';
+    dateConditionWithoutWhere = 'AND DATE(order_date) = CURDATE() - INTERVAL 1 DAY';
   } else if (filter === 'This Month') {
     dateCondition = 'WHERE YEAR(order_date) = YEAR(CURDATE()) AND MONTH(order_date) = MONTH(CURDATE())';
+    dateConditionWithoutWhere = 'AND YEAR(order_date) = YEAR(CURDATE()) AND MONTH(order_date) = MONTH(CURDATE())';
   } else if (filter === 'This Year') {
     dateCondition = 'WHERE YEAR(order_date) = YEAR(CURDATE())';
+    dateConditionWithoutWhere = 'AND YEAR(order_date) = YEAR(CURDATE())';
   } else if (filter === 'Custom Date' && from_date && to_date) {
     dateCondition = `WHERE DATE(order_date) BETWEEN '${from_date}' AND '${to_date}'`;
+    dateConditionWithoutWhere = `AND DATE(order_date) BETWEEN '${from_date}' AND '${to_date}'`;
   }
 
   try {
@@ -201,22 +208,23 @@ router.get('/dashboard', async (req, res) => {
     const total_sales = totalSalesResult[0].total_sales || 0;
 
     // Total Completed Orders
-    const totalCompletedOrdersQuery = `SELECT COUNT(*) AS total_completed_orders FROM orders WHERE payment_status = 'completed' ${dateCondition ? `AND ${dateCondition.substring(5)}` : ''}`;
+    const totalCompletedOrdersQuery = `SELECT COUNT(*) AS total_completed_orders FROM orders WHERE payment_status = 'completed' ${dateConditionWithoutWhere}`;
     const [totalCompletedOrdersResult] = await db.promise().query(totalCompletedOrdersQuery);
     const total_completed_orders = totalCompletedOrdersResult[0].total_completed_orders || 0;
 
-    // Top Products
+    // Top Products with translations
     const topProductsQuery = `
-      SELECT p.name AS product_name, SUM(oi.quantity) AS quantity_sold
+      SELECT pt.name AS product_name, SUM(oi.quantity) AS quantity_sold
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
+      JOIN products_translations pt ON p.id = pt.product_id
       JOIN orders o ON oi.order_id = o.id
-      ${dateCondition}
-      GROUP BY p.name
+      WHERE pt.language_code = ? ${dateConditionWithoutWhere}
+      GROUP BY pt.name
       ORDER BY quantity_sold DESC
       LIMIT 5
     `;
-    const [topProductsResult] = await db.promise().query(topProductsQuery);
+    const [topProductsResult] = await db.promise().query(topProductsQuery, [languageCode]);
     const top_products = topProductsResult;
 
     // Orders by Month
@@ -230,34 +238,32 @@ router.get('/dashboard', async (req, res) => {
     const [ordersByMonthResult] = await db.promise().query(ordersByMonthQuery);
     const orders_by_month = ordersByMonthResult;
 
-    // Orders by Branches (assuming 'branches' refers to locations or a similar concept in orders)
-    // This query needs adjustment based on your actual database schema for branches/provinces
-    // For now, I'll use a placeholder assuming orders have a 'province_id' or similar
+    // Orders by Branches (provinces) with translations
     const ordersByBranchesQuery = `
-      SELECT pr.name AS branch_name, COUNT(o.id) AS count
+      SELECT pt.name AS branch_name, COUNT(o.id) AS count
       FROM orders o
       JOIN user_addresses ua ON o.address_id = ua.id
-      JOIN provinces pr ON ua.province_id = pr.id
-      ${dateCondition ? `WHERE ${dateCondition.substring(5)}` : ''}
-      GROUP BY pr.name
+      JOIN provinces p ON ua.province_id = p.id
+      JOIN provinces_translations pt ON p.id = pt.province_id
+      WHERE pt.language_code = ? ${dateConditionWithoutWhere}
+      GROUP BY pt.name
       ORDER BY count DESC
     `;
-    const [ordersByBranchesResult] = await db.promise().query(ordersByBranchesQuery);
+    const [ordersByBranchesResult] = await db.promise().query(ordersByBranchesQuery, [languageCode]);
     const orders_by_branches = ordersByBranchesResult;
 
-    // Orders by Clients (optional)
+    // Orders by Clients
     const ordersByClientsQuery = `
       SELECT u.full_name AS client_name, COUNT(o.id) AS count
       FROM orders o
       JOIN users u ON o.user_id = u.id
-      ${dateCondition ? `WHERE ${dateCondition.substring(5)}` : ''}
+      WHERE 1=1 ${dateConditionWithoutWhere}
       GROUP BY u.full_name
       ORDER BY count DESC
       LIMIT 5
     `;
     const [ordersByClientsResult] = await db.promise().query(ordersByClientsQuery);
     const orders_by_clients = ordersByClientsResult;
-
 
     res.json({
       total_sales,

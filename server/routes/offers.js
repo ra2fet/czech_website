@@ -3,18 +3,23 @@ const router = express.Router();
 const db = require('../config/db');
 const { authenticateToken, adminProtect } = require('../middleware/auth');
 
-// GET all active offers (for public display)
+// GET all active offers (for public display) with translations
 router.get('/', async (req, res) => {
+  const languageCode = req.language;
   const query = `
-    SELECT o.*, p.id AS product_id, p.name AS product_name, p.retail_price AS product_price, p.image_url AS product_image_url
+    SELECT o.id, ot.name, ot.description, o.discount_type, o.discount_value, o.start_date, o.end_date, o.is_active, o.created_at, o.updated_at,
+           p.id AS product_id, pt.name AS product_name, p.retail_price AS product_price, p.image_url AS product_image_url
     FROM offers o
+    JOIN offers_translations ot ON o.id = ot.offer_id
     JOIN product_offers po ON o.id = po.offer_id
     JOIN products p ON po.product_id = p.id
-    WHERE o.is_active = TRUE AND o.start_date <= NOW() AND o.end_date >= NOW()
+    JOIN products_translations pt ON p.id = pt.product_id
+    WHERE o.is_active = TRUE AND o.start_date <= NOW() AND o.end_date >= NOW() 
+    AND ot.language_code = ? AND pt.language_code = ?
     ORDER BY o.start_date DESC;
   `;
   try {
-    const [results] = await db.promise().query(query);
+    const [results] = await db.promise().query(query, [languageCode, languageCode]);
 
     // Group products by offer
     const offersMap = new Map();
@@ -44,242 +49,228 @@ router.get('/', async (req, res) => {
     res.json(Array.from(offersMap.values()));
   } catch (err) {
     console.error('Error fetching active offers:', err);
-    res.status(500).json({ error: 'Failed to fetch offers' });
+    res.status(500).json({ 
+      error: req.t('errors.resources.fetch_failed', { resource: req.getResource('offer', true) })
+    });
   }
 });
 
-// GET all offers (for admin panel)
+// GET all offers (for admin panel) with all translations
 router.get('/admin', authenticateToken, adminProtect, async (req, res) => {
-  const query = `
-    SELECT o.*, p.id AS product_id, p.name AS product_name, p.retail_price AS product_price, p.image_url AS product_image_url
-    FROM offers o
-    LEFT JOIN product_offers po ON o.id = po.offer_id
-    LEFT JOIN products p ON po.product_id = p.id
-    ORDER BY o.created_at DESC;
-  `;
   try {
-    const [results] = await db.promise().query(query);
+    const [offers] = await db.promise().query('SELECT * FROM offers ORDER BY created_at DESC');
+    const [translations] = await db.promise().query('SELECT * FROM offers_translations');
+    const [productOffers] = await db.promise().query(
+      `SELECT po.offer_id, p.id, pt.name, p.retail_price, p.image_url 
+       FROM product_offers po 
+       JOIN products p ON po.product_id = p.id
+       JOIN products_translations pt ON p.id = pt.product_id
+       WHERE pt.language_code = ?`,
+      [req.language]
+    );
 
-    const offersMap = new Map();
-    results.forEach(row => {
-      if (!offersMap.has(row.id)) {
-        offersMap.set(row.id, {
-          id: row.id,
-          name: row.name,
-          description: row.description,
-          discount_type: row.discount_type,
-          discount_value: row.discount_value,
-          start_date: row.start_date,
-          end_date: row.end_date,
-          is_active: row.is_active,
-          created_at: row.created_at,
-          updated_at: row.updated_at,
-          products: []
-        });
-      }
-      if (row.product_id) { // Only push product if it exists
-        offersMap.get(row.id).products.push({
-          id: row.product_id,
-          name: row.product_name,
-          price: row.product_price,
-          image_url: row.product_image_url
-        });
-      }
+    const offersWithTranslations = offers.map((offer) => {
+      const offerTranslations = {};
+      translations.forEach((t) => {
+        if (t.offer_id === offer.id) {
+          offerTranslations[t.language_code] = { name: t.name, description: t.description };
+        }
+      });
+      
+      const products = productOffers
+        .filter(po => po.offer_id === offer.id)
+        .map(po => ({
+          id: po.id,
+          name: po.name,
+          price: po.retail_price,
+          image_url: po.image_url
+        }));
+      
+      return {
+        ...offer,
+        name: offerTranslations[req.language]?.name || offerTranslations['en']?.name || '',
+        description: offerTranslations[req.language]?.description || offerTranslations['en']?.description || '',
+        products,
+        translations: offerTranslations,
+      };
     });
-    res.json(Array.from(offersMap.values()));
+    res.json(offersWithTranslations);
   } catch (err) {
-    console.error('Error fetching all offers for admin:', err);
-    res.status(500).json({ error: 'Failed to fetch offers' });
+    console.error('Error fetching all offers for admin with translations:', err);
+    res.status(500).json({ 
+      error: req.t('errors.resources.fetch_failed', { resource: req.getResource('offer', true) })
+    });
   }
 });
 
 // POST create a new offer (admin only)
-router.post('/', authenticateToken, adminProtect, (req, res) => {
-  const { name, description, discount_type, discount_value, start_date, end_date, product_ids } = req.body;
+router.post('/', authenticateToken, adminProtect, async (req, res) => {
+  const { discount_type, discount_value, start_date, end_date, product_ids, translations } = req.body;
+  const defaultLanguageCode = req.language;
 
-  if (!name || !discount_type || !discount_value || !start_date || !end_date) {
-    return res.status(400).json({ message: 'Missing required offer fields.' });
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!translations || !translations[defaultLanguageCode]?.name) {
+    validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('name') }));
+  }
+  if (!discount_type) validationErrors.push(req.t('errors.validation.required', { field: 'Discount type' }));
+  if (!discount_value) validationErrors.push(req.t('errors.validation.required', { field: 'Discount value' }));
+  if (!start_date) validationErrors.push(req.t('errors.validation.required', { field: 'Start date' }));
+  if (!end_date) validationErrors.push(req.t('errors.validation.required', { field: 'End date' }));
+
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
-  db.beginTransaction((err) => {
-    if (err) {
-      console.error('Error starting transaction:', err);
-      return res.status(500).json({ message: 'Failed to create offer', error: err.message });
+  try {
+    await db.promise().beginTransaction();
+
+    const [offerResult] = await db.promise().query(
+      'INSERT INTO offers (discount_type, discount_value, start_date, end_date) VALUES (?, ?, ?, ?)',
+      [discount_type, discount_value, start_date, end_date]
+    );
+    const offerId = offerResult.insertId;
+
+    // Insert translations for all provided languages
+    for (const langCode in translations) {
+      if (translations[langCode]?.name) {
+        await db.promise().query(
+          'INSERT INTO offers_translations (offer_id, language_code, name, description) VALUES (?, ?, ?, ?)',
+          [offerId, langCode, translations[langCode].name, translations[langCode].description || null]
+        );
+      }
     }
 
-    const offerQuery = `
-      INSERT INTO offers (name, description, discount_type, discount_value, start_date, end_date)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    const offerValues = [name, description || null, discount_type, discount_value, start_date, end_date];
+    if (product_ids && product_ids.length > 0) {
+      const productOfferValues = product_ids.map(productId => [offerId, productId]);
+      const productOfferQuery = 'INSERT INTO product_offers (offer_id, product_id) VALUES ?';
+      await db.promise().query(productOfferQuery, [productOfferValues]);
+    }
 
-    db.query(offerQuery, offerValues, (err, offerResult) => {
-      if (err) {
-        return db.rollback(() => {
-          console.error('Error inserting offer, rolling back:', err);
-          res.status(500).json({ message: 'Failed to create offer', error: err.message });
-        });
-      }
-
-      const offerId = offerResult.insertId;
-
-      if (product_ids && product_ids.length > 0) {
-        const productOfferValues = product_ids.map(productId => [offerId, productId]);
-        const productOfferQuery = 'INSERT INTO product_offers (offer_id, product_id) VALUES ?';
-        db.query(productOfferQuery, [productOfferValues], (err) => {
-          if (err) {
-            return db.rollback(() => {
-              console.error('Error inserting product offers, rolling back:', err);
-              res.status(500).json({ message: 'Failed to create offer', error: err.message });
-            });
-          }
-          db.commit((commitErr) => {
-            if (commitErr) {
-              return db.rollback(() => {
-                console.error('Error committing transaction, rolling back:', commitErr);
-                res.status(500).json({ message: 'Failed to create offer', error: commitErr.message });
-              });
-            }
-            res.status(201).json({ message: 'Offer created successfully', offerId });
-          });
-        });
-      } else {
-        db.commit((commitErr) => {
-          if (commitErr) {
-            return db.rollback(() => {
-              console.error('Error committing transaction (no products), rolling back:', commitErr);
-              res.status(500).json({ message: 'Failed to create offer', error: commitErr.message });
-            });
-          }
-          res.status(201).json({ message: 'Offer created successfully', offerId });
-        });
-      }
+    await db.promise().commit();
+    res.status(201).json({ 
+      message: req.t('success.resources.created', { resource: req.getResource('offer') }),
+      id: offerId 
     });
-  });
+  } catch (error) {
+    await db.promise().rollback();
+    console.error('Error creating offer:', error);
+    res.status(500).json({ 
+      error: req.t('errors.resources.creation_failed', { resource: req.getResource('offer') })
+    });
+  }
 });
 
 // PUT update an existing offer (admin only)
-router.put('/:id', authenticateToken, adminProtect, (req, res) => {
+router.put('/:id', authenticateToken, adminProtect, async (req, res) => {
   const { id } = req.params;
-  const { name, description, discount_type, discount_value, start_date, end_date, is_active, product_ids } = req.body;
+  const { discount_type, discount_value, start_date, end_date, is_active, product_ids, translations } = req.body;
+  const defaultLanguageCode = req.language;
 
-  if (!name || !discount_type || !discount_value || !start_date || !end_date) {
-    return res.status(400).json({ message: 'Missing required offer fields.' });
+  // Validation with localized messages
+  const validationErrors = [];
+  if (!translations || !translations[defaultLanguageCode]?.name) {
+    validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('name') }));
+  }
+  if (!discount_type) validationErrors.push(req.t('errors.validation.required', { field: 'Discount type' }));
+  if (!discount_value) validationErrors.push(req.t('errors.validation.required', { field: 'Discount value' }));
+  if (!start_date) validationErrors.push(req.t('errors.validation.required', { field: 'Start date' }));
+  if (!end_date) validationErrors.push(req.t('errors.validation.required', { field: 'End date' }));
+
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
   }
 
-  db.beginTransaction((err) => {
-    if (err) {
-      console.error('Error starting transaction:', err);
-      return res.status(500).json({ message: 'Failed to update offer', error: err.message });
+  try {
+    await db.promise().beginTransaction();
+
+    // Update the main offers table
+    const [updateOfferResult] = await db.promise().query(
+      'UPDATE offers SET discount_type = ?, discount_value = ?, start_date = ?, end_date = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [discount_type, discount_value, start_date, end_date, is_active, id]
+    );
+
+    if (updateOfferResult.affectedRows === 0) {
+      await db.promise().rollback();
+      return res.status(404).json({ 
+        error: req.t('errors.resources.not_found', { resource: req.getResource('offer') })
+      });
     }
 
-    const offerQuery = `
-      UPDATE offers
-      SET name = ?, description = ?, discount_type = ?, discount_value = ?, start_date = ?, end_date = ?, is_active = ?
-      WHERE id = ?
-    `;
-    const offerValues = [name, description || null, discount_type, discount_value, start_date, end_date, is_active, id];
+    // Update or insert translations for all provided languages
+    for (const langCode in translations) {
+      if (translations[langCode]?.name) {
+        const [translationExists] = await db.promise().query(
+          'SELECT id FROM offers_translations WHERE offer_id = ? AND language_code = ?',
+          [id, langCode]
+        );
 
-    db.query(offerQuery, offerValues, (err, offerResult) => {
-      if (err) {
-        return db.rollback(() => {
-          console.error('Error updating offer, rolling back:', err);
-          res.status(500).json({ message: 'Failed to update offer', error: err.message });
-        });
-      }
-
-      if (offerResult.affectedRows === 0) {
-        return db.rollback(() => res.status(404).json({ message: 'Offer not found.' }));
-      }
-
-      // Update product_offers
-      db.query('DELETE FROM product_offers WHERE offer_id = ?', [id], (err) => {
-        if (err) {
-          return db.rollback(() => {  
-            console.error('Error deleting old product offers, rolling back:', err);
-            res.status(500).json({ message: 'Failed to update offer', error: err.message });
-          });
-        }
-
-        if (product_ids && product_ids.length > 0) {
-          const productOfferValues = product_ids.map(productId => [id, productId]);
-          const productOfferQuery = 'INSERT INTO product_offers (offer_id, product_id) VALUES ?';
-          db.query(productOfferQuery, [productOfferValues], (err) => {
-            if (err) {
-              return db.rollback(() => {
-                console.error('Error inserting new product offers, rolling back:', err);
-                res.status(500).json({ message: 'Failed to update offer', error: err.message });
-              });
-            }
-            db.commit((commitErr) => {
-              if (commitErr) {
-                return db.rollback(() => {
-                  console.error('Error committing transaction, rolling back:', commitErr);
-                  res.status(500).json({ message: 'Failed to update offer', error: commitErr.message });
-                });
-              }
-              res.status(200).json({ message: 'Offer updated successfully' });
-            });
-          });
+        if (translationExists.length > 0) {
+          // Update existing translation
+          await db.promise().query(
+            'UPDATE offers_translations SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE offer_id = ? AND language_code = ?',
+            [translations[langCode].name, translations[langCode].description || null, id, langCode]
+          );
         } else {
-          db.commit((commitErr) => {
-            if (commitErr) {
-              return db.rollback(() => {
-                console.error('Error committing transaction (no products), rolling back:', commitErr);
-                res.status(500).json({ message: 'Failed to update offer', error: commitErr.message });
-              });
-            }
-            res.status(200).json({ message: 'Offer updated successfully' });
-          });
+          // Insert new translation
+          await db.promise().query(
+            'INSERT INTO offers_translations (offer_id, language_code, name, description) VALUES (?, ?, ?, ?)',
+            [id, langCode, translations[langCode].name, translations[langCode].description || null]
+          );
         }
-      });
+      }
+    }
+
+    // Update product_offers
+    await db.promise().query('DELETE FROM product_offers WHERE offer_id = ?', [id]);
+
+    if (product_ids && product_ids.length > 0) {
+      const productOfferValues = product_ids.map(productId => [id, productId]);
+      const productOfferQuery = 'INSERT INTO product_offers (offer_id, product_id) VALUES ?';
+      await db.promise().query(productOfferQuery, [productOfferValues]);
+    }
+
+    await db.promise().commit();
+    res.status(200).json({ 
+      message: req.t('success.resources.updated', { resource: req.getResource('offer') })
     });
-  });
+  } catch (error) {
+    await db.promise().rollback();
+    console.error('Error updating offer:', error);
+    res.status(500).json({ 
+      error: req.t('errors.resources.update_failed', { resource: req.getResource('offer') })
+    });
+  }
 });
 
 // DELETE an offer (admin only)
-router.delete('/:id', authenticateToken, adminProtect, (req, res) => {
+router.delete('/:id', authenticateToken, adminProtect, async (req, res) => {
   const { id } = req.params;
 
-  db.beginTransaction((err) => {
-    if (err) {
-      console.error('Error starting transaction:', err);
-      return res.status(500).json({ message: 'Failed to delete offer', error: err.message });
+  try {
+    await db.promise().beginTransaction();
+
+    // Deleting from the main offers table will cascade delete from offers_translations and product_offers
+    const [result] = await db.promise().query('DELETE FROM offers WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      await db.promise().rollback();
+      return res.status(404).json({ 
+        error: req.t('errors.resources.not_found', { resource: req.getResource('offer') })
+      });
     }
 
-    // Delete from product_offers first due to foreign key constraints
-    db.query('DELETE FROM product_offers WHERE offer_id = ?', [id], (err) => {
-      if (err) {
-        return db.rollback(() => {
-          console.error('Error deleting product offers, rolling back:', err);
-          res.status(500).json({ message: 'Failed to delete offer', error: err.message });
-        });
-      }
-
-      db.query('DELETE FROM offers WHERE id = ?', [id], (err, offerResult) => {
-        if (err) {
-          return db.rollback(() => {
-            console.error('Error deleting offer, rolling back:', err);
-            res.status(500).json({ message: 'Failed to delete offer', error: err.message });
-          });
-        }
-
-        if (offerResult.affectedRows === 0) {
-          return db.rollback(() => res.status(404).json({ message: 'Offer not found.' }));
-        }
-
-        db.commit((commitErr) => {
-          if (commitErr) {
-            return db.rollback(() => {
-              console.error('Error committing transaction, rolling back:', commitErr);
-              res.status(500).json({ message: 'Failed to delete offer', error: commitErr.message });
-            });
-          }
-          res.status(200).json({ message: 'Offer deleted successfully' });
-        });
-      });
+    await db.promise().commit();
+    res.status(200).json({ 
+      message: req.t('success.resources.deleted', { resource: req.getResource('offer') })
     });
-  });
+  } catch (error) {
+    await db.promise().rollback();
+    console.error('Error deleting offer:', error);
+    res.status(500).json({ 
+      error: req.t('errors.resources.deletion_failed', { resource: req.getResource('offer') })
+    });
+  }
 });
 
 module.exports = router;

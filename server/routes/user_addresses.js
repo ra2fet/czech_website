@@ -9,7 +9,7 @@ router.use('/:userId', authenticateToken, (req, res, next) => {
     const { userId } = req.params;
     // Ensure the authenticated user matches the userId in the URL or is an admin
     if (req.user.id !== parseInt(userId) && req.user.userType !== 'admin') {
-        return res.status(403).json({ message: 'Access denied. You can only access your own addresses.' });
+        return res.status(403).json({ error: req.t('errors.auth.insufficient_permissions') });
     }
     next();
 });
@@ -27,7 +27,7 @@ router.get('/:userId', (req, res) => {
     db.query(query, [userId], (err, addresses) => {
         if (err) {
             console.error('Error fetching user addresses:', err);
-            return res.status(500).json({ message: 'Failed to fetch addresses', error: err.message });
+            return res.status(500).json({ error: req.t('errors.resources.fetch_failed', { resource: req.getResource('address', true) }) });
         }
         const formattedAddresses = addresses.map(address => ({
             ...address,
@@ -42,8 +42,17 @@ router.post('/:userId', (req, res) => {
     const { userId } = req.params;
     const { address_name, city, province_id, street_name, house_number, postcode } = req.body;
 
-    if (!address_name || !city || !province_id || !street_name || !house_number || !postcode) {
-        return res.status(400).json({ message: 'All address fields are required.' });
+    // Validation with localized messages
+    const validationErrors = [];
+    if (!address_name) validationErrors.push(req.t('errors.validation.required', { field: 'Address Name' }));
+    if (!city) validationErrors.push(req.t('errors.validation.required', { field: 'City' }));
+    if (!province_id) validationErrors.push(req.t('errors.validation.required', { field: 'Province' }));
+    if (!street_name) validationErrors.push(req.t('errors.validation.required', { field: 'Street Name' }));
+    if (!house_number) validationErrors.push(req.t('errors.validation.required', { field: 'House Number' }));
+    if (!postcode) validationErrors.push(req.t('errors.validation.required', { field: 'Postcode' }));
+
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ errors: validationErrors });
     }
 
     const query = 'INSERT INTO user_addresses (user_id, address_name, city, province_id, street_name, house_number, postcode) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -52,9 +61,18 @@ router.post('/:userId', (req, res) => {
     db.query(query, values, (err, result) => {
         if (err) {
             console.error('Error adding new address:', err);
-            return res.status(500).json({ message: 'Failed to add address', error: err.message });
+            return res.status(500).json({ error: req.t('errors.resources.creation_failed', { resource: req.getResource('address') }) });
         }
-        res.status(201).json({ id: result.insertId, address_name, city, province_id, street_name, house_number, postcode, message: 'Address added successfully.' });
+        res.status(201).json({ 
+            id: result.insertId, 
+            address_name, 
+            city, 
+            province_id, 
+            street_name, 
+            house_number, 
+            postcode, 
+            message: req.t('success.resources.created', { resource: req.getResource('address') })
+        });
     });
 });
 
@@ -63,8 +81,17 @@ router.put('/:userId/:addressId', (req, res) => {
     const { userId, addressId } = req.params;
     const { address_name, city, province_id, street_name, house_number, postcode } = req.body;
 
-    if (!address_name || !city || !province_id || !street_name || !house_number || !postcode) {
-        return res.status(400).json({ message: 'All address fields are required.' });
+    // Validation with localized messages
+    const validationErrors = [];
+    if (!address_name) validationErrors.push(req.t('errors.validation.required', { field: 'Address Name' }));
+    if (!city) validationErrors.push(req.t('errors.validation.required', { field: 'City' }));
+    if (!province_id) validationErrors.push(req.t('errors.validation.required', { field: 'Province' }));
+    if (!street_name) validationErrors.push(req.t('errors.validation.required', { field: 'Street Name' }));
+    if (!house_number) validationErrors.push(req.t('errors.validation.required', { field: 'House Number' }));
+    if (!postcode) validationErrors.push(req.t('errors.validation.required', { field: 'Postcode' }));
+
+    if (validationErrors.length > 0) {
+        return res.status(400).json({ errors: validationErrors });
     }
 
     const query = 'UPDATE user_addresses SET address_name = ?, city = ?, province_id = ?, street_name = ?, house_number = ?, postcode = ? WHERE id = ? AND user_id = ?';
@@ -73,12 +100,12 @@ router.put('/:userId/:addressId', (req, res) => {
     db.query(query, values, (err, result) => {
         if (err) {
             console.error('Error updating address:', err);
-            return res.status(500).json({ message: 'Failed to update address', error: err.message });
+            return res.status(500).json({ error: req.t('errors.resources.update_failed', { resource: req.getResource('address') }) });
         }
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Address not found or not authorized to update.' });
+            return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('address') }) });
         }
-        res.status(200).json({ message: 'Address updated successfully.' });
+        res.status(200).json({ message: req.t('success.resources.updated', { resource: req.getResource('address') }) });
     });
 });
 
@@ -92,12 +119,12 @@ router.delete('/:userId/:addressId', (req, res) => {
     db.query(query, values, (err, result) => {
         if (err) {
             console.error('Error deleting address:', err);
-            return res.status(500).json({ message: 'Failed to delete address', error: err.message });
+            return res.status(500).json({ error: req.t('errors.resources.deletion_failed', { resource: req.getResource('address') }) });
         }
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Address not found or not authorized to delete.' });
+            return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('address') }) });
         }
-        res.status(200).json({ message: 'Address deleted successfully.' });
+        res.status(200).json({ message: req.t('success.resources.deleted', { resource: req.getResource('address') }) });
     });
 });
 

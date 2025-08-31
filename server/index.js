@@ -4,6 +4,9 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+// Import i18n middleware
+const { detectLanguage, setLanguageHeaders } = require('./middleware/i18n');
+
 // Import route handlers
 const authRoutes = require('./routes/auth');
 const blogRoutes = require('./routes/blogs');
@@ -23,6 +26,9 @@ const announcementRoutes = require('./routes/announcements');
 const ratingRoutes = require('./routes/ratings'); // Import the new ratings route
 const userRoutes = require('./routes/users'); // Import the new users route
 const newsletterRoutes = require('./routes/newsletter'); // Import the new newsletter route
+const languageRoutes = require('./routes/languages'); // Import the languages route
+const featureSettingsRoutes = require('./routes/featureSettings');
+
 const initRatingEmailScheduler = require('./cron/ratingEmailScheduler'); // Import the scheduler
 
 const app = express();
@@ -37,9 +43,13 @@ app.use(cors({
   //   ? process.env.FRONTEND_PRODUCTION_URL || 'https://babonederland.com'
   //   :  process.env.FRONTEND_LOCAL_URL || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language']
 }));
 app.use(express.json());
+
+// Apply i18n middleware globally
+app.use(detectLanguage);
+app.use(setLanguageHeaders);
 
 // Serve static files from the 'uploads' directory
 // Use path.join and __dirname for a more robust path resolution
@@ -64,6 +74,9 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/ratings', ratingRoutes); // Use the new ratings route
 app.use('/api/users', userRoutes); // Use the new users route
 app.use('/api/newsletter', newsletterRoutes); // Use the new newsletter route
+app.use('/api/languages', languageRoutes); // Use the languages route
+app.use('/api/admin', featureSettingsRoutes);
+
 
 // Global Error Handler
 app.use((err, req, res, next) => {

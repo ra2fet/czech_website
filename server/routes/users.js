@@ -10,7 +10,7 @@ router.get('/',  authenticateToken, adminProtect, (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.error('Database error fetching users:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     res.json(results);
   });
@@ -23,10 +23,10 @@ router.get('/:id',  authenticateToken, adminProtect, (req, res) => {
   db.query(query, [id], (err, results) => {
     if (err) {
       console.error('Database error fetching user:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('user') }) });
     }
     res.json(results[0]);
   });
@@ -41,12 +41,12 @@ router.put('/:id', authenticateToken, adminProtect, (req, res) => {
   db.query(query, [full_name, phone_number, email, user_type, is_active, is_verified, id], (err, result) => {
     if (err) {
       console.error('Database error updating user:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('user') }) });
     }
-    res.json({ message: 'User updated successfully' });
+    res.json({ message: req.t('success.resources.updated', { resource: req.getResource('user') }) });
   });
 });
 
@@ -57,12 +57,12 @@ router.delete('/:id', authenticateToken, adminProtect, (req, res) => {
   db.query(query, [id], (err, result) => {
     if (err) {
       console.error('Database error deleting user:', err);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('user') }) });
     }
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: req.t('success.resources.deleted', { resource: req.getResource('user') }) });
   });
 });
 

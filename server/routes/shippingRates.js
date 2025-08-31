@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
   db.query('SELECT * FROM shipping_rates ORDER BY min_price ASC', (err, rows) => {
     if (err) {
       console.error(err.message);
-      return res.status(500).send(`Server Error:  ${err.message}`);
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     res.json(rows);
   });
@@ -19,7 +19,7 @@ router.get('/active', (req, res) => {
   db.query('SELECT * FROM shipping_rates WHERE is_active = TRUE ORDER BY min_price ASC', (err, rows) => {
     if (err) {
       console.error(err.message);
-      return res.status(500).send(`Server Error: ${err.message}`);
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
     }
     res.json(rows);
   });
@@ -34,9 +34,16 @@ router.post('/', authenticateToken, adminProtect, (req, res) => {
     (err, result) => {
       if (err) {
         console.error(err.message);
-        return res.status(500).send(`Server Error:  ${err.message}`);
+        return res.status(500).json({ error: req.t('errors.resources.creation_failed', { resource: 'Shipping Rate' }) });
       }
-      res.json({ id: result.insertId, min_price, max_price, percentage_rate, is_active });
+      res.json({ 
+        id: result.insertId, 
+        min_price, 
+        max_price, 
+        percentage_rate, 
+        is_active,
+        message: req.t('success.resources.created', { resource: 'Shipping Rate' })
+      });
     }
   );
 });
@@ -51,9 +58,9 @@ router.put('/:id', authenticateToken, adminProtect, (req, res) => {
     (err) => {
       if (err) {
         console.error(err.message);
-        return res.status(500).send(`Server Error:  ${err.message}`);
+        return res.status(500).json({ error: req.t('errors.resources.update_failed', { resource: 'Shipping Rate' }) });
       }
-      res.json({ msg: 'Shipping rate updated' });
+      res.json({ message: req.t('success.resources.updated', { resource: 'Shipping Rate' }) });
     }
   );
 });
@@ -64,9 +71,9 @@ router.delete('/:id', authenticateToken, adminProtect, (req, res) => {
   db.query('DELETE FROM shipping_rates WHERE id = ?', [id], (err) => {
     if (err) {
       console.error(err.message);
-      return res.status(500).send(`Server Error:  ${err.message}`);
+      return res.status(500).json({ error: req.t('errors.resources.deletion_failed', { resource: 'Shipping Rate' }) });
     }
-    res.json({ msg: 'Shipping rate deleted' });
+    res.json({ message: req.t('success.resources.deleted', { resource: 'Shipping Rate' }) });
   });
 });
 

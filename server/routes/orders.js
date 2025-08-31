@@ -11,14 +11,15 @@ router.get('/single/:orderId', authenticateToken, (req, res) => {
     const userId = req.user.id; // Authenticated user's ID
 
     const query = `
-        SELECT o.*, ua.street_name, ua.house_number, ua.city, p.name AS province, ua.postcode, ua.address_name
+        SELECT o.*, ua.street_name, ua.house_number, ua.city, pt.name AS province, ua.postcode, ua.address_name
         FROM orders o
         LEFT JOIN user_addresses ua ON o.address_id = ua.id
         LEFT JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
         WHERE o.id = ? AND o.user_id = ?
     `;
 
-    db.query(query, [orderId, userId], (err, orders) => {
+    db.query(query, [req.language || 'en', orderId, userId], (err, orders) => {
         if (err) {
             console.error('Error fetching single order:', err);
             return res.status(500).json({ message: 'Failed to fetch order details', error: err.message });
@@ -31,8 +32,8 @@ router.get('/single/:orderId', authenticateToken, (req, res) => {
         const order = orders[0];
 
         db.query(
-            'SELECT oi.*, p.name as product_name, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?',
-            [order.id],
+            'SELECT oi.*, pt.name as product_name, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN products_translations pt ON p.id = pt.product_id WHERE oi.order_id = ? AND pt.language_code = ?',
+            [order.id, req.language || 'en'],
             (err, items) => {
                 if (err) {
                     console.error('Error fetching order items for single order:', err);
@@ -52,14 +53,15 @@ router.get('/public-single-by-token/:ratingToken', (req, res) => {
 
     const query = `
         SELECT o.id, o.order_date, o.total_amount, o.rating_token_used,
-               ua.street_name, ua.house_number, ua.city, p.name AS province, ua.postcode, ua.address_name
+               ua.street_name, ua.house_number, ua.city, pt.name AS province, ua.postcode, ua.address_name
         FROM orders o
         LEFT JOIN user_addresses ua ON o.address_id = ua.id
         LEFT JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
         WHERE o.rating_token = ?
     `;
 
-    db.query(query, [ratingToken], (err, orders) => {
+    db.query(query, [req.language || 'en', ratingToken], (err, orders) => {
         if (err) {
             console.error('Error fetching public single order by token:', err);
             return res.status(500).json({ message: 'Failed to fetch order details', error: err.message });
@@ -76,8 +78,8 @@ router.get('/public-single-by-token/:ratingToken', (req, res) => {
         }
 
         db.query(
-            'SELECT oi.*, p.name as product_name, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?',
-            [order.id],
+            'SELECT oi.*, pt.name as product_name, p.image_url FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN products_translations pt ON p.id = pt.product_id WHERE oi.order_id = ? AND pt.language_code = ?',
+            [order.id, req.language || 'en'],
             (err, items) => {
                 if (err) {
                     console.error('Error fetching order items for public single order by token:', err);
@@ -193,16 +195,17 @@ router.get('/:userId', authenticateToken, (req, res) => {
     }
 
     const query = `
-        SELECT o.*,u.full_name, ua.street_name, ua.house_number, ua.city, p.name AS province, ua.postcode, ua.address_name
+        SELECT o.*,u.full_name, ua.street_name, ua.house_number, ua.city, pt.name AS province, ua.postcode, ua.address_name
         FROM orders o
         LEFT JOIN user_addresses ua ON o.address_id = ua.id
         LEFT JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
         LEFT JOIN users u ON o.user_id = u.id
         WHERE o.user_id = ?
         ORDER BY o.order_date DESC
     `;
 
-    db.query(query, [userId], (err, orders) => {
+    db.query(query, [req.language || 'en', userId], (err, orders) => {
         if (err) {
             console.error('Error fetching user orders:', err);
             return res.status(500).json({ message: 'Failed to fetch user orders', error: err.message });
@@ -216,8 +219,8 @@ router.get('/:userId', authenticateToken, (req, res) => {
         orders.forEach((order) => {
             // Fetch order items
             db.query(
-                'SELECT oi.*, p.name as product_name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?',
-                [order.id],
+                'SELECT oi.*, pt.name as product_name FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN products_translations pt ON p.id = pt.product_id WHERE oi.order_id = ? AND pt.language_code = ?',
+                [order.id, req.language || 'en'],
                 (err, items) => {
                     if (err) {
                         console.error('Error fetching order items:', err);
@@ -258,15 +261,16 @@ router.get('/', authenticateToken, adminProtect, (req, res) => {
     // }
 
     const query = `
-        SELECT o.*,u.full_name, u.email as user_email, ua.street_name, ua.house_number, ua.city, p.name AS province, ua.postcode, ua.address_name
+        SELECT o.*,u.full_name, u.email as user_email, ua.street_name, ua.house_number, ua.city, pt.name AS province, ua.postcode, ua.address_name
         FROM orders o
         JOIN users u ON o.user_id = u.id
         LEFT JOIN user_addresses ua ON o.address_id = ua.id
         LEFT JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
         ORDER BY o.order_date DESC
     `;
 
-    db.query(query, (err, orders) => {
+    db.query(query, [req.language || 'en'], (err, orders) => {
         if (err) {
             console.error('Error fetching all orders:', err);
             return res.status(500).json({ message: 'Failed to fetch orders', error: err.message });
@@ -280,8 +284,8 @@ router.get('/', authenticateToken, adminProtect, (req, res) => {
         orders.forEach((order) => {
             // Fetch order items
             db.query(
-                'SELECT oi.*, p.name as product_name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?',
-                [order.id],
+                'SELECT oi.*, pt.name as product_name FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN products_translations pt ON p.id = pt.product_id WHERE oi.order_id = ? AND pt.language_code = ?',
+                [order.id, req.language || 'en'],
                 (err, items) => {
                     if (err) {
                         console.error('Error fetching order items:', err);

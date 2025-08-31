@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -6,79 +6,87 @@ import {
   XCircle,
   Loader2
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import axios from '../../api/axios';
 import toast from 'react-hot-toast';
 import config from '../../config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Blog {
   id: number;
-  title: string;
-  content: string;
-  excerpt: string;
+  title: string; // Default language title
+  content: string; // Default language content
+  excerpt: string; // Default language excerpt
   image_url: string;
   created_at: string;
+  translations?: { 
+    [key: string]: { 
+      title: string; 
+      content: string; 
+      excerpt: string; 
+    } 
+  };
+}
+
+interface BlogFormState {
+  image_url: string;
+  translations: { 
+    [key: string]: { 
+      title: string; 
+      content: string; 
+      excerpt: string; 
+    } 
+  };
 }
 
 export function BlogsManager() {
-  // State for blogs data and UI
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBlog, setCurrentBlog] = useState<Blog | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form data state
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    excerpt: '',
-    image_url: ''
+  const [formState, setFormState] = useState<BlogFormState>({
+    image_url: '',
+    translations: {},
   });
 
-  // Fetch blogs on component mount
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    if (!loadingLanguages) {
+      fetchBlogs();
+    }
+  }, [loadingLanguages]);
 
-  // Update form data when current blog changes
   useEffect(() => {
-    if (currentBlog) {
-      setFormData({
-        title: currentBlog.title,
-        content: currentBlog.content,
-        excerpt: currentBlog.excerpt || '',
-        image_url: currentBlog.image_url || ''
+    if (currentBlog && languages.length > 0) {
+      const existingTranslations: { [key: string]: { title: string; content: string; excerpt: string; } } = {};
+      languages.forEach(lang => {
+        existingTranslations[lang.code] = {
+          title: currentBlog.translations?.[lang.code]?.title || '',
+          content: currentBlog.translations?.[lang.code]?.content || '',
+          excerpt: currentBlog.translations?.[lang.code]?.excerpt || '',
+        };
       });
-    } else {
-      // Reset form for new blog
-      setFormData({
-        title: '',
-        content: '',
-        excerpt: '',
-        image_url: ''
+      setFormState({
+        image_url: currentBlog.image_url || '',
+        translations: existingTranslations,
+      });
+    } else if (languages.length > 0) {
+      const initialTranslations: { [key: string]: { title: string; content: string; excerpt: string; } } = {};
+      languages.forEach(lang => {
+        initialTranslations[lang.code] = { title: '', content: '', excerpt: '' };
+      });
+      setFormState({
+        image_url: '',
+        translations: initialTranslations,
       });
     }
-  }, [currentBlog]);
+  }, [currentBlog, languages]);
 
-  // Fetch all blogs
   const fetchBlogs = async () => {
     setLoading(true);
     try {
-      if (config.useSupabase) {
-        // Supabase fetch
-        const { data, error } = await supabase
-          .from('blogs')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setBlogs(data || []);
-      } else {
-        // Axios fetch
-        const response = await config.axios.get(config.apiEndpoints.blogs);
-        setBlogs(response.data || []);
-      }
+      const response = await config.axios.get('blogs/admin');
+      setBlogs(response.data || []);
     } catch (error) {
       toast.error('Error fetching blogs');
       console.error('Error:', error);
@@ -87,40 +95,29 @@ export function BlogsManager() {
     }
   };
 
-  // Handle form submission for create/update
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
-    try {
-      if (config.useSupabase) {
-        // Supabase create/update
-        let error;
-        if (currentBlog) {
-          // Update existing blog
-          const { error: updateError } = await supabase
-            .from('blogs')
-            .update(formData)
-            .eq('id', currentBlog.id);
-          error = updateError;
-        } else {
-          // Create new blog
-          const { error: insertError } = await supabase
-            .from('blogs')
-            .insert([formData]);
-          error = insertError;
-        }
+    if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.title.trim() || !formState.translations[defaultLanguage.code]?.content.trim()) {
+      toast.error(`Title and content in default language (${defaultLanguage?.name || 'English'}) are required.`);
+      setSubmitting(false);
+      return;
+    }
 
-        if (error) throw error;
+    try {
+      const payload = {
+        image_url: formState.image_url,
+        title: formState.translations[defaultLanguage.code]?.title,
+        content: formState.translations[defaultLanguage.code]?.content,
+        excerpt: formState.translations[defaultLanguage.code]?.excerpt,
+        translations: formState.translations,
+      };
+
+      if (currentBlog) {
+        await config.axios.put(`blogs/${currentBlog.id}`, payload);
       } else {
-        // Axios create/update
-        if (currentBlog) {
-          // Update existing blog
-           await axios.put(`${config.apiEndpoints.blogs}/${currentBlog.id}`, formData);
-        } else {
-          // Create new blog
-          await axios.post(config.apiEndpoints.blogs, formData);
-        }
+        await config.axios.post('blogs', payload);
       }
 
       toast.success(currentBlog ? 'Blog updated successfully' : 'Blog created successfully');
@@ -134,22 +131,10 @@ export function BlogsManager() {
     }
   };
 
-  // Handle blog deletion
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this blog post?')) {
       try {
-      if (config.useSupabase) {
-          // Supabase delete
-          const { error } = await supabase
-            .from('blogs')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-        } else {
-          // Axios delete
-          await axios.delete(`${config.apiEndpoints.blogs}/${id}`);
-        }
+        await config.axios.delete(`blogs/${id}`);
         toast.success('Blog deleted successfully');
         fetchBlogs();
       } catch (error) {
@@ -159,10 +144,22 @@ export function BlogsManager() {
     }
   };
 
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleTranslationChange = (langCode: string, field: 'title' | 'content' | 'excerpt', value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: {
+          ...prev.translations[langCode],
+          [field]: value
+        }
+      }
+    }));
   };
 
   return (
@@ -286,44 +283,49 @@ export function BlogsManager() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title*
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Content*
-                </label>
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  required
-                  rows={6}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Excerpt
-                </label>
-                <textarea
-                  name="excerpt"
-                  value={formData.excerpt}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              {languages.map(lang => (
+                <div key={lang.code} className="space-y-2 border p-4 rounded-md">
+                  <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Title ({lang.code.toUpperCase()}){lang.is_default ? '*':''}
+                    </label>
+                    <input
+                      type="text"
+                      name={`title-${lang.code}`}
+                      value={formState.translations[lang.code]?.title || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'title', e.target.value)}
+                      required={lang.is_default}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Content ({lang.code.toUpperCase()}){lang.is_default ? '*':''}
+                    </label>
+                    <textarea
+                      name={`content-${lang.code}`}
+                      value={formState.translations[lang.code]?.content || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'content', e.target.value)}
+                      required={lang.is_default}
+                      rows={6}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Excerpt ({lang.code.toUpperCase()})
+                    </label>
+                    <textarea
+                      name={`excerpt-${lang.code}`}
+                      value={formState.translations[lang.code]?.excerpt || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'excerpt', e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+              ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Image URL
@@ -331,7 +333,7 @@ export function BlogsManager() {
                 <input
                   type="url"
                   name="image_url"
-                  value={formData.image_url}
+                  value={formState.image_url}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />

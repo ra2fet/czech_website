@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { PlusCircle, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Product {
   id: number;
@@ -14,28 +15,41 @@ interface Product {
 
 interface Offer {
   id: number;
-  name: string;
-  description: string;
+  name: string; // Default language name
+  description: string; // Default language description
   discount_type: 'percentage' | 'fixed_amount';
   discount_value: number;
   start_date: string;
   end_date: string;
   is_active: boolean;
   products: Product[];
+  created_at: string;
+  updated_at: string;
+  translations?: { 
+    [key: string]: { 
+      name: string; 
+      description: string; 
+    } 
+  };
 }
 
 interface OfferFormState {
-  name: string;
-  description: string;
   discount_type: 'percentage' | 'fixed_amount';
   discount_value: number;
   start_date: Date | null;
   end_date: Date | null;
   is_active: boolean;
   product_ids: number[];
+  translations: { 
+    [key: string]: { 
+      name: string; 
+      description: string; 
+    } 
+  };
 }
 
 export const OffersManager = () => {
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [products, setProducts] = useState<Product[]>([]); // All available products
   const [loading, setLoading] = useState(true);
@@ -43,26 +57,62 @@ export const OffersManager = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentOffer, setCurrentOffer] = useState<Offer | null>(null);
   const [formState, setFormState] = useState<OfferFormState>({
-    name: '',
-    description: '',
     discount_type: 'percentage',
     discount_value: 0,
     start_date: null,
     end_date: null,
     is_active: true,
     product_ids: [],
+    translations: {},
   });
 
   useEffect(() => {
-    fetchOffers();
-    fetchProducts();
-  }, []);
+    if (!loadingLanguages) {
+      fetchOffers();
+      fetchProducts();
+    }
+  }, [loadingLanguages]);
+
+  useEffect(() => {
+    if (currentOffer && languages.length > 0) {
+      const existingTranslations: { [key: string]: { name: string; description: string; } } = {};
+      languages.forEach(lang => {
+        existingTranslations[lang.code] = {
+          name: currentOffer.translations?.[lang.code]?.name || '',
+          description: currentOffer.translations?.[lang.code]?.description || '',
+        };
+      });
+      setFormState({
+        discount_type: currentOffer.discount_type,
+        discount_value: currentOffer.discount_value,
+        start_date: currentOffer.start_date ? new Date(currentOffer.start_date) : null,
+        end_date: currentOffer.end_date ? new Date(currentOffer.end_date) : null,
+        is_active: currentOffer.is_active,
+        product_ids: currentOffer.products.map(p => p.id),
+        translations: existingTranslations,
+      });
+    } else if (languages.length > 0) {
+      const initialTranslations: { [key: string]: { name: string; description: string; } } = {};
+      languages.forEach(lang => {
+        initialTranslations[lang.code] = { name: '', description: '' };
+      });
+      setFormState({
+        discount_type: 'percentage',
+        discount_value: 0,
+        start_date: null,
+        end_date: null,
+        is_active: true,
+        product_ids: [],
+        translations: initialTranslations,
+      });
+    }
+  }, [currentOffer, languages]);
 
   const fetchOffers = async () => {
     setLoading(true);
     try {
-      const response = await config.axios.get('/offers/admin');
-      setOffers(response.data);
+      const response = await config.axios.get('offers/admin');
+      setOffers(response.data || []);
     } catch (error) {
       console.error('Error fetching offers:', error);
       toast.error('Failed to load offers.');
@@ -73,8 +123,8 @@ export const OffersManager = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await config.axios.get('/products');
-      setProducts(response.data);
+      const response = await config.axios.get('products');
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products for selection.');
@@ -82,34 +132,22 @@ export const OffersManager = () => {
   };
 
   const handleAddOfferClick = () => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
     setIsEditing(false);
     setCurrentOffer(null);
-    setFormState({
-      name: '',
-      description: '',
-      discount_type: 'percentage',
-      discount_value: 0,
-      start_date: null,
-      end_date: null,
-      is_active: true,
-      product_ids: [],
-    });
     setShowModal(true);
   };
 
   const handleEditOfferClick = (offer: Offer) => {
+    if (loadingLanguages) {
+      toast.error('Languages are still loading. Please wait.');
+      return;
+    }
     setIsEditing(true);
     setCurrentOffer(offer);
-    setFormState({
-      name: offer.name,
-      description: offer.description,
-      discount_type: offer.discount_type,
-      discount_value: offer.discount_value,
-      start_date: offer.start_date ? new Date(offer.start_date) : null,
-      end_date: offer.end_date ? new Date(offer.end_date) : null,
-      is_active: offer.is_active,
-      product_ids: offer.products.map(p => p.id),
-    });
     setShowModal(true);
   };
 
@@ -120,6 +158,19 @@ export const OffersManager = () => {
     } else {
       setFormState(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleTranslationChange = (langCode: string, field: 'name' | 'description', value: string) => {
+    setFormState(prev => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: {
+          ...prev.translations[langCode],
+          [field]: value
+        }
+      }
+    }));
   };
 
   const handleProductSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -134,8 +185,8 @@ export const OffersManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formState.name || !formState.discount_type || formState.discount_value <= 0 || !formState.start_date || !formState.end_date) {
-      toast.error('Please fill in all required fields and ensure discount value is positive.');
+    if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.name.trim() || formState.discount_value <= 0 || !formState.start_date || !formState.end_date) {
+      toast.error(`Please fill in all required fields including offer name in default language (${defaultLanguage?.name || 'English'}) and ensure discount value is positive.`);
       return;
     }
 
@@ -145,17 +196,21 @@ export const OffersManager = () => {
     }
 
     const offerData = {
-      ...formState,
+      discount_type: formState.discount_type,
+      discount_value: formState.discount_value,
       start_date: formState.start_date?.toISOString(),
       end_date: formState.end_date?.toISOString(),
+      is_active: formState.is_active,
+      product_ids: formState.product_ids,
+      translations: formState.translations,
     };
 
     try {
       if (isEditing && currentOffer) {
-        await config.axios.put(`/offers/${currentOffer.id}`, offerData);
+        await config.axios.put(`offers/${currentOffer.id}`, offerData);
         toast.success('Offer updated successfully!');
       } else {
-        await config.axios.post('/offers', offerData);
+        await config.axios.post('offers', offerData);
         toast.success('Offer created successfully!');
       }
       setShowModal(false);
@@ -169,7 +224,7 @@ export const OffersManager = () => {
   const handleDeleteOffer = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this offer? This action cannot be undone.')) {
       try {
-        await config.axios.delete(`/offers/${id}`);
+        await config.axios.delete(`offers/${id}`);
         toast.success('Offer deleted successfully!');
         fetchOffers();
       } catch (error) {
@@ -179,7 +234,7 @@ export const OffersManager = () => {
     }
   };
 
-  if (loading) {
+  if (loading || loadingLanguages) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -257,29 +312,36 @@ export const OffersManager = () => {
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full">
             <h3 className="text-2xl font-bold mb-6">{isEditing ? 'Edit Offer' : 'Add New Offer'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Offer Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formState.name}
-                  onChange={handleFormChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={formState.description}
-                  onChange={handleFormChange}
-                  rows={3}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                ></textarea>
-              </div>
+              {languages.map(lang => (
+                <div key={lang.code} className="space-y-2 border p-4 rounded-md">
+                  <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
+                  <div>
+                    <label htmlFor={`name-${lang.code}`} className="block text-sm font-medium text-gray-700">
+                      Offer Name ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                    </label>
+                    <input
+                      type="text"
+                      id={`name-${lang.code}`}
+                      value={formState.translations[lang.code]?.name || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'name', e.target.value)}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      required={lang.is_default}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`description-${lang.code}`} className="block text-sm font-medium text-gray-700">
+                      Description ({lang.code.toUpperCase()})
+                    </label>
+                    <textarea
+                      id={`description-${lang.code}`}
+                      value={formState.translations[lang.code]?.description || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'description', e.target.value)}
+                      rows={3}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+              ))}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="discount_type" className="block text-sm font-medium text-gray-700">Discount Type</label>
