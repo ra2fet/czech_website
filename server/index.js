@@ -75,7 +75,7 @@ app.use('/api/ratings', ratingRoutes); // Use the new ratings route
 app.use('/api/users', userRoutes); // Use the new users route
 app.use('/api/newsletter', newsletterRoutes); // Use the new newsletter route
 app.use('/api/languages', languageRoutes); // Use the languages route
-app.use('/api/admin', featureSettingsRoutes);
+app.use('/api/feature-settings', featureSettingsRoutes);
 
 
 // Global Error Handler

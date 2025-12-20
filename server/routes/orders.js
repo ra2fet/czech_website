@@ -4,6 +4,20 @@ const db = require('../config/db'); // Assuming you have a db connection
 const { authenticateToken, adminProtect } = require('../middleware/auth'); // Import auth middleware
 const { v4: uuidv4 } = require('uuid'); // Import uuid for generating unique tokens
 
+// Helper function to check if a feature is enabled
+const isFeatureEnabled = async (featureName) => {
+  try {
+    const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
+    if (settings.length > 0) {
+      return settings[0][featureName] === 1 || settings[0][featureName] === true;
+    }
+    return true; // Default to enabled if no settings found
+  } catch (error) {
+    console.error('Error checking feature setting:', error);
+    return true; // Default to enabled on error
+  }
+};
+
 
 // Route to get a single order by orderId (for RatingPage) - Requires authentication
 router.get('/single/:orderId', authenticateToken, (req, res) => {
@@ -48,7 +62,13 @@ router.get('/single/:orderId', authenticateToken, (req, res) => {
 });
 
 // Public route to get a single order by ratingToken (for RatingPage without auth)
-router.get('/public-single-by-token/:ratingToken', (req, res) => {
+router.get('/public-single-by-token/:ratingToken', async (req, res) => {
+    // Check if rating system is enabled
+    const ratingEnabled = await isFeatureEnabled('enableOrderRating');
+    if (!ratingEnabled) {
+        return res.status(403).json({ message: 'Order rating feature is currently disabled' });
+    }
+
     const { ratingToken } = req.params;
 
     const query = `
@@ -95,93 +115,117 @@ router.get('/public-single-by-token/:ratingToken', (req, res) => {
 
 
 // Route to create a new order
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
+    // Check if order creation is enabled (assuming this feature exists)
+    const orderCreationEnabled = await isFeatureEnabled('enableOrderCreation');
+    if (!orderCreationEnabled) {
+        return res.status(403).json({ message: 'Order creation is currently disabled' });
+    }
+
     const { userId, totalAmount, addressId, cartItems } = req.body;
 
     if (!userId || !totalAmount || !addressId || !cartItems || cartItems.length === 0) {
         return res.status(400).json({ message: 'Missing required order information.' });
     }
 
-    db.beginTransaction((err) => {
+    db.beginTransaction(async (err) => {
         if (err) {
             console.error('Error starting transaction:', err);
             return res.status(500).json({ message: 'Failed to create order', error: err.message });
         }
 
-        // Generate a unique rating token and calculate send date
-        const ratingToken = uuidv4();
-        const sendRatingEmailDate = new Date();
-        sendRatingEmailDate.setDate(sendRatingEmailDate.getDate() + 3); // 3 days from now
-
-        // Insert order into the orders table
-        const orderQuery = `
-            INSERT INTO orders (user_id, total_amount, address_id, payment_status, rating_token, send_rating_email_date)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
-        const orderValues = [
-            userId,
-            totalAmount,
-            addressId,
-            'completed',
-            ratingToken,
-            sendRatingEmailDate.toISOString().split('T')[0] // Format as YYYY-MM-DD
-        ];
-
-        db.query(orderQuery, orderValues, (err, orderResult) => {
-            if (err) {
-                db.rollback(() => {
-                    console.error('Error inserting order, rolling back:', err);
-                    res.status(500).json({ message: 'Failed to create order', error: err.message });
-                });
-                return;
+        try {
+            // Check if rating features are enabled
+            const ratingEnabled = await isFeatureEnabled('enableOrderRating');
+            const autoEmailEnabled = await isFeatureEnabled('enableAutoRatingEmail');
+            const send3DaysEnabled = await isFeatureEnabled('enableRatingLinkAfter3Days');
+            
+            // Generate rating token only if rating system is enabled
+            const ratingToken = ratingEnabled ? uuidv4() : null;
+            
+            // Calculate send date only if auto rating emails are enabled
+            let sendRatingEmailDate = null;
+            if (ratingEnabled && autoEmailEnabled) {
+                sendRatingEmailDate = new Date();
+                const daysToAdd = send3DaysEnabled ? 3 : 1;
+                sendRatingEmailDate.setDate(sendRatingEmailDate.getDate() + daysToAdd);
             }
 
-            const orderId = orderResult.insertId;
-            let orderItemsInserted = 0;
+            // Insert order into the orders table
+            const orderQuery = `
+                INSERT INTO orders (user_id, total_amount, address_id, payment_status, rating_token, send_rating_email_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            const orderValues = [
+                userId,
+                totalAmount,
+                addressId,
+                'completed',
+                ratingToken,
+                sendRatingEmailDate ? sendRatingEmailDate.toISOString().split('T')[0] : null // Format as YYYY-MM-DD or null
+            ];
 
-            if (cartItems.length === 0) {
-                db.commit((commitErr) => {
-                    if (commitErr) {
-                        db.rollback(() => {
-                            console.error('Error committing transaction (no items), rolling back:', commitErr);
-                            res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
-                        });
-                    } else {
-                        res.status(201).json({ message: 'Order created successfully', orderId });
-                    }
-                });
-                return;
-            }
+            db.query(orderQuery, orderValues, (err, orderResult) => {
+                if (err) {
+                    db.rollback(() => {
+                        console.error('Error inserting order, rolling back:', err);
+                        res.status(500).json({ message: 'Failed to create order', error: err.message });
+                    });
+                    return;
+                }
 
-            cartItems.forEach((item) => {
-                db.query(
-                    'INSERT INTO order_items (order_id, product_id, quantity, price, product_type) VALUES (?, ?, ?, ?, ?)',
-                    [orderId, item.productId, item.quantity, item.price, item.type],
-                    (err) => {
-                        if (err) {
+                const orderId = orderResult.insertId;
+                let orderItemsInserted = 0;
+
+                if (cartItems.length === 0) {
+                    db.commit((commitErr) => {
+                        if (commitErr) {
                             db.rollback(() => {
-                                console.error('Error inserting order item, rolling back:', err);
-                                res.status(500).json({ message: 'Failed to create order', error: err.message });
+                                console.error('Error committing transaction (no items), rolling back:', commitErr);
+                                res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
                             });
-                            return;
+                        } else {
+                            res.status(201).json({ message: 'Order created successfully', orderId });
                         }
-                        orderItemsInserted++;
-                        if (orderItemsInserted === cartItems.length) {
-                            db.commit((commitErr) => {
-                                if (commitErr) {
-                                    db.rollback(() => {
-                                        console.error('Error committing transaction, rolling back:', commitErr);
-                                        res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
-                                    });
-                                } else {
-                                    res.status(201).json({ message: 'Order created successfully', orderId });
-                                }
-                            });
+                    });
+                    return;
+                }
+
+                cartItems.forEach((item) => {
+                    db.query(
+                        'INSERT INTO order_items (order_id, product_id, quantity, price, product_type) VALUES (?, ?, ?, ?, ?)',
+                        [orderId, item.productId, item.quantity, item.price, item.type],
+                        (err) => {
+                            if (err) {
+                                db.rollback(() => {
+                                    console.error('Error inserting order item, rolling back:', err);
+                                    res.status(500).json({ message: 'Failed to create order', error: err.message });
+                                });
+                                return;
+                            }
+                            orderItemsInserted++;
+                            if (orderItemsInserted === cartItems.length) {
+                                db.commit((commitErr) => {
+                                    if (commitErr) {
+                                        db.rollback(() => {
+                                            console.error('Error committing transaction, rolling back:', commitErr);
+                                            res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
+                                        });
+                                    } else {
+                                        res.status(201).json({ message: 'Order created successfully', orderId });
+                                    }
+                                });
+                            }
                         }
-                    }
-                );
+                    );
+                });
             });
-        });
+        } catch (error) {
+            db.rollback(() => {
+                console.error('Error in order creation:', error);
+                res.status(500).json({ message: 'Failed to create order', error: error.message });
+            });
+        }
     });
 });
 

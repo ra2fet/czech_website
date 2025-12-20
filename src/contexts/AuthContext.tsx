@@ -30,7 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate(); // Initialize useNavigate
 
   const redirectToLogin = useCallback(() => {
-    navigate('/signin');
+    // Prevent redirect loop - only redirect if not already on signin page
+    if (window.location.pathname !== '/signin') {
+      navigate('/signin');
+    }
   }, [navigate]);
 
   const signOut = useCallback(async () => {
@@ -57,7 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (elapsed > SESSION_TIMEOUT) {
         console.log('Session timed out. Logging out...');
         signOut(); // Automatically sign out
-        redirectToLogin(); // Redirect to login page on timeout
+        // Only redirect if not already on signin page
+        if (window.location.pathname !== '/signin') {
+          redirectToLogin(); // Redirect to login page on timeout
+        }
       }
     }
   }, [signOut, redirectToLogin]);
@@ -80,12 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error fetching user:', error);
           localStorage.removeItem('token'); // Clear invalid token
           localStorage.removeItem('loginTime'); // Clear login time as well
-          if (error.response &&error.response.data.message === 'Invalid token. Please log in again.') {
-            signOut(); // Ensure full logout state
-            redirectToLogin(); // Redirect to login page
-          }else if (error.response &&  error.response.error === 'Access denied. No authentication token provided.') {
-            signOut(); // Ensure full logout state
-            redirectToLogin(); // Redirect to login page
+      
+          // Only redirect to login if there's a specific auth error and not already on signin
+          if (error.response && window.location.pathname !== '/signin') {
+            const errorMessage = error.response.data?.message || error.response.data?.error;
+            if (errorMessage === 'Invalid token. Please log in again.' || 
+                errorMessage === 'Access denied. No authentication token provided.') {
+                  signOut();
+              redirectToLogin(); // Redirect to login page
+            }
           }
         })
         .finally(() => {

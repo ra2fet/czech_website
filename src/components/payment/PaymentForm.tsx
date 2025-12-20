@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import config from '../../config';
 import toast from 'react-hot-toast';
+import { useFeatures, FeatureGuard } from '../../contexts/FeatureContext'; // Import feature context
 
 interface PaymentFormProps {
   onSuccess?: () => void;
@@ -37,6 +38,7 @@ interface FormData {
 export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, taxFee, shippingFee, discount }: PaymentFormProps) => {
   const { user } = useAuth();
   const { state: { items: cartItems, subtotal, couponStatus }, clearCart, applyCoupon, removeCoupon, fetchAndCalculateFees } = useCart();
+  const { features } = useFeatures();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -123,7 +125,24 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
   };
 
   const calculateTotal = () => {
-    return subtotal + taxFee + shippingFee - discount;
+    let total = subtotal;
+    
+    // Only add tax fee if tax feature is enabled
+    if (features.enableTaxPurchase) {
+      total += taxFee;
+    }
+    
+    // Only add shipping fee if shipping feature is enabled
+    if (features.enableShippingByPriceZone) {
+      total += shippingFee;
+    }
+    
+    // Only subtract discount if coupon feature is enabled
+    if (features.enableDiscountCoupons) {
+      total -= discount;
+    }
+    
+    return total;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -290,20 +309,33 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                 <span>Subtotal ({cartItems.length} items)</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Tax Fee</span>
-                <span>${taxFee.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Shipping</span>
-                <span>${shippingFee.toFixed(2)}</span>
-              </div>
-              {discount > 0 && (
+              
+              {/* Conditionally show tax fee based on feature toggle */}
+              <FeatureGuard feature="enableTaxPurchase">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Discount ({couponCode})</span>
-                  <span className="text-red-600">-${Number(discount).toFixed(0)}</span>
+                  <span>Tax Fee</span>
+                  <span>${taxFee.toFixed(2)}</span>
                 </div>
-              )}
+              </FeatureGuard>
+              
+              {/* Conditionally show shipping fee based on feature toggle */}
+              <FeatureGuard feature="enableShippingByPriceZone">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Shipping</span>
+                  <span>${shippingFee.toFixed(2)}</span>
+                </div>
+              </FeatureGuard>
+              
+              {/* Conditionally show discount based on coupon feature */}
+              <FeatureGuard feature="enableDiscountCoupons">
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Discount ({couponCode})</span>
+                    <span className="text-red-600">-${Number(discount).toFixed(0)}</span>
+                  </div>
+                )}
+              </FeatureGuard>
+              
               <div className="flex justify-between font-bold text-lg text-gray-900 pt-2 border-t border-blue-200">
                 <span>Total</span>
                 <span className="text-blue-600">${calculateTotal().toFixed(2)}</span>
@@ -450,46 +482,48 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               )}
             </div>
 
-            {/* Coupon Code Input */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-2">Have a coupon code?</h3>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Enter coupon code"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={couponCode !== null} // Disable input when coupon is applied
-                />
-                {couponCode ? (
-                  <button
-                    onClick={() => {
-                      removeCoupon();
-                      setCouponInput('');
-                      toast.success('Coupon removed.');
-                    }}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    onClick={async () => {
-                      if (couponInput.trim()) {
-                        setHasAttemptedCoupon(true); // Mark coupon as attempted
-                        await applyCoupon(couponInput);
-                      }
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                    disabled={!couponInput.trim()}
-                  >
-                    Apply
-                  </button>
-                )}
+            {/* Coupon Code Input - Only show if discount coupons are enabled */}
+            <FeatureGuard feature="enableDiscountCoupons">
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-2">Have a coupon code?</h3>
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={couponCode !== null} // Disable input when coupon is applied
+                  />
+                  {couponCode ? (
+                    <button
+                      onClick={() => {
+                        removeCoupon();
+                        setCouponInput('');
+                        toast.success('Coupon removed.');
+                      }}
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        if (couponInput.trim()) {
+                          setHasAttemptedCoupon(true); // Mark coupon as attempted
+                          await applyCoupon(couponInput);
+                        }
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                      disabled={!couponInput.trim()}
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-
+            </FeatureGuard>
+        
             {/* Payment Information */}
             <div id="payment-details" className="space-y-4">
               <div className="flex items-center justify-between">

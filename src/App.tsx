@@ -24,11 +24,13 @@ import 'leaflet/dist/leaflet.css';
 import IntroScreen from './components/layout/IntroScreen'; // Import IntroScreen
 import NewsletterPopup from './components/layout/NewsletterPopup'; // Import NewsletterPopup
 import { RegisterPage } from './pages/RegisterPage'; // Import RegisterPage
+import { SiteLockOverlay } from './components/common/SiteLockOverlay';
 import { RegistrationPendingPage } from './pages/RegistrationPendingPage'; // Import RegistrationPendingPage
 import { VerifyEmailPage } from './pages/VerifyEmailPage'; // Import VerifyEmailPage
 import { OffersPage } from './pages/OffersPage'; // Import OffersPage
 import RatingPage from './pages/RatingPage'; // Import RatingPage
 import { LanguageProvider } from './contexts/LanguageContext'; // Import LanguageProvider
+import { FeatureProvider, FeatureGuard } from './contexts/FeatureContext'; // Import FeatureProvider
 
 
 function App() {
@@ -43,9 +45,9 @@ function App() {
     const handleScroll = () => {
       setScrollPosition(window.scrollY);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -64,64 +66,71 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <CartProvider>
-        <LanguageProvider> {/* Wrap with LanguageProvider */}
-          <AuthAndCartHandler /> {/* New component to handle auth and cart logic */}
-          {showIntro && !shouldHideIntro && <IntroScreen onFinish={handleIntroFinish} />} {/* Render IntroScreen conditionally */}
-          {!showIntro && !shouldHideIntro && <NewsletterPopup />} {/* Render NewsletterPopup after intro and not on admin/dashboard routes */}
-          <div className="font-sans text-gray-900 bg-white">
-            <ScrollToTop />
-            {!isAdminRoute && !isDashboardRoute && !showIntro && <Header scrollPosition={scrollPosition} />}
-            <main>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/blogs" element={<BlogsPage />} />
-                <Route path="/portfolio" element={<PortfolioPage />} />
-                <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
-                <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
-                <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}
-                <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
-                <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
-                <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
-                <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
-                <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
-                <Route
-                  path="/admin/*"
-                  element={
-                    <ProtectedRoute adminOnly={true}>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <CustomerDashboard /> {/* Default dashboard for customers */}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/company-dashboard"
-                  element={
-                    <ProtectedRoute companyOnly={true}> {/* Protect company dashboard */}
-                      <CompanyDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </main>
-            {!isAdminRoute && <Footer />}
-            {!isAdminRoute &&  <ChatBot />}
-            <Toaster position="top-right" />
-          </div>
-        </LanguageProvider>
-      </CartProvider>
-    </AuthProvider>
+    <FeatureProvider>
+      <AuthProvider>
+        <CartProvider>
+          <LanguageProvider> {/* Wrap with LanguageProvider */}
+            <AuthAndCartHandler /> {/* New component to handle auth and cart logic */}
+            <SiteLockOverlay />
+            {showIntro && !shouldHideIntro && <IntroScreen onFinish={handleIntroFinish} />} {/* Render IntroScreen conditionally */}
+            {!showIntro && !shouldHideIntro && (
+              <FeatureGuard feature="enableEmailSubscriptionPopup">
+                <NewsletterPopup /> {/* Render NewsletterPopup after intro and not on admin/dashboard routes */}
+              </FeatureGuard>
+            )}
+            <div className="font-sans text-gray-900 bg-white">
+              <ScrollToTop />
+              {!isAdminRoute && !isDashboardRoute && !showIntro && <Header scrollPosition={scrollPosition} />}
+              <main>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/blogs" element={<BlogsPage />} />
+                  <Route path="/portfolio" element={<PortfolioPage />} />
+                  <Route path="/locations" element={<LocationsPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
+                  <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
+                  <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}
+                  <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
+                  <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
+                  <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
+                  <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
+                  <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <ProtectedRoute adminOnly={true}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <CustomerDashboard /> {/* Default dashboard for customers */}
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/company-dashboard"
+                    element={
+                      <ProtectedRoute companyOnly={true}> {/* Protect company dashboard */}
+                        <CompanyDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </main>
+              {!isAdminRoute && <Footer />}
+              {!isAdminRoute && <ChatBot />}
+              <Toaster position="top-right" />
+            </div>
+          </LanguageProvider>
+        </CartProvider>
+      </AuthProvider>
+    </FeatureProvider>
   );
 }
 

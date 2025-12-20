@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
 import AnnouncementMarquee from './AnnouncementMarquee'; // Import AnnouncementMarquee
 import LanguageSwitcher from './LanguageSwitcher'; // Import LanguageSwitcher
 import { useTranslation } from 'react-i18next';
+import { useFeatures, FeatureGuard } from '../../contexts/FeatureContext'; // Import feature context
 
 interface HeaderProps {
   scrollPosition: number;
@@ -17,6 +18,7 @@ interface HeaderProps {
 
 export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
   const { t } = useTranslation();
+  const { isFeatureEnabled } = useFeatures(); // Get feature status
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -39,7 +41,8 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
   const navigation = [
     { name: t('home'), href: '/' },
     { name: t('products'), href: '/products' },
-    { name: t('offers'), href: '/offers' },
+    // Conditionally include offers based on feature toggle
+    ...(isFeatureEnabled('enableProductOffers') ? [{ name: t('offers'), href: '/offers' }] : []),
     { name: t('blogs'), href: '/blogs' },
     { name: t('portfolio'), href: '/portfolio' },
     // { name: 'Locations', href: '/locations' }, // Uncomment and translate if needed
@@ -48,9 +51,12 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
 
   return (
     <>
-      <AnnouncementMarquee />
+      {/* Conditionally render announcement marquee based on feature toggle */}
+      <FeatureGuard feature="enableNewsMarquee">
+        <AnnouncementMarquee />
+      </FeatureGuard>
       <header 
-        className={`fixed ${isScrolled?'top-0':'top-8'} w-full z-50 transition-all duration-300 ${
+        className={`fixed ${isScrolled?'top-0':isFeatureEnabled('enableNewsMarquee')?'top-8':'top-0'} w-full z-50 transition-all duration-300 ${
           isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-transparent py-4'
         } ${showIntro ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
@@ -82,18 +88,28 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
         
         {/* Cart Icon, Login/User Icon, Language Switcher and Mobile Menu Button */}
         <div className="flex items-center space-x-4">
-          <LanguageSwitcher isScrolled={isScrolled} />
-          <CartIcon onClick={() => setIsCartOpen(true)} isScrolled={isScrolled} />
+          {/* Conditionally render language switcher based on feature toggle */}
+          <FeatureGuard feature="enableDutchLanguage">
+            <LanguageSwitcher isScrolled={isScrolled} />
+          </FeatureGuard>
           
-          {user ? (
-            <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
-              <User size={24} />
-            </Link>
-          ) : (
-            <Link to="/signin" className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
-              <UserCircle size={24} />
-            </Link>
-          )}
+          {/* Conditionally render cart icon based on customer accounts feature */}
+          <FeatureGuard feature="enableCustomerAccounts">
+            <CartIcon onClick={() => setIsCartOpen(true)} isScrolled={isScrolled} />
+          </FeatureGuard>
+          
+          {/* Conditionally render user authentication based on user registration feature */}
+          <FeatureGuard feature="enableUserRegistration">
+            {user ? (
+              <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
+                <User size={24} />
+              </Link>
+            ) : (
+              <Link to="/signin" className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
+                <UserCircle size={24} />
+              </Link>
+            )}
+          </FeatureGuard>
 
           <button 
             onClick={toggleMenu}
@@ -129,25 +145,34 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
                   {item.name}
                 </Link>
               ))}
-              {user ? (
-                <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                  {t('dashboard')}
-                </Link>
-              ) : (
-                <Link to="/signin" className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                  {t('signIn')}
-                </Link>
-              )}
-              <div className="py-2">
-                <LanguageSwitcher isScrolled={true} /> {/* Always scrolled style for mobile menu */}
-              </div>
+              {/* Conditionally render user links in mobile menu */}
+              <FeatureGuard feature="enableUserRegistration">
+                {user ? (
+                  <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className="block py-2 font-medium text-accent-900 hover:text-primary-600">
+                    {t('dashboard')}
+                  </Link>
+                ) : (
+                  <Link to="/signin" className="block py-2 font-medium text-accent-900 hover:text-primary-600">
+                    {t('signIn')}
+                  </Link>
+                )}
+              </FeatureGuard>
+              
+              {/* Conditionally render language switcher in mobile menu */}
+              <FeatureGuard feature="enableDutchLanguage">
+                <div className="py-2">
+                  <LanguageSwitcher isScrolled={true} /> {/* Always scrolled style for mobile menu */}
+                </div>
+              </FeatureGuard>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* Cart Sidebar */}
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      {/* Conditionally render cart sidebar based on customer accounts feature */}
+      <FeatureGuard feature="enableCustomerAccounts">
+        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      </FeatureGuard>
     </header></>
   );
 };

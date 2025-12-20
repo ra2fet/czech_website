@@ -5,6 +5,20 @@ const { authenticateToken, adminProtect } = require('../middleware/auth'); // Im
 const multer = require('multer');
 const path = require('path');
 
+// Helper function to check if a feature is enabled
+const isFeatureEnabled = async (featureName) => {
+  try {
+    const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
+    if (settings.length > 0) {
+      return settings[0][featureName] === 1 || settings[0][featureName] === true;
+    }
+    return true; // Default to enabled if no settings found
+  } catch (error) {
+    console.error('Error checking feature setting:', error);
+    return true; // Default to enabled on error
+  }
+};
+
 // Set up multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -39,7 +53,13 @@ const upload = multer({
 // @route   POST /api/contact/send-message
 // @desc    Send a message from the contact form
 // @access  Public
-router.post('/send-message', (req, res) => {
+router.post('/send-message', async (req, res) => {
+  // Check if contact form feature is enabled
+  const contactEnabled = await isFeatureEnabled('enableContactForms');
+  if (!contactEnabled) {
+    return res.status(403).json({ error: req.t('errors.features.contact_disabled') || 'Contact form feature is currently disabled' });
+  }
+
   const { name, email, phone, subject, message } = req.body;
 
   // Validation with localized messages
@@ -92,7 +112,16 @@ router.get('/open-positions', (req, res) => {
 // @route   POST /api/contact/upload-resume
 // @desc    Upload a resume file
 // @access  Public
-router.post('/upload-resume', upload.single('resume'), (req, res) => {
+router.post('/upload-resume', async (req, res, next) => {
+  // Check if job applications are enabled
+  const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
+  if (!jobApplicationsEnabled) {
+    return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
+  }
+  
+  // Continue with multer middleware
+  upload.single('resume')(req, res, next);
+}, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: req.t('errors.file.upload_failed') });
   }
@@ -118,7 +147,13 @@ router.post('/upload-resume', upload.single('resume'), (req, res) => {
 // @route   POST /api/contact/apply-job
 // @desc    Apply for a job position
 // @access  Public
-router.post('/apply-job', (req, res) => {
+router.post('/apply-job', async (req, res) => {
+  // Check if job applications are enabled
+  const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
+  if (!jobApplicationsEnabled) {
+    return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
+  }
+
   const { position_id, name, email, phone, resume_url, cover_letter } = req.body;
 
   // Validation with localized messages

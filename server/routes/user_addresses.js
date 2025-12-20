@@ -17,14 +17,16 @@ router.use('/:userId', authenticateToken, (req, res, next) => {
 // Route to get addresses for a specific user
 router.get('/:userId', (req, res) => {
     const { userId } = req.params;
+    const languageCode = req.language || 'en';
     const query = `
-        SELECT ua.*, p.name AS province_name
+        SELECT ua.*, pt.name AS province_name
         FROM user_addresses ua
-        JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces p ON ua.province_id = p.id
+        LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
         WHERE ua.user_id = ?
         ORDER BY ua.created_at DESC
     `;
-    db.query(query, [userId], (err, addresses) => {
+    db.query(query, [languageCode, userId], (err, addresses) => {
         if (err) {
             console.error('Error fetching user addresses:', err);
             return res.status(500).json({ error: req.t('errors.resources.fetch_failed', { resource: req.getResource('address', true) }) });

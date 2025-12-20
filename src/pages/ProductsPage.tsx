@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import config from '../config'; // Import config
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useTranslation } from 'react-i18next';
+import { useFeatures, FeatureGuard } from '../contexts/FeatureContext'; // Import feature context
 
 interface Product {
   id: string;
@@ -32,6 +33,7 @@ interface Product {
 
 export const ProductsPage = () => {
   const { t } = useTranslation();
+  const { isFeatureEnabled } = useFeatures(); // Get feature status
   const [viewMode, setViewMode] = useState<'retail' | 'wholesale'>('retail');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -98,13 +100,26 @@ export const ProductsPage = () => {
 
   const handleToggleViewMode = (mode: 'retail' | 'wholesale') => {
     if (mode === 'wholesale') {
+      // Check if wholesale feature is enabled
+      if (!isFeatureEnabled('enableWholesaleProducts')) {
+        toast.error(t('wholesale_feature_disabled'));
+        return;
+      }
+      
       if (!user) {
         toast.error(t('login_to_access_wholesale'));
         navigate('/signin'); // Redirect to login page
         return;
       }
-      if (user.userType !== 'company' || !user.isActive) {
+      
+      // Check if company-only wholesale is enabled
+      if (isFeatureEnabled('enableCompanyOnlyWholesale') && user.userType !== 'company') {
         toast.error(t('wholesale_for_company_users_only'));
+        return;
+      }
+      
+      if (user.userType === 'company' && !user.isActive) {
+        toast.error(t('company_account_not_active'));
         return;
       }
     }
@@ -197,38 +212,43 @@ export const ProductsPage = () => {
         </div>
       </section>
 
-      {/* View Mode Selector */}
-      <section className="bg-gray-100 py-6 border-b border-gray-200">
-        <div className="container-custom">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <h2 className="text-2xl font-bold mb-4 md:mb-0">{t('product_catalog_title')}</h2>
-            <div className="flex">
-              <button
-                onClick={() => handleToggleViewMode('retail')}
-                className={`flex items-center px-4 py-2 rounded-l-md ${
-                  viewMode === 'retail'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <ShoppingBag size={18} className="mr-2" />
-                {t('retail_mode')}
-              </button>
-              <button
-                onClick={() => handleToggleViewMode('wholesale')}
-                className={`flex items-center px-4 py-2 rounded-r-md ${
-                  viewMode === 'wholesale'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Package size={18} className="mr-2" />
-                {t('wholesale_mode')}
-              </button>
+      {/* View Mode Selector - Only show if wholesale products are enabled */}
+      <FeatureGuard feature="enableWholesaleProducts">
+        <section className="bg-gray-100 py-6 border-b border-gray-200">
+          <div className="container-custom">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <h2 className="text-2xl font-bold mb-4 md:mb-0">{t('product_catalog_title')}</h2>
+              <div className="flex">
+                <button
+                  onClick={() => handleToggleViewMode('retail')}
+                  className={`flex items-center px-4 py-2 rounded-l-md ${
+                    viewMode === 'retail'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <ShoppingBag size={18} className="mr-2" />
+                  {t('retail_mode')}
+                </button>
+                {/* Only show wholesale button if user has access or feature allows it */}
+                {(!isFeatureEnabled('enableCompanyOnlyWholesale') || (user && user.userType === 'company')) && (
+                  <button
+                    onClick={() => handleToggleViewMode('wholesale')}
+                    className={`flex items-center px-4 py-2 rounded-r-md ${
+                      viewMode === 'wholesale'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Package size={18} className="mr-2" />
+                    {t('wholesale_mode')}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </FeatureGuard>
 
       {/* Features Section */}
       <section className="py-12 bg-white">

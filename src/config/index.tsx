@@ -31,15 +31,15 @@ const errorResponse = (error: AxiosError<ServerError>) => {
     
     const axiosError = error as  AxiosError<ServerError>;
     if (axiosError.response && axiosError.response.data && axiosError.response.data.error == "Access denied. No authentication token provided.") {
-          console.log('unauth');
-
-            location.reload();
+          console.log('unauth - authentication error, handled by AuthContext');
+          // Don't reload here - let AuthContext handle the redirect
+          // location.reload();
     }
   
   if (error && error.response && error.response.data && error.response.data.error) {
     // Assuming 'location' is available in the current context (e.g., browser environment)
-    console.error("Axios error with structured data, reloading:", error); //DEBUG
-    // location.reload();
+    console.error("Axios error with structured data:", error); // DEBUG - removed reload
+    // location.reload(); // Don't auto-reload, let components handle appropriately
   } else {
     console.error("An unexpected Axios error occurred:", error);
     // Optionally, handle the error in a different way, like displaying a user-friendly message.

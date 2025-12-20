@@ -6,10 +6,10 @@ const db = require('../config/db');
 const { authenticateToken, adminProtect } = require('../middleware/auth');
 
 // Get feature settings
-router.get('/feature-settings', authenticateToken, adminProtect, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
-    
+
     if (settings.length === 0) {
       // Return default settings if none exist
       const defaultSettings = {
@@ -46,10 +46,14 @@ router.get('/feature-settings', authenticateToken, adminProtect, async (req, res
         enableAdminApprovalRequired: true,
         enableRestrictedCompanyCart: true,
         enableWholesaleRetailSeparation: true,
+        enableContactForms: true,
+        enableJobApplications: true,
+        enableOrderCreation: true,
+        enableUnpaidSiteLock: false,
       };
       return res.json(defaultSettings);
     }
-    
+
     res.json(settings[0]);
   } catch (error) {
     console.error('Error fetching feature settings:', error);
@@ -58,13 +62,13 @@ router.get('/feature-settings', authenticateToken, adminProtect, async (req, res
 });
 
 // Update feature settings
-router.put('/feature-settings', authenticateToken, adminProtect, async (req, res) => {
+router.put('/', authenticateToken, adminProtect, async (req, res) => {
   try {
     const settings = req.body;
-    
+
     // Check if settings exist
     const [existingSettings] = await db.promise().query('SELECT id FROM feature_settings WHERE id = 1');
-    
+
     if (existingSettings.length === 0) {
       // Insert new settings
       await db.promise().query(
@@ -79,8 +83,9 @@ router.put('/feature-settings', authenticateToken, adminProtect, async (req, res
           enableMultipleAddresses, enableWholesaleProducts, enableCompanyOnlyWholesale, 
           enableEmailVerification, enableVerificationCode, enableActivationLink, 
           enableCompanyNameField, enableLicenseNumberField, enableCompanyApproval, 
-          enableAdminApprovalRequired, enableRestrictedCompanyCart, enableWholesaleRetailSeparation
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          enableAdminApprovalRequired, enableRestrictedCompanyCart, enableWholesaleRetailSeparation,
+          enableUnpaidSiteLock
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           settings.enableTaxPurchase, settings.enableShippingByPriceZone, settings.enableDutchLanguage,
           settings.enableFourPartAddress, settings.enableProvincesList, settings.enableNewsMarquee,
@@ -92,7 +97,8 @@ router.put('/feature-settings', authenticateToken, adminProtect, async (req, res
           settings.enableMultipleAddresses, settings.enableWholesaleProducts, settings.enableCompanyOnlyWholesale,
           settings.enableEmailVerification, settings.enableVerificationCode, settings.enableActivationLink,
           settings.enableCompanyNameField, settings.enableLicenseNumberField, settings.enableCompanyApproval,
-          settings.enableAdminApprovalRequired, settings.enableRestrictedCompanyCart, settings.enableWholesaleRetailSeparation
+          settings.enableAdminApprovalRequired, settings.enableRestrictedCompanyCart, settings.enableWholesaleRetailSeparation,
+          settings.enableUnpaidSiteLock
         ]
       );
     } else {
@@ -110,6 +116,7 @@ router.put('/feature-settings', authenticateToken, adminProtect, async (req, res
           enableEmailVerification = ?, enableVerificationCode = ?, enableActivationLink = ?, 
           enableCompanyNameField = ?, enableLicenseNumberField = ?, enableCompanyApproval = ?, 
           enableAdminApprovalRequired = ?, enableRestrictedCompanyCart = ?, enableWholesaleRetailSeparation = ?,
+          enableUnpaidSiteLock = ?,
           updated_at = CURRENT_TIMESTAMP
          WHERE id = 1`,
         [
@@ -123,11 +130,12 @@ router.put('/feature-settings', authenticateToken, adminProtect, async (req, res
           settings.enableMultipleAddresses, settings.enableWholesaleProducts, settings.enableCompanyOnlyWholesale,
           settings.enableEmailVerification, settings.enableVerificationCode, settings.enableActivationLink,
           settings.enableCompanyNameField, settings.enableLicenseNumberField, settings.enableCompanyApproval,
-          settings.enableAdminApprovalRequired, settings.enableRestrictedCompanyCart, settings.enableWholesaleRetailSeparation
+          settings.enableAdminApprovalRequired, settings.enableRestrictedCompanyCart, settings.enableWholesaleRetailSeparation,
+          settings.enableUnpaidSiteLock
         ]
       );
     }
-    
+
     res.json({ message: 'Feature settings updated successfully' });
   } catch (error) {
     console.error('Error updating feature settings:', error);

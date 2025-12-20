@@ -32,14 +32,16 @@ import { OffersManager } from './OffersManager'; // Import OffersManager
 import AnnouncementsManager from './AnnouncementsManager'; // Import AnnouncementsManager
 import { UsersManager } from './UsersManager';
 import { FeatureManager } from './FeatureManager';
+import { useFeatures, FeatureGuard } from '../../contexts/FeatureContext'; // Import feature context
 
 export function AdminDashboard() {
   // State for sidebar visibility on mobile
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { signOut } = useAuth();
+  const { isFeatureEnabled } = useFeatures(); // Get feature status
   const location = useLocation();
 
-  // Navigation items for sidebar
+  // Navigation items for sidebar - conditionally build based on features
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Users', href: '/admin/users', icon: Users },
@@ -52,13 +54,13 @@ export function AdminDashboard() {
     { name: 'Applications', href: '/admin/applications', icon: ClipboardList },
     { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle }, // Add new FAQ navigation item
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart }, // Add new Orders navigation item
-    { name: 'Tax Fees', href: '/admin/tax-fees', icon: DollarSign },
-    { name: 'Shipping Rates', href: '/admin/shipping-rates', icon: Truck },
-    { name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift },
-    { name: 'Offers', href: '/admin/offers', icon: Gift }, // Add new Offers navigation item
-    { name: 'Announcements', href: '/admin/announcements', icon: ClipboardList }, // Add new Announcements navigation item
+    // Conditionally add feature-dependent navigation items
+    ...(isFeatureEnabled('enableTaxPurchase') ? [{ name: 'Tax Fees', href: '/admin/tax-fees', icon: DollarSign }] : []),
+    ...(isFeatureEnabled('enableShippingByPriceZone') ? [{ name: 'Shipping Rates', href: '/admin/shipping-rates', icon: Truck }] : []),
+    ...(isFeatureEnabled('enableDiscountCoupons') ? [{ name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift }] : []),
+    ...(isFeatureEnabled('enableProductOffers') ? [{ name: 'Offers', href: '/admin/offers', icon: Gift }] : []),
+    ...(isFeatureEnabled('enableNewsMarquee') ? [{ name: 'Announcements', href: '/admin/announcements', icon: ClipboardList }] : []),
     { name: 'Feature Settings', href: '/admin/features', icon: Settings },
-
   ];
 
   // Handle user sign out
@@ -153,11 +155,53 @@ export function AdminDashboard() {
           <Route path="applications" element={<ApplicationsManager />} />
           <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
           <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
-          <Route path="tax-fees" element={<TaxFeesManager />} />
-          <Route path="shipping-rates" element={<ShippingRatesManager />} />
-          <Route path="coupon-codes" element={<CouponCodesManager />} />
-          <Route path="offers" element={<OffersManager />} /> {/* Add new Offers route */}
-          <Route path="announcements" element={<AnnouncementsManager />} /> {/* Add new Announcements route */}
+          
+          {/* Conditionally render routes based on feature toggles */}
+          <Route path="tax-fees" element={
+            <FeatureGuard 
+              feature="enableTaxPurchase" 
+              fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Tax & Fees feature is disabled</h2></div>}
+            >
+              <TaxFeesManager />
+            </FeatureGuard>
+          } />
+          
+          <Route path="shipping-rates" element={
+            <FeatureGuard 
+              feature="enableShippingByPriceZone" 
+              fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Shipping Rates feature is disabled</h2></div>}
+            >
+              <ShippingRatesManager />
+            </FeatureGuard>
+          } />
+          
+          <Route path="coupon-codes" element={
+            <FeatureGuard 
+              feature="enableDiscountCoupons" 
+              fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Coupon Codes feature is disabled</h2></div>}
+            >
+              <CouponCodesManager />
+            </FeatureGuard>
+          } />
+          
+          <Route path="offers" element={
+            <FeatureGuard 
+              feature="enableProductOffers" 
+              fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Offers feature is disabled</h2></div>}
+            >
+              <OffersManager />
+            </FeatureGuard>
+          } />
+          
+          <Route path="announcements" element={
+            <FeatureGuard 
+              feature="enableNewsMarquee" 
+              fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Announcements feature is disabled</h2></div>}
+            >
+              <AnnouncementsManager />
+            </FeatureGuard>
+          } />
+          
           <Route path="features" element={<FeatureManager />} />
         </Routes>
       </main>

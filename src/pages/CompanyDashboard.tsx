@@ -96,7 +96,7 @@ export const CompanyDashboard = () => {
     }
     if (window.confirm('Are you sure you want to delete this address?')) {
       try {
-        await config.axios.delete(`/user_addresses/${user.id}/${addressId}`);
+        await config.axios.delete(`user_addresses/${user.id}/${addressId}`);
         toast.success('Address deleted successfully!');
         fetchAddresses(); // Refresh the address list
       } catch (error) {
@@ -132,11 +132,11 @@ export const CompanyDashboard = () => {
     try {
       if (currentAddress) {
         // Update existing address
-        await config.axios.put(`/user_addresses/${user.id}/${currentAddress.id}`, addressDataToSend);
+        await config.axios.put(`user_addresses/${user.id}/${currentAddress.id}`, addressDataToSend);
         toast.success('Address updated successfully!');
       } else {
         // Add new address
-        await config.axios.post(`/user_addresses/${user.id}`, addressDataToSend);
+        await config.axios.post(`user_addresses/${user.id}`, addressDataToSend);
         toast.success('Address added successfully!');
       }
       setShowAddressModal(false);
@@ -159,7 +159,7 @@ export const CompanyDashboard = () => {
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
-      const response = await config.axios.get(`/orders/${user?.id}`);
+      const response = await config.axios.get(`orders/${user?.id}`);
       const ordersData = response.data.map((order: Order) => ({
         ...order,
         total_amount: Number(order.total_amount).toFixed(2), // Ensure total_amount is a number
@@ -176,7 +176,7 @@ export const CompanyDashboard = () => {
   const fetchAddresses = async () => {
     setLoadingAddresses(true);
     try {
-      const response = await config.axios.get(`/user_addresses/${user?.id}`);
+      const response = await config.axios.get(`user_addresses/${user?.id}`);
       setAddresses(response.data);
     } catch (error) {
       console.error('Error fetching addresses:', error);
