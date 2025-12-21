@@ -38,7 +38,7 @@ initRatingEmailScheduler();
 
 // Middleware
 app.use(cors({
-  origin:'*',
+  origin: '*',
   // origin: process.env.NODE_ENV === 'production'
   //   ? process.env.FRONTEND_PRODUCTION_URL || 'https://babonederland.com'
   //   :  process.env.FRONTEND_LOCAL_URL || 'http://localhost:3000',
@@ -55,27 +55,29 @@ app.use(setLanguageHeaders);
 // Use path.join and __dirname for a more robust path resolution
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+const API_VERSION = 'v2';
+
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/blogs', blogRoutes);
-app.use('/api/locations', locationRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/faqs', faqRoutes); 
-app.use('/api/orders', orderRoutes); 
-app.use('/api/admin', adminRoutes);
-app.use('/api/user_addresses', addressRoutes);
-app.use('/api/tax-fees', taxFeeRoutes);
-app.use('/api/shipping-rates', shippingRateRoutes);
-app.use('/api/coupon-codes', couponCodeRoutes);
-app.use('/api/provinces', provinceRoutes);
-app.use('/api/offers', offerRoutes); 
-app.use('/api/announcements', announcementRoutes);
-app.use('/api/ratings', ratingRoutes); // Use the new ratings route
-app.use('/api/users', userRoutes); // Use the new users route
-app.use('/api/newsletter', newsletterRoutes); // Use the new newsletter route
-app.use('/api/languages', languageRoutes); // Use the languages route
-app.use('/api/feature-settings', featureSettingsRoutes);
+app.use(`/api/${API_VERSION}/auth`, authRoutes);
+app.use(`/api/${API_VERSION}/blogs`, blogRoutes);
+app.use(`/api/${API_VERSION}/locations`, locationRoutes);
+app.use(`/api/${API_VERSION}/products`, productRoutes);
+app.use(`/api/${API_VERSION}/contact`, contactRoutes);
+app.use(`/api/${API_VERSION}/faqs`, faqRoutes);
+app.use(`/api/${API_VERSION}/orders`, orderRoutes);
+app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+app.use(`/api/${API_VERSION}/user_addresses`, addressRoutes);
+app.use(`/api/${API_VERSION}/tax-fees`, taxFeeRoutes);
+app.use(`/api/${API_VERSION}/shipping-rates`, shippingRateRoutes);
+app.use(`/api/${API_VERSION}/coupon-codes`, couponCodeRoutes);
+app.use(`/api/${API_VERSION}/provinces`, provinceRoutes);
+app.use(`/api/${API_VERSION}/offers`, offerRoutes);
+app.use(`/api/${API_VERSION}/announcements`, announcementRoutes);
+app.use(`/api/${API_VERSION}/ratings`, ratingRoutes); // Use the new ratings route
+app.use(`/api/${API_VERSION}/users`, userRoutes); // Use the new users route
+app.use(`/api/${API_VERSION}/newsletter`, newsletterRoutes); // Use the new newsletter route
+app.use(`/api/${API_VERSION}/languages`, languageRoutes); // Use the languages route
+app.use(`/api/${API_VERSION}/feature-settings`, featureSettingsRoutes);
 
 
 // Global Error Handler
