@@ -6,7 +6,7 @@ interface ApiError {
 }
 
 const instance = axios.create({
-  // baseURL: 'http://localhost:5001/api',  local api v1
+  // baseURL: 'http://localhost:5001/api',  local api 
   baseURL: 'https://babobambo.com/api/v2',
 });
 
