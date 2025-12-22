@@ -7,7 +7,7 @@ interface ApiError {
 
 const instance = axios.create({
   // baseURL: 'http://localhost:5001/api',  local api aaaaaaaa
-  baseURL: 'https://babobambo.com/api/v2',
+  baseURL: 'https://babobambo.com/api/v3',
 });
 
 // Add request interceptor to include language header
