@@ -55,7 +55,7 @@ app.use(setLanguageHeaders);
 // Use path.join and __dirname for a more robust path resolution
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const API_VERSION = 'v2';
+const API_VERSION = 'v3';
 
 // Routes
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
