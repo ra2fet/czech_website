@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // This ensures assets and src paths work correctly when deployed in a subdirectory
+  base: '/', // Changed to absolute path for proper SPA routing
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
