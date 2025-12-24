@@ -64,7 +64,7 @@ axiosInstance.interceptors.response.use(
 const config = {
   useSupabase: env.VITE_USE_SUPABASE === 'true' || false, // Convert string to boolean, default to false
   enableSessionTimeout: env.VITE_ENABLE_SESSION_TIMEOUT === 'true' || true, // Enable session timeout by default
-  backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://your-production-api.com/api' : 'http://localhost:5001/api'),
+  backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api'),
   apiEndpoints: {
     auth: {
       signin: '/auth/signin',
