@@ -193,6 +193,16 @@ export function ProductsManager() {
         <button
           onClick={() => {
             setCurrentProduct(null);
+            setFormData({
+              name: '',
+              description: '',
+              image_url: '',
+              retail_price: '',
+              wholesale_price: '',
+              retail_specs: {},
+              wholesale_specs: {}
+            });
+            setSelectedFile(null);
             setIsModalOpen(true);
           }}
           className="btn btn-primary flex items-center"
@@ -361,9 +371,13 @@ export function ProductsManager() {
                     }}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
-                  {selectedFile && (
+                  {selectedFile ? (
                     <p className="text-sm text-green-600 mt-1">
                       Selected: {selectedFile.name}
+                    </p>
+                  ) : formData.image_url && !formData.image_url.startsWith('http') && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Current file: {formData.image_url.split('/').pop()}
                     </p>
                   )}
                 </div>
