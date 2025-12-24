@@ -138,9 +138,13 @@ export function ProductsManager() {
         }
 
         if (currentProduct) {
-          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data);
+          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data, {
+            headers: { 'Content-Type': undefined }
+          });
         } else {
-          await config.axios.post(config.apiEndpoints.products, data);
+          await config.axios.post(config.apiEndpoints.products, data, {
+            headers: { 'Content-Type': undefined }
+          });
         }
       }
 
