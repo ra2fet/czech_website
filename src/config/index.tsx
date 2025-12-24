@@ -10,7 +10,7 @@ const isProduction = env.MODE === 'production';
 
 // Create Axios instance with base URL
 const axiosInstance = axios.create({
-  baseURL: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://your-production-api.com/api' : 'http://localhost:5001/api'),
+  baseURL: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api'),
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -18,7 +18,7 @@ const axiosInstance = axios.create({
 
 // Add Authorization header with JWT token
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');  
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,14 +28,14 @@ axiosInstance.interceptors.request.use((config) => {
 
 // Generic error handling function
 const errorResponse = (error: AxiosError<ServerError>) => {
-    
-    const axiosError = error as  AxiosError<ServerError>;
-    if (axiosError.response && axiosError.response.data && axiosError.response.data.error == "Access denied. No authentication token provided.") {
-          console.log('unauth - authentication error, handled by AuthContext');
-          // Don't reload here - let AuthContext handle the redirect
-          // location.reload();
-    }
-  
+
+  const axiosError = error as AxiosError<ServerError>;
+  if (axiosError.response && axiosError.response.data && axiosError.response.data.error == "Access denied. No authentication token provided.") {
+    console.log('unauth - authentication error, handled by AuthContext');
+    // Don't reload here - let AuthContext handle the redirect
+    // location.reload();
+  }
+
   if (error && error.response && error.response.data && error.response.data.error) {
     // Assuming 'location' is available in the current context (e.g., browser environment)
     console.error("Axios error with structured data:", error); // DEBUG - removed reload
