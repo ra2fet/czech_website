@@ -94,50 +94,61 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Admin: Get all products with translations
+// Admin: Get all products with all translations
 router.get('/admin', authenticateToken, adminProtect, async (req, res) => {
-  const languageCode = req.language;
   try {
-    const [results] = await db.promise().query(
-      `SELECT p.id, pt.name, pt.description, p.image_url, p.retail_price, p.wholesale_price, p.retail_specs, p.wholesale_specs, p.created_at, p.updated_at
-       FROM products p
-       LEFT JOIN products_translations pt ON p.id = pt.product_id AND pt.language_code = ?
-       ORDER BY p.created_at DESC`,
-      [languageCode]
-    );
-    res.json(results);
+    const [products] = await db.promise().query('SELECT * FROM products ORDER BY created_at DESC');
+    const [translations] = await db.promise().query('SELECT * FROM products_translations');
+
+    const productsWithTranslations = products.map((product) => {
+      const productTranslations = {};
+
+      translations.forEach((t) => {
+        if (t.product_id === product.id) {
+          productTranslations[t.language_code] = { name: t.name, description: t.description };
+        }
+      });
+
+      return {
+        ...product,
+        name: productTranslations[req.language]?.name || productTranslations['en']?.name || '',
+        description: productTranslations[req.language]?.description || productTranslations['en']?.description || '',
+        translations: productTranslations,
+      };
+    });
+
+    res.json(productsWithTranslations);
   } catch (error) {
-    console.error('Error fetching all products:', error);
+    console.error('Error fetching all products with translations:', error);
     res.status(500).json({ error: 'Failed to fetch all products' });
   }
 });
 
 router.post('/', authenticateToken, adminProtect, upload.single('image'), async (req, res) => {
-  const { name, description, retail_price, wholesale_price } = req.body;
+  const { retail_price, wholesale_price } = req.body;
+  let { translations, retail_specs, wholesale_specs } = req.body;
 
-  // Handle specs parsing
-  let { retail_specs, wholesale_specs } = req.body;
+  // Parse JSON fields from FormData
+  translations = parseJsonField(translations);
   retail_specs = parseJsonField(retail_specs);
   wholesale_specs = parseJsonField(wholesale_specs);
 
-  const languageCode = req.language;
+  const defaultLanguageCode = req.language;
+
+  // Validation
+  if (!translations || !translations[defaultLanguageCode]?.name || !retail_price || !wholesale_price) {
+    return res.status(400).json({ error: 'Name (default language), retail price, and wholesale price are required' });
+  }
 
   // Determine image URL
   let image_url = req.body.image_url;
   if (req.file) {
-    // Save relative path using /uploads/
     image_url = '/uploads/' + req.file.filename;
   }
 
-  // Validation
-  if (!name || !retail_price || !wholesale_price) {
-    return res.status(400).json({ error: 'Name, retail price, and wholesale price are required' });
-  }
-  if (isNaN(parseFloat(retail_price)) || isNaN(parseFloat(wholesale_price))) {
-    return res.status(400).json({ error: 'Invalid price format' });
-  }
-
   try {
+    await db.promise().beginTransaction();
+
     const [productResult] = await db.promise().query(
       'INSERT INTO products (image_url, retail_price, wholesale_price, retail_specs, wholesale_specs) VALUES (?, ?, ?, ?, ?)',
       [
@@ -150,13 +161,20 @@ router.post('/', authenticateToken, adminProtect, upload.single('image'), async 
     );
     const productId = productResult.insertId;
 
-    await db.promise().query(
-      'INSERT INTO products_translations (product_id, language_code, name, description) VALUES (?, ?, ?, ?)',
-      [productId, languageCode, name, description || null]
-    );
+    // Insert translations for all provided languages
+    for (const langCode in translations) {
+      if (translations[langCode]?.name) {
+        await db.promise().query(
+          'INSERT INTO products_translations (product_id, language_code, name, description) VALUES (?, ?, ?, ?)',
+          [productId, langCode, translations[langCode].name, translations[langCode].description || null]
+        );
+      }
+    }
 
+    await db.promise().commit();
     res.status(201).json({ message: 'Product created successfully', id: productId });
   } catch (error) {
+    await db.promise().rollback();
     console.error('Error creating product:', error);
     res.status(500).json({ error: 'Failed to create product' });
   }
@@ -164,14 +182,20 @@ router.post('/', authenticateToken, adminProtect, upload.single('image'), async 
 
 router.put('/:id', authenticateToken, adminProtect, upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  const { name, description, retail_price, wholesale_price } = req.body;
+  const { retail_price, wholesale_price } = req.body;
+  let { translations, retail_specs, wholesale_specs } = req.body;
 
-  // Handle specs parsing
-  let { retail_specs, wholesale_specs } = req.body;
+  // Parse JSON fields from FormData
+  translations = parseJsonField(translations);
   retail_specs = parseJsonField(retail_specs);
   wholesale_specs = parseJsonField(wholesale_specs);
 
-  const languageCode = req.language;
+  const defaultLanguageCode = req.language;
+
+  // Validation
+  if (!translations || !translations[defaultLanguageCode]?.name || !retail_price || !wholesale_price) {
+    return res.status(400).json({ error: 'Name (default language), retail price, and wholesale price are required' });
+  }
 
   // Determine image URL
   let image_url = req.body.image_url;
@@ -179,25 +203,8 @@ router.put('/:id', authenticateToken, adminProtect, upload.single('image'), asyn
     image_url = '/uploads/' + req.file.filename;
   }
 
-  // Validation
-  if (!name || !retail_price || !wholesale_price) {
-    return res.status(400).json({ error: 'Name, retail price, and wholesale price are required' });
-  }
-  if (isNaN(parseFloat(retail_price)) || isNaN(parseFloat(wholesale_price))) {
-    return res.status(400).json({ error: 'Invalid price format' });
-  }
-
   try {
-    // Current product URL if not provided? 
-    // Usually frontend sends the old URL if not changing, OR sends nothing if not changing.
-    // However, if we don't send image_url and no file, it might overwrite with null if we are not careful.
-    // But destructing `image_url` from body gives `undefined` if not present.
-    // If undefined, we shouldn't overwrite it with null unless intended.
-    // The query overwrites: `image_url || null`.
-    // If frontend sends existing image_url provided by user (text input), it is preserved.
-    // If user uploads new file, `image_url` becomes file path.
-    // If user wants to clear image, they send empty string? `image_url || null` converts "" to null.
-    // So logic seems sound.
+    await db.promise().beginTransaction();
 
     // Update main product
     const [updateProductResult] = await db.promise().query(
@@ -213,31 +220,38 @@ router.put('/:id', authenticateToken, adminProtect, upload.single('image'), asyn
     );
 
     if (updateProductResult.affectedRows === 0) {
+      await db.promise().rollback();
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Check if translation exists for the given language
-    const [translationExists] = await db.promise().query(
-      'SELECT id FROM products_translations WHERE product_id = ? AND language_code = ?',
-      [id, languageCode]
-    );
+    // Update or insert translations for all provided languages
+    for (const langCode in translations) {
+      if (translations[langCode]?.name) {
+        const [translationExists] = await db.promise().query(
+          'SELECT id FROM products_translations WHERE product_id = ? AND language_code = ?',
+          [id, langCode]
+        );
 
-    if (translationExists.length > 0) {
-      // Update existing translation
-      await db.promise().query(
-        'UPDATE products_translations SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE product_id = ? AND language_code = ?',
-        [name, description || null, id, languageCode]
-      );
-    } else {
-      // Insert new translation
-      await db.promise().query(
-        'INSERT INTO products_translations (product_id, language_code, name, description) VALUES (?, ?, ?, ?)',
-        [id, languageCode, name, description || null]
-      );
+        if (translationExists.length > 0) {
+          // Update existing translation
+          await db.promise().query(
+            'UPDATE products_translations SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE product_id = ? AND language_code = ?',
+            [translations[langCode].name, translations[langCode].description || null, id, langCode]
+          );
+        } else {
+          // Insert new translation
+          await db.promise().query(
+            'INSERT INTO products_translations (product_id, language_code, name, description) VALUES (?, ?, ?, ?)',
+            [id, langCode, translations[langCode].name, translations[langCode].description || null]
+          );
+        }
+      }
     }
 
+    await db.promise().commit();
     res.json({ message: 'Product updated successfully' });
   } catch (error) {
+    await db.promise().rollback();
     console.error('Error updating product:', error);
     res.status(500).json({ error: 'Failed to update product' });
   }

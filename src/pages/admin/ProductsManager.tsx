@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, XCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-// import axios from '../../api/axios';
 import toast from 'react-hot-toast';
-import config from '../../config'; // Import config
+import config from '../../config';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Product {
   id: number;
@@ -14,9 +14,31 @@ interface Product {
   wholesale_price: number;
   retail_specs: object;
   wholesale_specs: object;
+  translations?: {
+    [key: string]: {
+      name: string;
+      description: string;
+    }
+  };
+}
+
+interface ProductFormState {
+  image_url: string;
+  retail_price: string;
+  wholesale_price: string;
+  retail_specs: object;
+  wholesale_specs: object;
+  translations: {
+    [key: string]: {
+      name: string;
+      description: string;
+    }
+  };
 }
 
 export function ProductsManager() {
+  const { languages, loadingLanguages, defaultLanguage } = useLanguage();
+
   const getImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
@@ -32,44 +54,56 @@ export function ProductsManager() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+  const [formData, setFormData] = useState<ProductFormState>({
     image_url: '',
     retail_price: '',
     wholesale_price: '',
     retail_specs: {},
-    wholesale_specs: {}
+    wholesale_specs: {},
+    translations: {},
   });
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!loadingLanguages) {
+      fetchProducts();
+    }
+  }, [loadingLanguages]);
 
   useEffect(() => {
     setSelectedFile(null);
-    if (currentProduct) {
+    if (currentProduct && languages.length > 0) {
+      const existingTranslations: { [key: string]: { name: string; description: string; } } = {};
+      languages.forEach(lang => {
+        existingTranslations[lang.code] = {
+          name: currentProduct.translations?.[lang.code]?.name || '',
+          description: currentProduct.translations?.[lang.code]?.description || '',
+        };
+      });
+
       setFormData({
-        name: currentProduct.name,
-        description: currentProduct.description || '',
         image_url: currentProduct.image_url?.startsWith('http') ? currentProduct.image_url : '',
         retail_price: currentProduct.retail_price.toString(),
         wholesale_price: currentProduct.wholesale_price.toString(),
         retail_specs: currentProduct.retail_specs || {},
-        wholesale_specs: currentProduct.wholesale_specs || {}
+        wholesale_specs: currentProduct.wholesale_specs || {},
+        translations: existingTranslations,
       });
-    } else {
+    } else if (languages.length > 0) {
+      const initialTranslations: { [key: string]: { name: string; description: string; } } = {};
+      languages.forEach(lang => {
+        initialTranslations[lang.code] = { name: '', description: '' };
+      });
+
       setFormData({
-        name: '',
-        description: '',
         image_url: '',
         retail_price: '',
         wholesale_price: '',
         retail_specs: {},
-        wholesale_specs: {}
+        wholesale_specs: {},
+        translations: initialTranslations,
       });
     }
-  }, [currentProduct]);
+  }, [currentProduct, languages]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -83,7 +117,7 @@ export function ProductsManager() {
         if (error) throw error;
         setProducts(data || []);
       } else {
-        const response = await config.axios.get(config.apiEndpoints.products);
+        const response = await config.axios.get(`${config.apiEndpoints.products}/admin`);
         setProducts(response.data || []);
       }
     } catch (error) {
@@ -128,12 +162,12 @@ export function ProductsManager() {
         if (error) throw error;
       } else {
         const data = new FormData();
-        data.append('name', formData.name);
-        data.append('description', formData.description);
         data.append('retail_price', formData.retail_price);
         data.append('wholesale_price', formData.wholesale_price);
         data.append('retail_specs', JSON.stringify(formData.retail_specs));
         data.append('wholesale_specs', JSON.stringify(formData.wholesale_specs));
+        data.append('translations', JSON.stringify(formData.translations));
+
         if (formData.image_url) {
           data.append('image_url', formData.image_url);
         } else if (currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
@@ -146,13 +180,9 @@ export function ProductsManager() {
         }
 
         if (currentProduct) {
-          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data, {
-            headers: { 'Content-Type': undefined }
-          });
+          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data);
         } else {
-          await config.axios.post(config.apiEndpoints.products, data, {
-            headers: { 'Content-Type': undefined }
-          });
+          await config.axios.post(config.apiEndpoints.products, data);
         }
       }
 
@@ -191,7 +221,20 @@ export function ProductsManager() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev: ProductFormState) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTranslationChange = (langCode: string, field: 'name' | 'description', value: string) => {
+    setFormData((prev: ProductFormState) => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [langCode]: {
+          ...prev.translations[langCode],
+          [field]: value
+        }
+      }
+    }));
   };
 
   return (
@@ -201,14 +244,17 @@ export function ProductsManager() {
         <button
           onClick={() => {
             setCurrentProduct(null);
+            const initialTranslations: { [key: string]: { name: string; description: string; } } = {};
+            languages.forEach(lang => {
+              initialTranslations[lang.code] = { name: '', description: '' };
+            });
             setFormData({
-              name: '',
-              description: '',
               image_url: '',
               retail_price: '',
               wholesale_price: '',
               retail_specs: {},
-              wholesale_specs: {}
+              wholesale_specs: {},
+              translations: initialTranslations,
             });
             setSelectedFile(null);
             setIsModalOpen(true);
@@ -330,31 +376,36 @@ export function ProductsManager() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name*
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
+              {languages.map(lang => (
+                <div key={lang.code} className="space-y-2 border p-4 rounded-md">
+                  <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
+                    </label>
+                    <input
+                      type="text"
+                      name={`name-${lang.code}`}
+                      value={formData.translations[lang.code]?.name || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'name', e.target.value)}
+                      required={lang.is_default}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description ({lang.code.toUpperCase()})
+                    </label>
+                    <textarea
+                      name={`description-${lang.code}`}
+                      value={formData.translations[lang.code]?.description || ''}
+                      onChange={(e) => handleTranslationChange(lang.code, 'description', e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+              ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Image URL
