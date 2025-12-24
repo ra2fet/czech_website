@@ -9,7 +9,7 @@ import {
   X,
   FileText,
   Mail,
-  Briefcase, 
+  Briefcase,
   ClipboardList,
   Users
 } from 'lucide-react';
@@ -60,7 +60,7 @@ export function AdminDashboard() {
     ...(isFeatureEnabled('enableDiscountCoupons') ? [{ name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift }] : []),
     ...(isFeatureEnabled('enableProductOffers') ? [{ name: 'Offers', href: '/admin/offers', icon: Gift }] : []),
     ...(isFeatureEnabled('enableNewsMarquee') ? [{ name: 'Announcements', href: '/admin/announcements', icon: ClipboardList }] : []),
-    { name: 'Feature Settings', href: '/admin/features', icon: Settings },
+    // { name: 'Feature Settings', href: '/admin/features', icon: Settings },
   ];
 
   // Handle user sign out
@@ -76,9 +76,8 @@ export function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:relative lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:relative lg:translate-x-0`}
       >
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
@@ -91,7 +90,7 @@ export function AdminDashboard() {
               <X size={24} />
             </button>
           </div>
-          
+
           {/* Navigation Menu */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
@@ -100,23 +99,21 @@ export function AdminDashboard() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-primary-50 text-primary-600 border-r-2 border-primary-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-accent-900'
-                  }`}
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
+                    ? 'bg-primary-50 text-primary-600 border-r-2 border-primary-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-accent-900'
+                    }`}
                 >
                   <item.icon
-                    className={`mr-3 h-5 w-5 ${
-                      isActive ? 'text-primary-500' : 'text-gray-400'
-                    }`}
+                    className={`mr-3 h-5 w-5 ${isActive ? 'text-primary-500' : 'text-gray-400'
+                      }`}
                   />
                   {item.name}
                 </Link>
               );
             })}
           </nav>
-          
+
           {/* Sign Out Button */}
           <div className="p-4 border-t border-gray-200">
             <button
@@ -155,53 +152,53 @@ export function AdminDashboard() {
           <Route path="applications" element={<ApplicationsManager />} />
           <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
           <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
-          
+
           {/* Conditionally render routes based on feature toggles */}
           <Route path="tax-fees" element={
-            <FeatureGuard 
-              feature="enableTaxPurchase" 
+            <FeatureGuard
+              feature="enableTaxPurchase"
               fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Tax & Fees feature is disabled</h2></div>}
             >
               <TaxFeesManager />
             </FeatureGuard>
           } />
-          
+
           <Route path="shipping-rates" element={
-            <FeatureGuard 
-              feature="enableShippingByPriceZone" 
+            <FeatureGuard
+              feature="enableShippingByPriceZone"
               fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Shipping Rates feature is disabled</h2></div>}
             >
               <ShippingRatesManager />
             </FeatureGuard>
           } />
-          
+
           <Route path="coupon-codes" element={
-            <FeatureGuard 
-              feature="enableDiscountCoupons" 
+            <FeatureGuard
+              feature="enableDiscountCoupons"
               fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Coupon Codes feature is disabled</h2></div>}
             >
               <CouponCodesManager />
             </FeatureGuard>
           } />
-          
+
           <Route path="offers" element={
-            <FeatureGuard 
-              feature="enableProductOffers" 
+            <FeatureGuard
+              feature="enableProductOffers"
               fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Offers feature is disabled</h2></div>}
             >
               <OffersManager />
             </FeatureGuard>
           } />
-          
+
           <Route path="announcements" element={
-            <FeatureGuard 
-              feature="enableNewsMarquee" 
+            <FeatureGuard
+              feature="enableNewsMarquee"
               fallback={<div className="p-6 text-center"><h2 className="text-xl text-gray-500">Announcements feature is disabled</h2></div>}
             >
               <AnnouncementsManager />
             </FeatureGuard>
           } />
-          
+
           <Route path="features" element={<FeatureManager />} />
         </Routes>
       </main>
