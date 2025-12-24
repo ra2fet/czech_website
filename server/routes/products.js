@@ -69,31 +69,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single product by ID with translations
-router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  const languageCode = req.language;
-
-  try {
-    const [results] = await db.promise().query(
-      `SELECT p.id, pt.name, pt.description, p.image_url, p.retail_price, p.wholesale_price, p.retail_specs, p.wholesale_specs, p.created_at, p.updated_at
-       FROM products p
-       JOIN products_translations pt ON p.id = pt.product_id
-       WHERE p.id = ? AND pt.language_code = ?`,
-      [id, languageCode]
-    );
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    res.json(results[0]);
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ error: 'Failed to fetch product' });
-  }
-});
-
 // Admin: Get all products with all translations
 router.get('/admin', authenticateToken, adminProtect, async (req, res) => {
   try {
@@ -121,6 +96,31 @@ router.get('/admin', authenticateToken, adminProtect, async (req, res) => {
   } catch (error) {
     console.error('Error fetching all products with translations:', error);
     res.status(500).json({ error: 'Failed to fetch all products' });
+  }
+});
+
+// Get single product by ID with translations
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  const languageCode = req.language;
+
+  try {
+    const [results] = await db.promise().query(
+      `SELECT p.id, pt.name, pt.description, p.image_url, p.retail_price, p.wholesale_price, p.retail_specs, p.wholesale_specs, p.created_at, p.updated_at
+       FROM products p
+       JOIN products_translations pt ON p.id = pt.product_id
+       WHERE p.id = ? AND pt.language_code = ?`,
+      [id, languageCode]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json(results[0]);
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ error: 'Failed to fetch product' });
   }
 });
 
