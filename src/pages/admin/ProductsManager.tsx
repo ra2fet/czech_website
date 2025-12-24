@@ -383,10 +383,17 @@ export function ProductsManager() {
                     <p className="text-sm text-green-600 mt-1">
                       Selected: {selectedFile.name}
                     </p>
-                  ) : formData.image_url && !formData.image_url.startsWith('http') && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Current file: {formData.image_url.split('/').pop()}
-                    </p>
+                  ) : currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-1">
+                        Current file: {currentProduct.image_url.split('/').pop()}
+                      </p>
+                      <img
+                        src={getImageUrl(currentProduct.image_url)}
+                        alt={currentProduct.name}
+                        className="h-32 w-32 object-cover rounded-md border border-gray-200"
+                      />
+                    </div>
                   )}
                 </div>
               </div>
