@@ -52,7 +52,7 @@ export function ProductsManager() {
       setFormData({
         name: currentProduct.name,
         description: currentProduct.description || '',
-        image_url: currentProduct.image_url || '',
+        image_url: currentProduct.image_url?.startsWith('http') ? currentProduct.image_url : '',
         retail_price: currentProduct.retail_price.toString(),
         wholesale_price: currentProduct.wholesale_price.toString(),
         retail_specs: currentProduct.retail_specs || {},
@@ -105,6 +105,11 @@ export function ProductsManager() {
         wholesale_price: parseFloat(formData.wholesale_price)
       };
 
+      // Preserve existing local image if not replaced and no new URL provided
+      if (!productData.image_url && currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
+        productData.image_url = currentProduct.image_url;
+      }
+
       if (config.useSupabase) {
         let error;
         if (currentProduct) {
@@ -131,6 +136,9 @@ export function ProductsManager() {
         data.append('wholesale_specs', JSON.stringify(formData.wholesale_specs));
         if (formData.image_url) {
           data.append('image_url', formData.image_url);
+        } else if (currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
+          // Preserve existing local image path if not replaced
+          data.append('image_url', currentProduct.image_url);
         }
 
         if (selectedFile) {
