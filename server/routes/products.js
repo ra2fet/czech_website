@@ -8,9 +8,11 @@ const path = require('path');
 const fs = require('fs');
 
 // Configure Multer for file uploads
+// Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = 'uploads/';
+    // Navigate up from routes/ to server root, then to uploads/
+    const uploadDir = path.join(__dirname, '../uploads');
     // Ensure directory exists
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
