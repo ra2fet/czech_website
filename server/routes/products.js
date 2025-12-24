@@ -3,6 +3,50 @@ const express = require('express');
 const db = require('../config/db');
 const { authenticateToken, adminProtect } = require('../middleware/auth');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/';
+    // Ensure directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Sanitize filename and append timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+// Helper to parse JSON fields if they are strings (from FormData)
+const parseJsonField = (field) => {
+  if (typeof field === 'string') {
+    try {
+      return JSON.parse(field);
+    } catch (e) {
+      return field;
+    }
+  }
+  return field;
+};
 
 // Get all products with translations for the current language
 router.get('/', async (req, res) => {
@@ -66,9 +110,22 @@ router.get('/admin', authenticateToken, adminProtect, async (req, res) => {
   }
 });
 
-router.post('/', authenticateToken, adminProtect, async (req, res) => {
-  const { name, description, image_url, retail_price, wholesale_price, retail_specs, wholesale_specs } = req.body;
+router.post('/', authenticateToken, adminProtect, upload.single('image'), async (req, res) => {
+  const { name, description, retail_price, wholesale_price } = req.body;
+
+  // Handle specs parsing
+  let { retail_specs, wholesale_specs } = req.body;
+  retail_specs = parseJsonField(retail_specs);
+  wholesale_specs = parseJsonField(wholesale_specs);
+
   const languageCode = req.language;
+
+  // Determine image URL
+  let image_url = req.body.image_url;
+  if (req.file) {
+    // Save relative path using /uploads/
+    image_url = '/uploads/' + req.file.filename;
+  }
 
   // Validation
   if (!name || !retail_price || !wholesale_price) {
@@ -103,10 +160,22 @@ router.post('/', authenticateToken, adminProtect, async (req, res) => {
   }
 });
 
-router.put('/:id', authenticateToken, adminProtect, async (req, res) => {
+router.put('/:id', authenticateToken, adminProtect, upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  const { name, description, image_url, retail_price, wholesale_price, retail_specs, wholesale_specs } = req.body;
+  const { name, description, retail_price, wholesale_price } = req.body;
+
+  // Handle specs parsing
+  let { retail_specs, wholesale_specs } = req.body;
+  retail_specs = parseJsonField(retail_specs);
+  wholesale_specs = parseJsonField(wholesale_specs);
+
   const languageCode = req.language;
+
+  // Determine image URL
+  let image_url = req.body.image_url;
+  if (req.file) {
+    image_url = '/uploads/' + req.file.filename;
+  }
 
   // Validation
   if (!name || !retail_price || !wholesale_price) {
@@ -117,6 +186,17 @@ router.put('/:id', authenticateToken, adminProtect, async (req, res) => {
   }
 
   try {
+    // Current product URL if not provided? 
+    // Usually frontend sends the old URL if not changing, OR sends nothing if not changing.
+    // However, if we don't send image_url and no file, it might overwrite with null if we are not careful.
+    // But destructing `image_url` from body gives `undefined` if not present.
+    // If undefined, we shouldn't overwrite it with null unless intended.
+    // The query overwrites: `image_url || null`.
+    // If frontend sends existing image_url provided by user (text input), it is preserved.
+    // If user uploads new file, `image_url` becomes file path.
+    // If user wants to clear image, they send empty string? `image_url || null` converts "" to null.
+    // So logic seems sound.
+
     // Update main product
     const [updateProductResult] = await db.promise().query(
       'UPDATE products SET image_url = ?, retail_price = ?, wholesale_price = ?, retail_specs = ?, wholesale_specs = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',

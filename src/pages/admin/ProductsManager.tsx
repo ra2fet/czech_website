@@ -17,11 +17,20 @@ interface Product {
 }
 
 export function ProductsManager() {
+  const getImageUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    // Remove /api suffix to get the root URL
+    const baseUrl = config.backendBaseUrl.replace(/\/api.*$/, '');
+    return `${baseUrl}${url}`;
+  };
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +47,7 @@ export function ProductsManager() {
   }, []);
 
   useEffect(() => {
+    setSelectedFile(null);
     if (currentProduct) {
       setFormData({
         name: currentProduct.name,
@@ -112,10 +122,29 @@ export function ProductsManager() {
 
         if (error) throw error;
       } else {
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('description', formData.description);
+        data.append('retail_price', formData.retail_price);
+        data.append('wholesale_price', formData.wholesale_price);
+        data.append('retail_specs', JSON.stringify(formData.retail_specs));
+        data.append('wholesale_specs', JSON.stringify(formData.wholesale_specs));
+        if (formData.image_url) {
+          data.append('image_url', formData.image_url);
+        }
+
+        if (selectedFile) {
+          data.append('image', selectedFile);
+        }
+
         if (currentProduct) {
-          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, productData);
+          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
         } else {
-          await config.axios.post(config.apiEndpoints.products, productData);
+          await config.axios.post(config.apiEndpoints.products, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
         }
       }
 
@@ -216,7 +245,7 @@ export function ProductsManager() {
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <img
-                        src={product.image_url}
+                        src={getImageUrl(product.image_url)}
                         alt={product.name}
                         className="h-12 w-12 object-cover rounded"
                       />
@@ -318,7 +347,26 @@ export function ProductsManager() {
                   value={formData.image_url}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="https://example.com/image.jpg"
                 />
+                <div className="mt-2">
+                  <span className="block text-sm text-gray-500 mb-1">Or upload an image</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSelectedFile(e.target.files[0]);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                  {selectedFile && (
+                    <p className="text-sm text-green-600 mt-1">
+                      Selected: {selectedFile.name}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
