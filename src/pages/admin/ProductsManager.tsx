@@ -53,6 +53,7 @@ export function ProductsManager() {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<ProductFormState>({
     image_url: '',
@@ -71,6 +72,10 @@ export function ProductsManager() {
 
   useEffect(() => {
     setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
     if (currentProduct && languages.length > 0) {
       const existingTranslations: { [key: string]: { name: string; description: string; } } = {};
       languages.forEach(lang => {
@@ -180,9 +185,13 @@ export function ProductsManager() {
         }
 
         if (currentProduct) {
-          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data);
+          await config.axios.put(`${config.apiEndpoints.products}/${currentProduct.id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
         } else {
-          await config.axios.post(config.apiEndpoints.products, data);
+          await config.axios.post(config.apiEndpoints.products, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
         }
       }
 
@@ -425,16 +434,28 @@ export function ProductsManager() {
                     accept="image/*"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
-                        setSelectedFile(e.target.files[0]);
+                        const file = e.target.files[0];
+                        setSelectedFile(file);
                         setFormData(prev => ({ ...prev, image_url: '' }));
+
+                        // Create preview URL
+                        if (previewUrl) URL.revokeObjectURL(previewUrl);
+                        setPreviewUrl(URL.createObjectURL(file));
                       }
                     }}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
-                  {selectedFile ? (
-                    <p className="text-sm text-green-600 mt-1">
-                      Selected: {selectedFile.name}
-                    </p>
+                  {previewUrl ? (
+                    <div className="mt-2 text-center">
+                      <p className="text-sm text-green-600 mb-1">
+                        Preview: {selectedFile?.name}
+                      </p>
+                      <img
+                        src={previewUrl}
+                        alt="Preview"
+                        className="h-32 w-32 object-cover mx-auto rounded-md border-2 border-primary-500 shadow-sm"
+                      />
+                    </div>
                   ) : currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && (
                     <div className="mt-2">
                       <p className="text-sm text-gray-600 mb-1">
