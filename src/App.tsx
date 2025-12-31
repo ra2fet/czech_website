@@ -8,6 +8,7 @@ import { BlogsPage } from './pages/BlogsPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { LocationsPage } from './pages/LocationsPage';
 import { ContactPage } from './pages/ContactPage';
+import { AboutUsPage } from './pages/AboutUsPage';
 import { BlogPostPage } from './pages/BlogPostPage'; // Import the new blog post page
 import { LoginPage } from './pages/LoginPage'; // Import the new general LoginPage
 import { AdminLoginPage } from './pages/admin/AdminLoginPage'; // Import the admin LoginPage
@@ -89,6 +90,7 @@ function App() {
                   <Route path="/portfolio" element={<PortfolioPage />} />
                   <Route path="/locations" element={<LocationsPage />} />
                   <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/about-us" element={<AboutUsPage />} />
                   <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
                   <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
                   <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}

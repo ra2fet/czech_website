@@ -24,11 +24,11 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { user } = useAuth(); // Get user from AuthContext
-  
+
   useEffect(() => {
     setIsScrolled(scrollPosition > 50);
   }, [scrollPosition]);
-  
+
   useEffect(() => {
     // Close menu when changing routes
     setIsMenuOpen(false);
@@ -40,6 +40,7 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
 
   const navigation = [
     { name: t('home'), href: '/' },
+    { name: t('about_us'), href: '/about-us' },
     { name: t('products'), href: '/products' },
     // Conditionally include offers based on feature toggle
     ...(isFeatureEnabled('enableProductOffers') ? [{ name: t('offers'), href: '/offers' }] : []),
@@ -55,124 +56,122 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
       <FeatureGuard feature="enableNewsMarquee">
         <AnnouncementMarquee />
       </FeatureGuard>
-      <header 
-        className={`fixed ${isScrolled?'top-0':isFeatureEnabled('enableNewsMarquee')?'top-8':'top-0'} w-full z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-transparent py-4'
-        } ${showIntro ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      <header
+        className={`fixed ${isScrolled ? 'top-0' : isFeatureEnabled('enableNewsMarquee') ? 'top-8' : 'top-0'} w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' : 'bg-transparent py-4'
+          } ${showIntro ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
-      <div className="container-custom flex items-center justify-between">
-        <div className="flex-shrink-0">
-          <Link to="/" className="block">
-            <Logo isScrolled={isScrolled} />
-          </Link>
-        </div>
-        
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`font-medium transition-colors duration-300 whitespace-nowrap text-sm xl:text-base
-                ${location.pathname === item.href 
-                  ? (isScrolled 
-                      ? 'text-primary-600 border-b-2 border-secondary-500' 
-                      : 'text-secondary-500 border-b-2 border-secondary-500 bg-black/20 px-3 py-1 rounded-md backdrop-blur-sm') 
-                  : isScrolled ? 'text-accent-900 hover:text-primary-600' : 'text-white hover:text-secondary-400'}
-              `}
-            >
-              {item.name}
+        <div className="container-custom flex items-center justify-between">
+          <div className="flex-shrink-0">
+            <Link to="/" className="block">
+              <Logo isScrolled={isScrolled} />
             </Link>
-          ))}
-        </nav>
-        
-        {/* Cart Icon, Login/User Icon, Language Switcher and Mobile Menu Button */}
-        <div className="flex items-center space-x-4">
-          {/* Conditionally render language switcher based on feature toggle */}
-          <FeatureGuard feature="enableDutchLanguage">
-            <LanguageSwitcher isScrolled={isScrolled} />
-          </FeatureGuard>
-          
-          {/* Conditionally render cart icon based on customer accounts feature */}
-          <FeatureGuard feature="enableCustomerAccounts">
-            <CartIcon onClick={() => setIsCartOpen(true)} isScrolled={isScrolled} />
-          </FeatureGuard>
-          
-          {/* Conditionally render user authentication based on user registration feature */}
-          <FeatureGuard feature="enableUserRegistration">
-            {user ? (
-              <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
-                <User size={24} />
-              </Link>
-            ) : (
-              <Link to="/signin" className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
-                <UserCircle size={24} />
-              </Link>
-            )}
-          </FeatureGuard>
+          </div>
 
-          <button 
-            onClick={toggleMenu}
-            className={`lg:hidden p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
-      
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200"
-          >
-            <div className="container-custom py-4 space-y-2">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`block py-2 font-medium ${
-                    location.pathname === item.href 
-                      ? 'text-primary-600' 
-                      : 'text-accent-900 hover:text-primary-600'
-                  }`}
-                >
-                  {item.name}
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`font-medium transition-colors duration-300 whitespace-nowrap text-sm xl:text-base
+                ${location.pathname === item.href
+                    ? (isScrolled
+                      ? 'text-primary-600 border-b-2 border-secondary-500'
+                      : 'text-secondary-500 border-b-2 border-secondary-500 bg-black/20 px-3 py-1 rounded-md backdrop-blur-sm')
+                    : isScrolled ? 'text-accent-900 hover:text-primary-600' : 'text-white hover:text-secondary-400'}
+              `}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Cart Icon, Login/User Icon, Language Switcher and Mobile Menu Button */}
+          <div className="flex items-center space-x-4">
+            {/* Conditionally render language switcher based on feature toggle */}
+            <FeatureGuard feature="enableDutchLanguage">
+              <LanguageSwitcher isScrolled={isScrolled} />
+            </FeatureGuard>
+
+            {/* Conditionally render cart icon based on customer accounts feature */}
+            <FeatureGuard feature="enableCustomerAccounts">
+              <CartIcon onClick={() => setIsCartOpen(true)} isScrolled={isScrolled} />
+            </FeatureGuard>
+
+            {/* Conditionally render user authentication based on user registration feature */}
+            <FeatureGuard feature="enableUserRegistration">
+              {user ? (
+                <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
+                  <User size={24} />
                 </Link>
-              ))}
-              {/* Conditionally render user links in mobile menu */}
-              <FeatureGuard feature="enableUserRegistration">
-                {user ? (
-                  <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                    {t('dashboard')}
+              ) : (
+                <Link to="/signin" className={`p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}>
+                  <UserCircle size={24} />
+                </Link>
+              )}
+            </FeatureGuard>
+
+            <button
+              onClick={toggleMenu}
+              className={`lg:hidden p-2 ${isScrolled ? 'text-accent-900' : 'text-white'}`}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="lg:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200"
+            >
+              <div className="container-custom py-4 space-y-2">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`block py-2 font-medium ${location.pathname === item.href
+                        ? 'text-primary-600'
+                        : 'text-accent-900 hover:text-primary-600'
+                      }`}
+                  >
+                    {item.name}
                   </Link>
-                ) : (
-                  <Link to="/signin" className="block py-2 font-medium text-accent-900 hover:text-primary-600">
-                    {t('signIn')}
-                  </Link>
-                )}
-              </FeatureGuard>
-              
-              {/* Conditionally render language switcher in mobile menu */}
-              <FeatureGuard feature="enableDutchLanguage">
-                <div className="py-2">
-                  <LanguageSwitcher isScrolled={true} /> {/* Always scrolled style for mobile menu */}
-                </div>
-              </FeatureGuard>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Conditionally render cart sidebar based on customer accounts feature */}
-      <FeatureGuard feature="enableCustomerAccounts">
-        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      </FeatureGuard>
-    </header></>
+                ))}
+                {/* Conditionally render user links in mobile menu */}
+                <FeatureGuard feature="enableUserRegistration">
+                  {user ? (
+                    <Link to={user.userType === 'admin' ? '/admin' : '/dashboard'} className="block py-2 font-medium text-accent-900 hover:text-primary-600">
+                      {t('dashboard')}
+                    </Link>
+                  ) : (
+                    <Link to="/signin" className="block py-2 font-medium text-accent-900 hover:text-primary-600">
+                      {t('signIn')}
+                    </Link>
+                  )}
+                </FeatureGuard>
+
+                {/* Conditionally render language switcher in mobile menu */}
+                <FeatureGuard feature="enableDutchLanguage">
+                  <div className="py-2">
+                    <LanguageSwitcher isScrolled={true} /> {/* Always scrolled style for mobile menu */}
+                  </div>
+                </FeatureGuard>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Conditionally render cart sidebar based on customer accounts feature */}
+        <FeatureGuard feature="enableCustomerAccounts">
+          <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        </FeatureGuard>
+      </header></>
   );
 };

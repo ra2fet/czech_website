@@ -1,8 +1,16 @@
 <IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+    RewriteEngine On
+    RewriteBase /
+    
+    # Serve images from  updatedServer/uploads/ URL
+    
+    RewriteRule ^uploads/(.+)$ /updatedServer/uploads/$1 [L]
+    
+    # Skip SPA rewrite for existing files (including images)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+    
+    # Protect index.html itself
+    RewriteRule ^index\.html$ - [L]
 </IfModule>
