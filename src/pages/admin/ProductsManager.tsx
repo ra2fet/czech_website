@@ -168,15 +168,15 @@ export function ProductsManager() {
         data.append('wholesale_specs', JSON.stringify(formData.wholesale_specs));
         data.append('translations', JSON.stringify(formData.translations));
 
-        if (formData.image_url) {
-          data.append('image_url', formData.image_url);
-        } else if (currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
-          // Preserve existing local image path if not replaced
-          data.append('image_url', currentProduct.image_url);
-        }
-
         if (selectedFile) {
           data.append('image', selectedFile);
+        } else {
+          if (formData.image_url) {
+            data.append('image_url', formData.image_url);
+          } else if (currentProduct?.image_url && !currentProduct.image_url.startsWith('http')) {
+            // Preserve existing local image path if not replaced
+            data.append('image_url', currentProduct.image_url);
+          }
         }
 
         if (currentProduct) {
@@ -426,6 +426,7 @@ export function ProductsManager() {
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         setSelectedFile(e.target.files[0]);
+                        setFormData(prev => ({ ...prev, image_url: '' }));
                       }
                     }}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
