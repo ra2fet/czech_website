@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
+import { Mail } from 'lucide-react';
 
 interface ServerError {
   error: string;
@@ -121,15 +122,30 @@ export const LoginPage = () => {
             {t('auth_return_home_link')}
           </Link>
         </div>
-        <div className="mt-2 text-center">
-          <a
-            href="http://web.babobambo.com/webmail"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-primary-600 hover:text-primary-500"
-          >
-            Login to Web Email
-          </a>
+
+        <div className="mt-8">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                Other Access
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <a
+              href="http://mail.babobambo.com/webmail"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              <span>Login to Web Email</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
