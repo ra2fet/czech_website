@@ -4,11 +4,12 @@ import { motion, useInView } from 'framer-motion';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import config from '../../config';
 
 interface Blog {
   id: string;
   title: string;
-  excerpt: string;
+  summary: string;
   image_url: string;
   created_at: string;
   // Add other blog properties as needed
@@ -20,28 +21,45 @@ export const NewsSection = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     fetchBlogs();
   }, []);
 
   const fetchBlogs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(3);
+      setLoading(true);
+      let data;
 
-      if (error) throw error;
+      if (config.useSupabase) {
+        if (!supabase) {
+          console.error('Supabase client is not initialized');
+          throw new Error('Supabase client is not initialized');
+        }
+        const { data: supabaseData, error } = await supabase
+          .from('blogs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        data = supabaseData;
+      } else {
+        const response = await config.axios.get(`${config.apiEndpoints.blogs}?limit=3`);
+        // If the API doesn't support limit param, we might get all of them, so we slice here just in case
+        data = Array.isArray(response.data) ? response.data.slice(0, 3) : [];
+      }
+
       setBlogs(data || []);
     } catch (error) {
       console.error('Error fetching blogs:', error);
+      // Fallback to empty array on error
+      setBlogs([]);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -51,7 +69,7 @@ export const NewsSection = () => {
       },
     },
   };
-  
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -65,7 +83,7 @@ export const NewsSection = () => {
     <section ref={ref} className="section-padding">
       <div className="container-custom">
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: -20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
@@ -73,7 +91,7 @@ export const NewsSection = () => {
           >
             {t('news_section_title')}
           </motion.h2>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -88,8 +106,8 @@ export const NewsSection = () => {
             {t('news_section_subtitle')}
           </motion.p>
         </div>
-        
-        <motion.div 
+
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -111,8 +129,8 @@ export const NewsSection = () => {
                 className="card card-hover"
               >
                 <div className="h-48 overflow-hidden">
-                  <img 
-                    src={blog.image_url} 
+                  <img
+                    src={blog.image_url}
                     alt={blog.title}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
@@ -125,8 +143,8 @@ export const NewsSection = () => {
                     </span>
                   </div>
                   <h3 className="text-xl font-bold mb-2">{blog.title}</h3>
-                  <p className="text-gray-600 mb-4">{blog.excerpt}</p>
-                  <Link 
+                  <p className="text-gray-600 mb-4">{blog.summary}</p>
+                  <Link
                     to={`/blog/${blog.id}`}
                     className="inline-flex items-center text-primary-600 font-medium hover:text-secondary-500 transition-colors"
                   >
