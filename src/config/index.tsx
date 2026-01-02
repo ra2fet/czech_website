@@ -10,7 +10,7 @@ const isProduction = env.MODE === 'production';
 
 // Create Axios instance with base URL
 const axiosInstance = axios.create({
-  baseURL: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api'),
+  baseURL: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api/v3'),
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -64,7 +64,7 @@ axiosInstance.interceptors.response.use(
 const config = {
   useSupabase: env.VITE_USE_SUPABASE === 'true' || false, // Convert string to boolean, default to false
   enableSessionTimeout: env.VITE_ENABLE_SESSION_TIMEOUT === 'true' || true, // Enable session timeout by default
-  backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api'),
+  backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api/v3'),
   apiEndpoints: {
     auth: {
       signin: '/auth/signin',

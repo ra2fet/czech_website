@@ -76,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
+          // Set default axios header for future requests
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setUser(response.data);
           // Start timeout check only if user is successfully authenticated and feature is enabled
           if (config.enableSessionTimeout && localStorage.getItem('loginTime')) {
@@ -86,13 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error fetching user:', error);
           localStorage.removeItem('token'); // Clear invalid token
           localStorage.removeItem('loginTime'); // Clear login time as well
-      
+
           // Only redirect to login if there's a specific auth error and not already on signin
           if (error.response && window.location.pathname !== '/signin') {
             const errorMessage = error.response.data?.message || error.response.data?.error;
-            if (errorMessage === 'Invalid token. Please log in again.' || 
-                errorMessage === 'Access denied. No authentication token provided.') {
-                  signOut();
+            if (errorMessage === 'Invalid token. Please log in again.' ||
+              errorMessage === 'Access denied. No authentication token provided.') {
+              signOut();
               redirectToLogin(); // Redirect to login page
             }
           }

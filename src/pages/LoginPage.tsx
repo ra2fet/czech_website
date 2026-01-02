@@ -114,13 +114,23 @@ export const LoginPage = () => {
               {loading ? t('auth_signing_in_button') : t('auth_sign_in_button')}
             </button>
           </div>
-           
+
         </form>
-         <div className="mt-6 text-center">
-                    <Link to="/" className="font-medium text-primary-600 hover:text-primary-500">
-                      {t('auth_return_home_link')}
-                    </Link>
-                  </div>
+        <div className="mt-6 text-center">
+          <Link to="/" className="font-medium text-primary-600 hover:text-primary-500">
+            {t('auth_return_home_link')}
+          </Link>
+        </div>
+        <div className="mt-2 text-center">
+          <a
+            href="http://web.babobambo.com/webmail"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary-600 hover:text-primary-500"
+          >
+            Login to Web Email
+          </a>
+        </div>
       </div>
     </div>
   );
