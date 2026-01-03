@@ -77,11 +77,11 @@ const defaultFeatures: FeatureSettings = {
   enableDutchLanguage: true,
   enableFourPartAddress: true,
   enableProvincesList: true,
-  enableNewsMarquee: true,
+  enableNewsMarquee: false,
   enableDiscountCoupons: true,
   enableProductOffers: true,
-  enableOrderRating: true,
-  enableAutoRatingEmail: true,
+  enableOrderRating: false,
+  enableAutoRatingEmail: false,
   enableRatingLinkAfter3Days: true,
   enableAccountingDashboard: true,
   enableDataCharts: true,
@@ -90,7 +90,7 @@ const defaultFeatures: FeatureSettings = {
   enableUserRegistration: true,
   enableCustomerAccounts: true,
   enableCompanyAccounts: true,
-  enableEmailSubscriptionPopup: true,
+  enableEmailSubscriptionPopup: false,
   enableCustomerDashboard: true,
   enableCompanyDashboard: true,
   enableMultipleAddresses: true,
@@ -147,7 +147,7 @@ export const FeatureProvider: React.FC<FeatureProviderProps> = ({ children }) =>
   };
 
   const isFeatureEnabled = (feature: keyof FeatureSettings): boolean => {
-    return features[feature];
+    return !!features?.[feature];
   };
 
   useEffect(() => {
@@ -178,7 +178,11 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
   children,
   fallback = null
 }) => {
-  const { isFeatureEnabled } = useFeatures();
+  const context = useContext(FeatureContext);
 
-  return isFeatureEnabled(feature) ? <>{children}</> : <>{fallback}</>;
+  if (!context || !context.isFeatureEnabled(feature)) {
+    return <>{fallback}</>;
+  }
+
+  return <>{children}</>;
 };

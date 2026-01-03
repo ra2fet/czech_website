@@ -137,8 +137,8 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
                     key={item.name}
                     to={item.href}
                     className={`block py-2 font-medium ${location.pathname === item.href
-                        ? 'text-primary-600'
-                        : 'text-accent-900 hover:text-primary-600'
+                      ? 'text-primary-600'
+                      : 'text-accent-900 hover:text-primary-600'
                       }`}
                   >
                     {item.name}
