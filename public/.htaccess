@@ -5,7 +5,8 @@
     # Serve images from  updatedServer/uploads/ URL
     
     RewriteRule ^uploads/(.+)$ /updatedServer/uploads/$1 [L]
-    
+    RewriteRule ^videos/(.+)$ /slider_videos/$1 [L]
+
     # Skip SPA rewrite for existing files (including images)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

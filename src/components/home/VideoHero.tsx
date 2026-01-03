@@ -10,19 +10,21 @@ interface VideoHeroProps {
 export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
   const { t } = useTranslation();
   const [currentVideo, setCurrentVideo] = useState(0);
-  
+
   const videos = [
-  'https://videos.pexels.com/video-files/4144903/4144903-uhd_2560_1440_25fps.mp4'
+    // 'https://videos.pexels.com/video-files/4144903/4144903-uhd_2560_1440_25fps.mp4'
+    'https://babobambo.com/videos/4144903-uhd_2560_1440_25fps.mp4',
+    'https://babobambo.com/videos/video_2026-01-03_10-26-42.mp4'
   ];
-  
 
 
-    
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentVideo((prev) => (prev + 1) % videos.length);
     }, 8000);
-    
+
     return () => clearInterval(interval);
   }, [videos.length]);
 
@@ -31,9 +33,8 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
       {videos.map((video, index) => (
         <div
           key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            currentVideo === index ? 'opacity-100' : 'opacity-0'
-          }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ${currentVideo === index ? 'opacity-100' : 'opacity-0'
+            }`}
         >
           <video
             autoPlay
@@ -47,7 +48,7 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           </video>
         </div>
       ))}
-      
+
       <div className="video-overlay">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -61,14 +62,14 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           <p className="text-xl md:text-2xl opacity-90 mb-8">
             {t('video_hero_subtitle')}
           </p>
-          <button 
+          <button
             className="bg-secondary-500 text-accent-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-secondary-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
             onClick={() => window.location.href = '/products'}
           >
             {t('explore_products_button')}
           </button>
         </motion.div>
-        
+
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
