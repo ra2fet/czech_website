@@ -11,7 +11,8 @@ import {
   Mail,
   Briefcase,
   ClipboardList,
-  Users
+  Users,
+  Info
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardHome } from './DashboardHome';
@@ -32,6 +33,7 @@ import { OffersManager } from './OffersManager'; // Import OffersManager
 import AnnouncementsManager from './AnnouncementsManager'; // Import AnnouncementsManager
 import { UsersManager } from './UsersManager';
 import { FeatureManager } from './FeatureManager';
+import { AboutUsManager } from './AboutUsManager';
 import { useFeatures, FeatureGuard } from '../../contexts/FeatureContext'; // Import feature context
 
 export function AdminDashboard() {
@@ -47,6 +49,7 @@ export function AdminDashboard() {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Companies', href: '/admin/companies', icon: Building },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'About Us', href: '/admin/about-us', icon: Info },
     // { name: 'Locations', href: '/admin/locations', icon: MapPin },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Messages', href: '/admin/messages', icon: Mail },
@@ -152,6 +155,7 @@ export function AdminDashboard() {
           <Route path="applications" element={<ApplicationsManager />} />
           <Route path="faqs" element={<FaqsManager />} /> {/* Add new FAQ route */}
           <Route path="orders" element={<OrdersManager />} /> {/* Add new Orders route */}
+          <Route path="about-us" element={<AboutUsManager />} />
 
           {/* Conditionally render routes based on feature toggles */}
           <Route path="tax-fees" element={

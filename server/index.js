@@ -28,6 +28,7 @@ const userRoutes = require('./routes/users'); // Import the new users route
 const newsletterRoutes = require('./routes/newsletter'); // Import the new newsletter route
 const languageRoutes = require('./routes/languages'); // Import the languages route
 const featureSettingsRoutes = require('./routes/featureSettings');
+const aboutUsRoutes = require('./routes/aboutUs');
 
 const initRatingEmailScheduler = require('./cron/ratingEmailScheduler'); // Import the scheduler
 
@@ -78,6 +79,7 @@ app.use(`/api/${API_VERSION}/users`, userRoutes); // Use the new users route
 app.use(`/api/${API_VERSION}/newsletter`, newsletterRoutes); // Use the new newsletter route
 app.use(`/api/${API_VERSION}/languages`, languageRoutes); // Use the languages route
 app.use(`/api/${API_VERSION}/feature-settings`, featureSettingsRoutes);
+app.use(`/api/${API_VERSION}/about-us`, aboutUsRoutes);
 
 
 // Global Error Handler

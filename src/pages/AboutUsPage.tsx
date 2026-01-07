@@ -1,10 +1,28 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Target, Lightbulb, History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import api from '../api/axios';
+
+interface AboutUsData {
+    image_url: string;
+    hero_title: string;
+    hero_subtitle: string;
+    story_title: string;
+    story_content: string;
+    story_footer: string;
+    vision_title: string;
+    vision_description: string;
+    mission_title: string;
+    mission_description: string;
+    sustainability_quote: string;
+}
 
 export const AboutUsPage = () => {
-    const { t } = useTranslation();
+    const { i18n } = useTranslation();
+    const [data, setData] = useState<AboutUsData | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const storyRef = useRef(null);
     const visionRef = useRef(null);
     const missionRef = useRef(null);
@@ -13,15 +31,41 @@ export const AboutUsPage = () => {
     const visionInView = useInView(visionRef, { once: true, amount: 0.2 });
     const missionInView = useInView(missionRef, { once: true, amount: 0.2 });
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get('/about-us');
+                setData(response.data);
+            } catch (error) {
+                console.error('Error fetching about us data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [i18n.language]);
+
+    if (loading) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+            </div>
+        );
+    }
+
+    if (!data) return null;
+
     return (
         <div>
             {/* Hero Section */}
             <section className="rafatbg text-white py-24 md:py-32">
                 <div className="container-custom">
                     <div className="max-w-3xl">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('about_us_hero_title')}</h1>
+                        <h1 className="text-4xl md:text-5xl font-bold mb-6">{data.hero_title}</h1>
                         <p className="text-xl opacity-90 mb-8">
-                            {t('about_us_hero_subtitle')}
+                            {data.hero_subtitle}
                         </p>
                     </div>
                 </div>
@@ -39,14 +83,13 @@ export const AboutUsPage = () => {
                             <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-2xl bg-primary-100 text-primary-600">
                                 <History size={32} />
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('about_us_story_title')}</h2>
-                            <div className="space-y-4 text-lg text-gray-700">
-                                <p>{t('about_us_story_p1')}</p>
-                                <p>{t('about_us_story_p2')}</p>
-                                <p>{t('about_us_story_p3')}</p>
-                                <p>{t('about_us_story_p4')}</p>
+                            <h2 className="text-3xl md:text-4xl font-bold mb-6">{data.story_title}</h2>
+                            <div className="space-y-4 text-lg text-gray-700 whitespace-pre-wrap">
+                                {data.story_content.split('\n').map((paragraph, index) => (
+                                    <p key={index}>{paragraph}</p>
+                                ))}
                                 <p className="font-bold text-primary-700 italic border-l-4 border-primary-500 pl-4 py-2 mt-8">
-                                    {t('about_us_story_footer')}
+                                    {data.story_footer}
                                 </p>
                             </div>
                         </motion.div>
@@ -59,7 +102,7 @@ export const AboutUsPage = () => {
                         >
                             <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl">
                                 <img
-                                    src="https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&q=80&w=800"
+                                    src={data.image_url}
                                     alt="Bamboo Sustainable Material"
                                     className="w-full h-full object-cover"
                                 />
@@ -85,9 +128,9 @@ export const AboutUsPage = () => {
                             <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center text-accent-600 mb-6">
                                 <Lightbulb size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">{t('our_vision_title')}</h3>
+                            <h3 className="text-2xl font-bold mb-4">{data.vision_title}</h3>
                             <p className="text-gray-600 text-lg leading-relaxed">
-                                {t('our_vision_description')}
+                                {data.vision_description}
                             </p>
                         </motion.div>
 
@@ -101,9 +144,9 @@ export const AboutUsPage = () => {
                             <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center text-primary-600 mb-6">
                                 <Target size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">{t('our_mission_title')}</h3>
+                            <h3 className="text-2xl font-bold mb-4">{data.mission_title}</h3>
                             <p className="text-gray-600 text-lg leading-relaxed">
-                                {t('our_mission_description')}
+                                {data.mission_description}
                             </p>
                         </motion.div>
                     </div>
@@ -115,7 +158,7 @@ export const AboutUsPage = () => {
                 <div className="container-custom relative z-10">
                     <div className="text-center max-w-4xl mx-auto">
                         <h2 className="text-3xl md:text-5xl font-bold mb-8 italic">
-                            "Babo is more than paper products — it’s a conscious choice for a cleaner home and a calmer planet."
+                            "{data.sustainability_quote}"
                         </h2>
                         <div className="inline-block h-1 w-24 bg-secondary-400"></div>
                     </div>
