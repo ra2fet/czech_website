@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Target, Lightbulb, History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../api/axios';
@@ -22,14 +22,6 @@ export const AboutUsPage = () => {
     const { i18n } = useTranslation();
     const [data, setData] = useState<AboutUsData | null>(null);
     const [loading, setLoading] = useState(true);
-
-    const storyRef = useRef(null);
-    const visionRef = useRef(null);
-    const missionRef = useRef(null);
-
-    const storyInView = useInView(storyRef, { once: true, amount: 0.1 });
-    const visionInView = useInView(visionRef, { once: true, amount: 0.1 });
-    const missionInView = useInView(missionRef, { once: true, amount: 0.1 });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,32 +52,44 @@ export const AboutUsPage = () => {
     if (!data) return null;
 
     return (
-        <div className="overflow-x-hidden">
+        <div className="overflow-x-hidden bg-white">
             {/* Hero Section */}
             <section className="rafatbg text-white py-24 md:py-32">
                 <div className="container-custom">
                     <div className="max-w-3xl">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">{data.hero_title}</h1>
-                        <p className="text-xl opacity-90 mb-8">
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-4xl md:text-5xl font-bold mb-6"
+                        >
+                            {data.hero_title}
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-xl opacity-90 mb-8"
+                        >
                             {data.hero_subtitle}
-                        </p>
+                        </motion.p>
                     </div>
                 </div>
             </section>
 
             {/* Story Section */}
-            <section ref={storyRef} className="section-padding">
+            <section className="section-padding">
                 <div className="container-custom">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
-                            animate={storyInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-                            transition={{ duration: 0.8 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6 }}
                         >
                             <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-2xl bg-primary-100 text-primary-600">
                                 <History size={32} />
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-bold mb-6">{data.story_title}</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">{data.story_title}</h2>
                             <div className="space-y-4 text-lg text-gray-700 whitespace-pre-wrap">
                                 {data.story_content?.split('\n').filter(p => p.trim()).map((paragraph, index) => (
                                     <p key={index}>{paragraph}</p>
@@ -100,15 +104,16 @@ export const AboutUsPage = () => {
 
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
-                            animate={storyInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-                            transition={{ delay: 0.3, duration: 0.8 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
                             className="relative"
                         >
-                            <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
+                            <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl bg-gray-50">
                                 {data.image_url && (
                                     <img
                                         src={data.image_url}
-                                        alt="About Us"
+                                        alt="About Us Story"
                                         className="w-full h-full object-cover"
                                     />
                                 )}
@@ -125,32 +130,32 @@ export const AboutUsPage = () => {
                 <div className="container-custom">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <motion.div
-                            ref={visionRef}
                             initial={{ opacity: 0, y: 20 }}
-                            animate={visionInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                            transition={{ duration: 0.8 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
                             className="bg-white p-8 md:p-12 rounded-3xl shadow-sm hover:shadow-md transition-shadow"
                         >
                             <div className="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center text-accent-600 mb-6">
                                 <Lightbulb size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">{data.vision_title}</h3>
+                            <h3 className="text-2xl font-bold mb-4 text-gray-900">{data.vision_title}</h3>
                             <p className="text-gray-600 text-lg leading-relaxed">
                                 {data.vision_description}
                             </p>
                         </motion.div>
 
                         <motion.div
-                            ref={missionRef}
                             initial={{ opacity: 0, y: 20 }}
-                            animate={missionInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
                             className="bg-white p-8 md:p-12 rounded-3xl shadow-sm hover:shadow-md transition-shadow"
                         >
                             <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center text-primary-600 mb-6">
                                 <Target size={28} />
                             </div>
-                            <h3 className="text-2xl font-bold mb-4">{data.mission_title}</h3>
+                            <h3 className="text-2xl font-bold mb-4 text-gray-900">{data.mission_title}</h3>
                             <p className="text-gray-600 text-lg leading-relaxed">
                                 {data.mission_description}
                             </p>
@@ -163,12 +168,17 @@ export const AboutUsPage = () => {
             {data.sustainability_quote && (
                 <section className="py-20 bg-primary-900 text-white overflow-hidden relative">
                     <div className="container-custom relative z-10">
-                        <div className="text-center max-w-4xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="text-center max-w-4xl mx-auto"
+                        >
                             <h2 className="text-3xl md:text-5xl font-bold mb-8 italic">
                                 "{data.sustainability_quote}"
                             </h2>
                             <div className="inline-block h-1 w-24 bg-secondary-400"></div>
-                        </div>
+                        </motion.div>
                     </div>
                     <div className="absolute top-0 right-0 w-96 h-96 bg-primary-800 rounded-full -mr-48 -mt-48 opacity-50 blur-3xl"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-500 rounded-full -ml-32 -mb-32 opacity-10 blur-3xl"></div>
