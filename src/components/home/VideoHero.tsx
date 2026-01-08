@@ -13,8 +13,8 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
 
   const videos = [
     // 'https://videos.pexels.com/video-files/4144903/4144903-uhd_2560_1440_25fps.mp4'
-    'https://babobambo.com/videos/4144903-uhd_2560_1440_25fps.mp4',
-    'https://babobambo.com/videos/video_2026-01-03_10-26-42.mp4'
+    // 'https://babobambo.com/videos/4144903-uhd_2560_1440_25fps.mp4',
+    'https://babobambo.com/videos/video_2026-01-08_15-13-57.mp4',
   ];
 
 
