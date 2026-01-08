@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
- import { toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import config from '../../config';
 
@@ -98,11 +98,11 @@ const JobsManager: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this job position?')) {
+    if (window.confirm('Are you sure you want to delete this job position? All associated job applications will also be permanently removed.')) {
       try {
         await config.axios.delete(`/contact/jobs/${id}`);
         setJobPositions(jobPositions.filter((job) => job.id !== id));
-        toast.success('Job position deleted successfully!');
+        toast.success('Job position and associated applications deleted successfully!');
       } catch (err) {
         toast.error('Failed to delete job position.');
         console.error(err);

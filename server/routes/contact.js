@@ -397,8 +397,15 @@ router.put('/jobs/:id', authenticateToken, adminProtect, async (req, res) => {
 router.delete('/jobs/:id', authenticateToken, adminProtect, async (req, res) => {
   const { id } = req.params;
   try {
-    // Deleting from the main open_positions table will cascade delete from open_positions_translations
+    // Delete associated job applications first to avoid foreign key constraints
+    await db.promise().query('DELETE FROM job_applications WHERE position_id = ?', [id]);
+
+    // Delete associated translations explicitly
+    await db.promise().query('DELETE FROM open_positions_translations WHERE position_id = ?', [id]);
+
+    // Finally delete from the main open_positions table
     const [result] = await db.promise().query('DELETE FROM open_positions WHERE id = ?', [id]);
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: req.getResource('position') }) });
     }
