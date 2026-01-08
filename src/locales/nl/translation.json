@@ -132,6 +132,13 @@
   "job_submitting_button": "Verzenden...",
   "job_submit_application_button": "Aanvraag Indienen",
   "job_resume_not_uploaded_error": "CV niet geüpload.",
+  "job_see_details_button": "Bekijk vacaturedetails",
+  "job_details_modal_title": "Vacaturedetails",
+  "job_requirements_label": "Vereisten",
+  "job_description_label": "Beschrijving",
+  "job_location_label": "Locatie",
+  "job_salary_label": "Salarisindicatie",
+  "job_close_button": "Sluiten",
   "errors": {
     "file": {
       "size_exceeded": "Bestandsgrootte overschrijdt de limiet van 10 MB.",

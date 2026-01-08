@@ -132,6 +132,13 @@
   "job_submitting_button": "Submitting...",
   "job_submit_application_button": "Submit Application",
   "job_resume_not_uploaded_error": "Resume not uploaded.",
+  "job_see_details_button": "See the job details",
+  "job_details_modal_title": "Job Details",
+  "job_requirements_label": "Requirements",
+  "job_description_label": "Description",
+  "job_location_label": "Location",
+  "job_salary_label": "Salary Range",
+  "job_close_button": "Close",
   "errors": {
     "file": {
       "size_exceeded": "File size exceeds 10MB limit.",

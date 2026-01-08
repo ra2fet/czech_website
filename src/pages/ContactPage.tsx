@@ -197,7 +197,9 @@ interface Position {
   id: number;
   title: string;
   description: string;
+  requirements: string;
   location: string;
+  salary_range?: string;
 }
 
 interface JobApplicationFormData {
@@ -224,6 +226,8 @@ const JobApplicationSection = () => {
   const [positionsLoading, setPositionsLoading] = useState(true);
   const [positionsError, setPositionsError] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Position | null>(null);
 
   useEffect(() => {
     const fetchOpenPositions = async () => {
@@ -411,19 +415,37 @@ const JobApplicationSection = () => {
               ) : positionsError ? (
                 <p className="text-danger-600">{t('job_error_loading_positions')}</p>
               ) : (
-                <select
-                  id="position_id"
-                  name="position_id"
-                  value={formData.position_id}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">{t('job_select_position_option')}</option>
-                  {openPositions.map((position) => (
-                    <option key={position.id} value={position.id}>{position.title} ({position.location})</option>
-                  ))}
-                </select>
+                <div className="flex flex-col space-y-2">
+                  <select
+                    id="position_id"
+                    name="position_id"
+                    value={formData.position_id}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">{t('job_select_position_option')}</option>
+                    {openPositions.map((position) => (
+                      <option key={position.id} value={position.id}>{position.title} ({position.location})</option>
+                    ))}
+                  </select>
+                  {formData.position_id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const job = openPositions.find(p => p.id === parseInt(formData.position_id));
+                        if (job) {
+                          setSelectedJob(job);
+                          setIsModalOpen(true);
+                        }
+                      }}
+                      className="text-primary-600 hover:text-primary-700 text-sm font-medium flex items-center self-start"
+                    >
+                      <FileText size={16} className="mr-1" />
+                      {t('job_see_details_button')}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             <div>
@@ -506,6 +528,66 @@ const JobApplicationSection = () => {
             )}
           </button>
         </form>
+      )}
+
+      {/* Job Details Modal */}
+      {isModalOpen && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">{selectedJob.title}</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <XCircle size={28} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{t('job_location_label')}</h4>
+                  <p className="text-gray-800 flex items-center mt-1">
+                    <MapPin size={16} className="text-primary-600 mr-2" />
+                    {selectedJob.location}
+                  </p>
+                </div>
+                {selectedJob.salary_range && (
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider">{t('job_salary_label')}</h4>
+                    <p className="text-gray-800 mt-1">{selectedJob.salary_range}</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{t('job_description_label')}</h4>
+                <div className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  {selectedJob.description}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">{t('job_requirements_label')}</h4>
+                <div className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  {selectedJob.requirements}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="btn btn-primary px-8"
+              >
+                {t('job_close_button')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
