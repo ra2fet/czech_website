@@ -6,18 +6,18 @@ const multer = require('multer');
 const path = require('path');
 
 // Helper function to check if a feature is enabled
-const isFeatureEnabled = async (featureName) => {
-  try {
-    const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
-    if (settings.length > 0) {
-      return settings[0][featureName] === 1 || settings[0][featureName] === true;
-    }
-    return true; // Default to enabled if no settings found
-  } catch (error) {
-    console.error('Error checking feature setting:', error);
-    return true; // Default to enabled on error
-  }
-};
+// const isFeatureEnabled = async (featureName) => {
+//   try {
+//     const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
+//     if (settings.length > 0) {
+//       return settings[0][featureName] === 1 || settings[0][featureName] === true;
+//     }
+//     return true; // Default to enabled if no settings found
+//   } catch (error) {
+//     console.error('Error checking feature setting:', error);
+//     return true; // Default to enabled on error
+//   }
+// };
 
 // Set up multer storage
 const storage = multer.diskStorage({
@@ -55,10 +55,10 @@ const upload = multer({
 // @access  Public
 router.post('/send-message', async (req, res) => {
   // Check if contact form feature is enabled
-  const contactEnabled = await isFeatureEnabled('enableContactForms');
-  if (!contactEnabled) {
-    return res.status(403).json({ error: req.t('errors.features.contact_disabled') || 'Contact form feature is currently disabled' });
-  }
+  // const contactEnabled = await isFeatureEnabled('enableContactForms');
+  // if (!contactEnabled) {
+  //   return res.status(403).json({ error: req.t('errors.features.contact_disabled') || 'Contact form feature is currently disabled' });
+  // }
 
   const { name, email, phone, subject, message } = req.body;
 
@@ -81,9 +81,9 @@ router.post('/send-message', async (req, res) => {
       console.error('Error inserting message:', err);
       return res.status(500).json({ error: req.t('errors.general.internal_error') });
     }
-    res.status(201).json({ 
-      message: req.t('success.email.contact_submitted'), 
-      messageId: result.insertId 
+    res.status(201).json({
+      message: req.t('success.email.contact_submitted'),
+      messageId: result.insertId
     });
   });
 });
@@ -114,11 +114,11 @@ router.get('/open-positions', (req, res) => {
 // @access  Public
 router.post('/upload-resume', async (req, res, next) => {
   // Check if job applications are enabled
-  const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
-  if (!jobApplicationsEnabled) {
-    return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
-  }
-  
+  // const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
+  // if (!jobApplicationsEnabled) {
+  //   return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
+  // }
+
   // Continue with multer middleware
   upload.single('resume')(req, res, next);
 }, (req, res) => {
@@ -127,9 +127,9 @@ router.post('/upload-resume', async (req, res, next) => {
   }
   // Return the path where the file is stored relative to the server's root
   const filePath = `/uploads/resumes/${req.file.filename}`;
-  res.status(200).json({ 
-    message: req.t('success.general.operation_completed'), 
-    filePath: filePath 
+  res.status(200).json({
+    message: req.t('success.general.operation_completed'),
+    filePath: filePath
   });
 }, (error, req, res, next) => {
   // Multer error handling
@@ -149,10 +149,10 @@ router.post('/upload-resume', async (req, res, next) => {
 // @access  Public
 router.post('/apply-job', async (req, res) => {
   // Check if job applications are enabled
-  const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
-  if (!jobApplicationsEnabled) {
-    return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
-  }
+  // const jobApplicationsEnabled = await isFeatureEnabled('enableJobApplications');
+  // if (!jobApplicationsEnabled) {
+  //   return res.status(403).json({ error: req.t('errors.features.job_applications_disabled') || 'Job applications are currently disabled' });
+  // }
 
   const { position_id, name, email, phone, resume_url, cover_letter } = req.body;
 
@@ -176,9 +176,9 @@ router.post('/apply-job', async (req, res) => {
       console.error('Error inserting job application:', err);
       return res.status(500).json({ error: req.t('errors.general.internal_error') });
     }
-    res.status(201).json({ 
-      message: req.t('success.general.operation_completed'), 
-      applicationId: result.insertId 
+    res.status(201).json({
+      message: req.t('success.general.operation_completed'),
+      applicationId: result.insertId
     });
   });
 });
@@ -227,11 +227,11 @@ router.get('/jobs', authenticateToken, adminProtect, async (req, res) => {
       const positionTranslations = {};
       translations.forEach((t) => {
         if (t.position_id === position.id) {
-          positionTranslations[t.language_code] = { 
-            title: t.title, 
-            description: t.description, 
-            requirements: t.requirements, 
-            location: t.location 
+          positionTranslations[t.language_code] = {
+            title: t.title,
+            description: t.description,
+            requirements: t.requirements,
+            location: t.location
           };
         }
       });
@@ -247,7 +247,7 @@ router.get('/jobs', authenticateToken, adminProtect, async (req, res) => {
     res.json(positionsWithTranslations);
   } catch (error) {
     console.error('Error fetching all positions with translations:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: req.t('errors.resources.fetch_failed', { resource: req.getResource('position', true) })
     });
   }
@@ -293,9 +293,9 @@ router.post('/jobs', authenticateToken, adminProtect, async (req, res) => {
       }
     }
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: req.t('success.resources.created', { resource: req.getResource('position') }),
-      id: positionId 
+      id: positionId
     });
   } catch (error) {
     console.error('Error creating position:', error);
@@ -332,7 +332,7 @@ router.put('/jobs/:id', authenticateToken, adminProtect, async (req, res) => {
     const [positionExists] = await db.promise().query('SELECT id FROM open_positions WHERE id = ?', [id]);
 
     if (positionExists.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: req.t('errors.resources.not_found', { resource: req.getResource('position') })
       });
     }

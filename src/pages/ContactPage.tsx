@@ -22,16 +22,16 @@ const ContactFormSection = () => {
     subject: '',
     message: '',
   });
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('submitting');
-    
+
     try {
       const response = await config.axios.post('contact/send-message', {
         name: formData.name,
@@ -40,7 +40,7 @@ const ContactFormSection = () => {
         subject: formData.subject,
         message: formData.message,
       });
-      
+
       if (response.status === 201) {
         setFormStatus('success');
         setFormData({
@@ -58,11 +58,11 @@ const ContactFormSection = () => {
       setFormStatus('error');
     }
   };
-  
+
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
       <h3 className="text-2xl font-bold mb-6">{t('contact_send_message_title')}</h3>
-      
+
       {formStatus === 'success' ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -169,9 +169,8 @@ const ContactFormSection = () => {
           <button
             type="submit"
             disabled={formStatus === 'submitting'}
-            className={`btn btn-primary w-full flex justify-center items-center ${
-              formStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`btn btn-primary w-full flex justify-center items-center ${formStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             {formStatus === 'submitting' ? (
               <>
@@ -224,7 +223,7 @@ const JobApplicationSection = () => {
   const [openPositions, setOpenPositions] = useState<Position[]>([]);
   const [positionsLoading, setPositionsLoading] = useState(true);
   const [positionsError, setPositionsError] = useState(false);
-  
+
   useEffect(() => {
     const fetchOpenPositions = async () => {
       try {
@@ -239,12 +238,12 @@ const JobApplicationSection = () => {
     };
     fetchOpenPositions();
   }, []);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -270,7 +269,7 @@ const JobApplicationSection = () => {
       }
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('submitting');
@@ -280,7 +279,7 @@ const JobApplicationSection = () => {
       console.error(t('job_resume_not_uploaded_error'));
       return;
     }
-    
+
     try {
       const response = await config.axios.post('/contact/apply-job', {
         position_id: parseInt(formData.position_id),
@@ -290,7 +289,7 @@ const JobApplicationSection = () => {
         resume_url: formData.resume_url, // This will now be the path from the upload
         cover_letter: formData.cover_letter,
       });
-      
+
       if (response.status === 201) {
         setFormStatus('success');
         setFormData({
@@ -309,11 +308,11 @@ const JobApplicationSection = () => {
       setFormStatus('error');
     }
   };
-  
+
   return (
     <div className="bg-white p-8 rounded-lg shadow-md">
       <h3 className="text-2xl font-bold mb-6">{t('job_apply_title')}</h3>
-      
+
       {formStatus === 'success' ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -454,9 +453,8 @@ const JobApplicationSection = () => {
           <button
             type="submit"
             disabled={formStatus === 'submitting'}
-            className={`btn btn-primary w-full flex justify-center items-center ${
-              formStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className={`btn btn-primary w-full flex justify-center items-center ${formStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
           >
             {formStatus === 'submitting' ? (
               <>
@@ -483,10 +481,10 @@ export const ContactPage = () => {
   const { t } = useTranslation();
   const contactRef = useRef(null);
   const jobsRef = useRef(null);
-  
+
   const contactInView = useInView(contactRef, { once: true, amount: 0.2 });
   const jobsInView = useInView(jobsRef, { once: true, amount: 0.2 });
-  
+
   return (
     <div>
       {/* Hero Section */}
@@ -500,7 +498,7 @@ export const ContactPage = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Contact Info Section */}
       <section ref={contactRef} className="section-padding">
         <div className="container-custom">
@@ -516,11 +514,11 @@ export const ContactPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">{t('contact_phone_title')}</h3>
               <p className="text-gray-600 mb-2">{t('contact_phone_description')}</p>
-              <a href="tel:+12345678900" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                +1 (234) 567-8900
+              <a href="tel:+31640887984" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
+                +31640887984
               </a>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={contactInView ? { opacity: 1, y: 0 } : {}}
@@ -533,10 +531,10 @@ export const ContactPage = () => {
               <h3 className="text-xl font-bold mb-2">{t('contact_email_title')}</h3>
               <p className="text-gray-600 mb-2">{t('contact_email_description')}</p>
               <a href="mailto:info@company.com" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                info@company.com
+                info@babobamboo.com
               </a>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={contactInView ? { opacity: 1, y: 0 } : {}}
@@ -549,12 +547,13 @@ export const ContactPage = () => {
               <h3 className="text-xl font-bold mb-2">{t('contact_headquarters_title')}</h3>
               <p className="text-gray-600 mb-2">{t('contact_headquarters_description')}</p>
               <address className="not-italic text-primary-600">
-                123 Business Avenue,<br />
-                Suite 100, New York, NY 10001
+                Papenkamp 20-P,6836 BD Arnhem
+                {/* <br />
+                Suite 100, New York, NY 10001 */}
               </address>
             </motion.div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -563,7 +562,7 @@ export const ContactPage = () => {
             >
               <ContactFormSection />
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0 }}
               animate={contactInView ? { opacity: 1 } : {}}
@@ -603,22 +602,22 @@ export const ContactPage = () => {
                   </div>
                 </div>
               </div>
-              <div className="text-sm text-gray-600">
+              {/* <div className="text-sm text-gray-600">
                 <p className="font-bold mb-1">{t('contact_business_hours_title')}</p>
                 <p>{t('contact_business_hours_mon_fri')}</p>
                 <p>{t('contact_business_hours_sat')}</p>
                 <p>{t('contact_business_hours_sun')}</p>
-              </div>
+              </div> */}
             </motion.div>
           </div>
         </div>
       </section>
-      
+
       {/* Careers Section */}
       <section ref={jobsRef} className="py-16 bg-gray-50">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, y: -20 }}
               animate={jobsInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6 }}
@@ -626,7 +625,7 @@ export const ContactPage = () => {
             >
               {t('contact_join_our_team_title')}
             </motion.h2>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={jobsInView ? { opacity: 1 } : {}}
               transition={{ delay: 0.3, duration: 0.6 }}
@@ -641,7 +640,7 @@ export const ContactPage = () => {
               {t('contact_join_our_team_description')}
             </motion.p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -658,7 +657,7 @@ export const ContactPage = () => {
                 <p className="text-gray-500">{t('contact_open_positions_message')}</p>
               </div>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={jobsInView ? { opacity: 1, x: 0 } : {}}
