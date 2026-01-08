@@ -18,22 +18,48 @@ export const Footer = () => {
               {t('footer_company_description', 'Providing sustainable products and exceptional service since 2010. Your trusted partner for eco-friendly solutions.')}
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a
+                href="https://www.facebook.com/share/1aNXnXD8xx/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
                 <Facebook size={20} />
                 <span className="sr-only">Facebook</span>
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a
+                href="https://www.tiktok.com/@babo.bambo.b.v?_r=1&_t=ZG-92tQFhyomBd"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-music"
+                >
+                  <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                </svg>
+                <span className="sr-only">TikTok</span>
+              </a>
+              {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Twitter size={20} />
                 <span className="sr-only">Twitter</span>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              </a> */}
+              {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram size={20} />
                 <span className="sr-only">Instagram</span>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              </a> */}
+              {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Linkedin size={20} />
                 <span className="sr-only">LinkedIn</span>
-              </a>
+              </a> */}
             </div>
           </div>
 
@@ -90,15 +116,15 @@ export const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin size={20} className="mr-2 flex-shrink-0 mt-1 text-primary-500" />
-                <span className="text-gray-400">123 Business Avenue, Suite 100, New York, NY 10001</span>
+                <span className="text-gray-400"> Papenkamp 20-P,6836 BD Arnhem</span>
               </li>
               <li className="flex items-center">
                 <Phone size={20} className="mr-2 flex-shrink-0 text-primary-500" />
-                <a href="tel:+12345678900" className="text-gray-400 hover:text-white transition-colors">+1 (234) 567-8900</a>
+                <a href="tel:+31640887984" className="text-gray-400 hover:text-white transition-colors">+31-640887984</a>
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="mr-2 flex-shrink-0 text-primary-500" />
-                <a href="mailto:info@babo.nl" className="text-gray-400 hover:text-secondary-400 transition-colors">info@babo.nl</a>
+                <a href="mailto:info@babobamboo.com" className="text-gray-400 hover:text-secondary-400 transition-colors">info@babobamboo.com</a>
               </li>
             </ul>
           </div>

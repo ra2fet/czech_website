@@ -15,16 +15,16 @@ const generateVerificationCode = () => {
 
 router.post('/register-admin', async (req, res) => {
   const { email, password } = req.body;
-  
+
   // Validation with localized messages
   const validationErrors = [];
   if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
   if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
-  
+
   if (validationErrors.length > 0) {
     return res.status(400).json({ errors: validationErrors });
   }
-  
+
   try {
     // Check if admin already exists
     db.query('SELECT * FROM admins WHERE email = ?', [email], async (err, results) => {
@@ -66,7 +66,7 @@ router.post('/register', async (req, res) => {
   if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
   if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
   if (!userType) validationErrors.push(req.t('errors.validation.required', { field: 'User type' }));
-  
+
   if (userType === 'company' && !companyName) {
     validationErrors.push(req.t('errors.validation.required', { field: 'Company name' }));
   }
@@ -115,10 +115,9 @@ router.post('/register', async (req, res) => {
           if (userType === 'customer') {
             // Send verification email only for customers
             try {
-              await emailService.sendVerificationEmail(email, verificationCode);
+              await emailService.sendVerificationEmail(email, verificationCode, req.language);
             } catch (emailError) {
               console.error('Error sending verification email:', emailError);
-              // Optionally, rollback user creation or mark for manual review if email sending fails
               return res.status(500).json({ error: req.t('errors.email.verification_failed') });
             }
             res.status(201).json({ message: req.t('success.auth.registration_success') });
@@ -157,7 +156,7 @@ router.post('/signin', async (req, res) => {
   const validationErrors = [];
   if (!email) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('email') }));
   if (!password) validationErrors.push(req.t('errors.validation.required', { field: req.getFieldName('password') }));
-  
+
   if (validationErrors.length > 0) {
     return res.status(400).json({ errors: validationErrors });
   }
@@ -361,7 +360,7 @@ router.post('/resend-verification-code', async (req, res) => {
           }
 
           try {
-            await emailService.sendVerificationEmail(email, newVerificationCode);
+            await emailService.sendVerificationEmail(email, newVerificationCode, req.language);
             res.status(200).json({ message: 'New verification code sent successfully. Please check your email.' });
           } catch (emailError) {
             console.error('Error sending new verification email:', emailError);

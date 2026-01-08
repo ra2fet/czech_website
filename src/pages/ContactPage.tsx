@@ -549,7 +549,7 @@ export const ContactPage = () => {
               <h3 className="text-xl font-bold mb-2">{t('contact_phone_title')}</h3>
               <p className="text-gray-600 mb-2">{t('contact_phone_description')}</p>
               <a href="tel:+31640887984" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                +31640887984
+                +31-640887984
               </a>
             </motion.div>
 
@@ -564,7 +564,7 @@ export const ContactPage = () => {
               </div>
               <h3 className="text-xl font-bold mb-2">{t('contact_email_title')}</h3>
               <p className="text-gray-600 mb-2">{t('contact_email_description')}</p>
-              <a href="mailto:info@company.com" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
+              <a href="mailto:info@babobamboo.com" className="text-primary-600 font-medium hover:text-primary-700 transition-colors">
                 info@babobamboo.com
               </a>
             </motion.div>
