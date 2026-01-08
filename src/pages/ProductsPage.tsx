@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Package, ShoppingBag, Truck, Shield, Zap, DollarSign, ChevronDown } from 'lucide-react';
+import { Package, ShoppingBag, Truck, Shield, Zap, Euro, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
@@ -81,7 +81,13 @@ export const ProductsPage = () => {
 
       if (data && Array.isArray(data)) {
         console.log('Setting products:', data.length, 'items');
-        setProducts(data);
+        // Parse specs if they are strings (common with some database drivers)
+        const parsedData = data.map(p => ({
+          ...p,
+          retail_specs: typeof p.retail_specs === 'string' ? JSON.parse(p.retail_specs) : p.retail_specs,
+          wholesale_specs: typeof p.wholesale_specs === 'string' ? JSON.parse(p.wholesale_specs) : p.wholesale_specs
+        }));
+        setProducts(parsedData);
       } else {
         console.log('No data received or invalid format');
         setProducts([]);
@@ -291,7 +297,7 @@ export const ProductsPage = () => {
             </div>
             <div className="flex flex-col items-center text-center">
               <div className="bg-primary-100 p-4 rounded-full mb-4">
-                <DollarSign size={32} className="text-primary-600" />
+                <Euro size={32} className="text-primary-600" />
               </div>
               <h3 className="text-xl font-bold mb-2">
                 {viewMode === 'wholesale' ? t('volume_discounts_title') : t('competitive_pricing_title')}
@@ -370,8 +376,8 @@ export const ProductsPage = () => {
                         <div className="text-right">
                           <div className="text-2xl font-bold text-primary-600">
                             {viewMode === 'wholesale'
-                              ? `$${product.wholesale_price}`
-                              : `$${product.retail_price}`}
+                              ? `${config.currencySymbol}${product.wholesale_price}`
+                              : `${config.currencySymbol}${product.retail_price}`}
                           </div>
                           <div className="text-sm text-gray-500">
                             {viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}

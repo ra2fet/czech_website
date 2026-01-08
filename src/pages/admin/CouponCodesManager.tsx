@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import config from '../../config';
- 
+
 interface CouponCode {
     id: number;
     code: string;
@@ -14,7 +14,7 @@ interface CouponCode {
     created_at: string;
     updated_at: string;
 }
- const CouponCodesManager: React.FC = () => {
+const CouponCodesManager: React.FC = () => {
     const [couponCodes, setCouponCodes] = useState<CouponCode[]>([]);
     const [formData, setFormData] = useState({
         code: '',
@@ -59,7 +59,7 @@ interface CouponCode {
         setError(null);
         setLoading(true);
 
-        const discount_value = formData.discount_value ? formData.discount_type ==  'percentage' ? parseFloat(formData.discount_value) / 100 : parseFloat(formData.discount_value)  : 0;
+        const discount_value = formData.discount_value ? formData.discount_type == 'percentage' ? parseFloat(formData.discount_value) / 100 : parseFloat(formData.discount_value) : 0;
 
         try {
             const dataToSend = {
@@ -118,7 +118,7 @@ interface CouponCode {
                 setError('Failed to delete coupon code.');
                 console.error(err);
 
-                  
+
             } finally {
                 setLoading(false);
             }
@@ -274,9 +274,9 @@ interface CouponCode {
                                         <td className="px-6 py-4 whitespace-nowrap">{coupon.code}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{coupon.discount_type}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            {coupon.discount_type === 'percentage' ? `${(coupon.discount_value * 100).toFixed(0)}%` : `$${Number(coupon.discount_value).toFixed(0)}`}
+                                            {coupon.discount_type === 'percentage' ? `${(coupon.discount_value * 100).toFixed(0)}%` : `${config.currencySymbol}${Number(coupon.discount_value).toFixed(0)}`}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{coupon.min_cart_value !== null ? `$${Number(coupon.min_cart_value).toFixed(0)}` : 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{coupon.min_cart_value !== null ? `${config.currencySymbol}${Number(coupon.min_cart_value).toFixed(0)}` : 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{coupon.uses_count}{coupon.max_uses !== null ? `/${coupon.max_uses}` : ''}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{coupon.expiry_date ? new Date(coupon.expiry_date).toLocaleDateString() : 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{coupon.is_active ? 'Yes' : 'No'}</td>

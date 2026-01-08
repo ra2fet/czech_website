@@ -72,7 +72,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
     } catch (err) {
       console.error('Error fetching addresses:', err);
       toast.error('Failed to load addresses.');
-      
+
     }
   }, [user, setSavedAddresses, setSelectedAddressId]);
 
@@ -105,7 +105,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
       if (couponStatus === 'invalid') {
         toast.error('Invalid or expired coupon code.');
       } else if (couponStatus === 'min_cart_value') {
-        toast.error(`Coupon requires a minimum cart subtotal value of $1000.`);
+        toast.error(`Coupon requires a minimum cart subtotal value of ${config.currencySymbol}1000.`);
       } else if (couponStatus === 'valid') {
         toast.success(`Coupon "${couponInput}" applied successfully!`);
       }
@@ -126,22 +126,22 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
 
   const calculateTotal = () => {
     let total = subtotal;
-    
+
     // Only add tax fee if tax feature is enabled
     if (features.enableTaxPurchase) {
       total += taxFee;
     }
-    
+
     // Only add shipping fee if shipping feature is enabled
     if (features.enableShippingByPriceZone) {
       total += shippingFee;
     }
-    
+
     // Only subtract discount if coupon feature is enabled
     if (features.enableDiscountCoupons) {
       total -= discount;
     }
-    
+
     return total;
   };
 
@@ -168,7 +168,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
         setError('Please fill in all new address fields.');
         return;
       }
-      
+
       const selectedProvince = provinces.find(p => p.name === newAddress.province);
       if (!selectedProvince) {
         setError('Please select a valid province.');
@@ -191,7 +191,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
       setError('Please select or add a shipping address.');
       return;
     }
-    
+
     if (!provinceIdToSend) {
       setError('Failed to determine province ID.');
       return;
@@ -307,38 +307,38 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               <h4 className="font-semibold text-gray-900 mb-2">Order Summary</h4>
               <div className="flex justify-between text-sm text-gray-600 mb-1">
                 <span>Subtotal ({cartItems.length} items)</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
               </div>
-              
+
               {/* Conditionally show tax fee based on feature toggle */}
               <FeatureGuard feature="enableTaxPurchase">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                   <span>Tax Fee</span>
-                  <span>${taxFee.toFixed(2)}</span>
+                  <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
                 </div>
               </FeatureGuard>
-              
+
               {/* Conditionally show shipping fee based on feature toggle */}
               <FeatureGuard feature="enableShippingByPriceZone">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                   <span>Shipping</span>
-                  <span>${shippingFee.toFixed(2)}</span>
+                  <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
                 </div>
               </FeatureGuard>
-              
+
               {/* Conditionally show discount based on coupon feature */}
               <FeatureGuard feature="enableDiscountCoupons">
                 {discount > 0 && (
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Discount ({couponCode})</span>
-                    <span className="text-red-600">-${Number(discount).toFixed(0)}</span>
+                    <span className="text-red-600">-{config.currencySymbol}{Number(discount).toFixed(0)}</span>
                   </div>
                 )}
               </FeatureGuard>
-              
+
               <div className="flex justify-between font-bold text-lg text-gray-900 pt-2 border-t border-blue-200">
                 <span>Total</span>
-                <span className="text-blue-600">${calculateTotal().toFixed(2)}</span>
+                <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
               </div>
             </div>
 
@@ -523,7 +523,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                 </div>
               </div>
             </FeatureGuard>
-        
+
             {/* Payment Information */}
             <div id="payment-details" className="space-y-4">
               <div className="flex items-center justify-between">
@@ -638,9 +638,8 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               type="button"
               onClick={handleSubmit}
               disabled={isProcessing}
-              className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105 disabled:hover:scale-100 ${
-                isProcessing ? 'opacity-70 cursor-not-allowed' : 'shadow-lg hover:shadow-xl'
-              }`}
+              className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105 disabled:hover:scale-100 ${isProcessing ? 'opacity-70 cursor-not-allowed' : 'shadow-lg hover:shadow-xl'
+                }`}
             >
               {isProcessing ? (
                 <div className="flex items-center justify-center">
@@ -661,7 +660,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                 </div>
               ) : (
                 <span className="text-lg">
-                  Complete Payment • ${calculateTotal().toFixed(2)}
+                  Complete Payment • {config.currencySymbol}{calculateTotal().toFixed(2)}
                 </span>
               )}
             </button>

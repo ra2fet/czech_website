@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Package, DollarSign, Calendar, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Package, Euro, Calendar, User, Mail, Phone, MapPin } from 'lucide-react';
 import config from '../../config';
 
 interface OrderItem {
@@ -144,9 +144,8 @@ export function OrdersManager() {
             <div key={order.id} className="bg-white rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
                 <h3 className="text-xl font-semibold text-gray-900">Order #{order.id}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  order.payment_status === 'completed' ? 'bg-success-100 text-success-800' : 'bg-warning-100 text-warning-800'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.payment_status === 'completed' ? 'bg-success-100 text-success-800' : 'bg-warning-100 text-warning-800'
+                  }`}>
                   {order.payment_status}
                 </span>
               </div>
@@ -175,8 +174,8 @@ export function OrdersManager() {
                   </p>
                 )}
                 <p className="flex items-center text-sm">
-                  <DollarSign size={16} className="mr-2 text-gray-500" />
-                  <strong className='mr-1'>Total: </strong> ${Number(order.total_amount).toFixed(2)}
+                  <Euro size={16} className="mr-2 text-gray-500" />
+                  <strong className='mr-1'>Total: </strong> {config.currencySymbol}{Number(order.total_amount).toFixed(2)}
                 </p>
                 <p className="flex items-center text-sm">
                   <Calendar size={16} className="mr-2 text-gray-500" />
@@ -212,9 +211,8 @@ export function OrdersManager() {
                 >
                   <span>Order Items ({order.items.length})</span>
                   <svg
-                    className={`w-5 h-5 transform transition-transform duration-200 ${
-                      expandedOrderItems.has(order.id) ? 'rotate-180' : ''
-                    }`}
+                    className={`w-5 h-5 transform transition-transform duration-200 ${expandedOrderItems.has(order.id) ? 'rotate-180' : ''
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -232,7 +230,7 @@ export function OrdersManager() {
                             <Package size={14} className="mr-2 text-gray-400" />
                             {item.product_name} (x{item.quantity})
                           </span>
-                          <span>${(item.price * item.quantity).toFixed(2)}</span>
+                          <span>{config.currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                         {item.product_rating !== undefined && item.product_rating !== null && (
                           <div className="ml-6">

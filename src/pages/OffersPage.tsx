@@ -120,14 +120,13 @@ export const OffersPage = () => {
                       <h2 className="text-2xl font-bold text-blue-700 flex items-center">
                         <Tag size={24} className="mr-2" /> {offer.name}
                       </h2>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        offer.discount_type === 'percentage' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${offer.discount_type === 'percentage' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'
+                        }`}>
                         {offer.discount_type === 'percentage' ? t('offers_percentage_off', { value: offer.discount_value }) : t('offers_amount_off', { value: Number(offer.discount_value).toFixed(0) })}
                       </span>
                     </div>
                     {offer.description && <p className="text-gray-600 mb-4">{offer.description}</p>}
-                    
+
                     <div className="flex items-center text-sm text-gray-500 mb-4">
                       <Clock size={16} className="mr-2" />
                       <span>{t('offers_valid_period', { startDate: new Date(offer.start_date).toLocaleDateString(), endDate: new Date(offer.end_date).toLocaleDateString() })}</span>
@@ -143,8 +142,8 @@ export const OffersPage = () => {
                             <div className="flex-1">
                               <p className="font-medium text-gray-900">{product.name}</p>
                               <div className="flex items-baseline space-x-2">
-                                <span className="text-lg font-bold text-blue-600">${Number(discountedPrice).toFixed(2)}</span>
-                                <span className="text-sm text-gray-500 line-through">${Number(product.price).toFixed(2)}</span>
+                                <span className="text-lg font-bold text-blue-600">{config.currencySymbol}{Number(discountedPrice).toFixed(2)}</span>
+                                <span className="text-sm text-gray-500 line-through">{config.currencySymbol}{Number(product.price).toFixed(2)}</span>
                               </div>
                             </div>
                             <button

@@ -12,8 +12,17 @@ interface Product {
   image_url: string;
   retail_price: number;
   wholesale_price: number;
-  retail_specs: object;
-  wholesale_specs: object;
+  retail_specs: {
+    dimensions?: string;
+    weight?: string;
+    material?: string;
+  };
+  wholesale_specs: {
+    quantity?: string | number;
+    dimensions?: string;
+    weight?: string;
+    material?: string;
+  };
   translations?: {
     [key: string]: {
       name: string;
@@ -26,8 +35,17 @@ interface ProductFormState {
   image_url: string;
   retail_price: string;
   wholesale_price: string;
-  retail_specs: object;
-  wholesale_specs: object;
+  retail_specs: {
+    dimensions: string;
+    weight: string;
+    material: string;
+  };
+  wholesale_specs: {
+    quantity: string;
+    dimensions: string;
+    weight: string;
+    material: string;
+  };
   translations: {
     [key: string]: {
       name: string;
@@ -59,8 +77,17 @@ export function ProductsManager() {
     image_url: '',
     retail_price: '',
     wholesale_price: '',
-    retail_specs: {},
-    wholesale_specs: {},
+    retail_specs: {
+      dimensions: '',
+      weight: '',
+      material: '',
+    },
+    wholesale_specs: {
+      quantity: '',
+      dimensions: '',
+      weight: '',
+      material: '',
+    },
     translations: {},
   });
 
@@ -85,12 +112,36 @@ export function ProductsManager() {
         };
       });
 
+      const parseSpecs = (specs: any) => {
+        if (!specs) return {};
+        if (typeof specs === 'string') {
+          try {
+            return JSON.parse(specs);
+          } catch (e) {
+            return {};
+          }
+        }
+        return specs;
+      };
+
+      const retailSpecs = parseSpecs(currentProduct.retail_specs);
+      const wholesaleSpecs = parseSpecs(currentProduct.wholesale_specs);
+
       setFormData({
         image_url: currentProduct.image_url?.startsWith('http') ? currentProduct.image_url : '',
         retail_price: currentProduct.retail_price.toString(),
         wholesale_price: currentProduct.wholesale_price.toString(),
-        retail_specs: currentProduct.retail_specs || {},
-        wholesale_specs: currentProduct.wholesale_specs || {},
+        retail_specs: {
+          dimensions: retailSpecs.dimensions || '',
+          weight: retailSpecs.weight || '',
+          material: retailSpecs.material || '',
+        },
+        wholesale_specs: {
+          quantity: wholesaleSpecs.quantity?.toString() || '',
+          dimensions: wholesaleSpecs.dimensions || '',
+          weight: wholesaleSpecs.weight || '',
+          material: wholesaleSpecs.material || '',
+        },
         translations: existingTranslations,
       });
     } else if (languages.length > 0) {
@@ -103,8 +154,17 @@ export function ProductsManager() {
         image_url: '',
         retail_price: '',
         wholesale_price: '',
-        retail_specs: {},
-        wholesale_specs: {},
+        retail_specs: {
+          dimensions: '',
+          weight: '',
+          material: '',
+        },
+        wholesale_specs: {
+          quantity: '',
+          dimensions: '',
+          weight: '',
+          material: '',
+        },
         translations: initialTranslations,
       });
     }
@@ -113,7 +173,7 @@ export function ProductsManager() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      if (config.useSupabase) {
+      if (config.useSupabase && supabase) {
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -149,7 +209,7 @@ export function ProductsManager() {
         productData.image_url = currentProduct.image_url;
       }
 
-      if (config.useSupabase) {
+      if (config.useSupabase && supabase) {
         let error;
         if (currentProduct) {
           const { error: updateError } = await supabase
@@ -209,7 +269,7 @@ export function ProductsManager() {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        if (config.useSupabase) {
+        if (config.useSupabase && supabase) {
           const { error } = await supabase
             .from('products')
             .delete()
@@ -231,6 +291,16 @@ export function ProductsManager() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev: ProductFormState) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSpecChange = (type: 'retail' | 'wholesale', field: string, value: string) => {
+    setFormData((prev: ProductFormState) => ({
+      ...prev,
+      [type === 'retail' ? 'retail_specs' : 'wholesale_specs']: {
+        ...prev[type === 'retail' ? 'retail_specs' : 'wholesale_specs'],
+        [field]: value
+      }
+    }));
   };
 
   const handleTranslationChange = (langCode: string, field: 'name' | 'description', value: string) => {
@@ -261,8 +331,17 @@ export function ProductsManager() {
               image_url: '',
               retail_price: '',
               wholesale_price: '',
-              retail_specs: {},
-              wholesale_specs: {},
+              retail_specs: {
+                dimensions: '',
+                weight: '',
+                material: '',
+              },
+              wholesale_specs: {
+                quantity: '',
+                dimensions: '',
+                weight: '',
+                material: '',
+              },
               translations: initialTranslations,
             });
             setSelectedFile(null);
@@ -335,12 +414,12 @@ export function ProductsManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-accent-900">
-                        ${product.retail_price}
+                        {config.currencySymbol}{product.retail_price}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-accent-900">
-                        ${product.wholesale_price}
+                        {config.currencySymbol}{product.wholesale_price}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -502,6 +581,91 @@ export function ProductsManager() {
                   />
                 </div>
               </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-lg text-gray-800 mb-2">Retail Specifications</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions</label>
+                    <input
+                      type="text"
+                      value={formData.retail_specs.dimensions}
+                      onChange={(e) => handleSpecChange('retail', 'dimensions', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. 10x10x5 cm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
+                    <input
+                      type="text"
+                      value={formData.retail_specs.weight}
+                      onChange={(e) => handleSpecChange('retail', 'weight', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. 0.5 kg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
+                    <input
+                      type="text"
+                      value={formData.retail_specs.material}
+                      onChange={(e) => handleSpecChange('retail', 'material', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. Bamboo"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-lg text-gray-800 mb-2">Wholesale Specifications</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity per Package</label>
+                    <input
+                      type="number"
+                      value={formData.wholesale_specs.quantity}
+                      onChange={(e) => handleSpecChange('wholesale', 'quantity', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. 24"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
+                    <input
+                      type="text"
+                      value={formData.wholesale_specs.material}
+                      onChange={(e) => handleSpecChange('wholesale', 'material', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. Bamboo"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Package Dimensions</label>
+                    <input
+                      type="text"
+                      value={formData.wholesale_specs.dimensions}
+                      onChange={(e) => handleSpecChange('wholesale', 'dimensions', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. 40x40x30 cm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Weight</label>
+                    <input
+                      type="text"
+                      value={formData.wholesale_specs.weight}
+                      onChange={(e) => handleSpecChange('wholesale', 'weight', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. 12 kg"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"

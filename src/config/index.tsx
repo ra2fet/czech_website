@@ -79,6 +79,8 @@ const config = {
     orders: '/orders'
   },
   axios: axiosInstance,
+  currency: 'euro',
+  currencySymbol: '€',
 };
 
 export default config;

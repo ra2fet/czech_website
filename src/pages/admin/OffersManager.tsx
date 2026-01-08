@@ -25,11 +25,11 @@ interface Offer {
   products: Product[];
   created_at: string;
   updated_at: string;
-  translations?: { 
-    [key: string]: { 
-      name: string; 
-      description: string; 
-    } 
+  translations?: {
+    [key: string]: {
+      name: string;
+      description: string;
+    }
   };
 }
 
@@ -40,11 +40,11 @@ interface OfferFormState {
   end_date: Date | null;
   is_active: boolean;
   product_ids: number[];
-  translations: { 
-    [key: string]: { 
-      name: string; 
-      description: string; 
-    } 
+  translations: {
+    [key: string]: {
+      name: string;
+      description: string;
+    }
   };
 }
 
@@ -184,7 +184,7 @@ export const OffersManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!defaultLanguage || !formState.translations[defaultLanguage.code]?.name.trim() || formState.discount_value <= 0 || !formState.start_date || !formState.end_date) {
       toast.error(`Please fill in all required fields including offer name in default language (${defaultLanguage?.name || 'English'}) and ensure discount value is positive.`);
       return;
@@ -273,7 +273,7 @@ export const OffersManager = () => {
                 <tr key={offer.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{offer.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {offer.discount_type === 'percentage' ? `${offer.discount_value}% OFF` : `$${Number(offer.discount_value).toFixed(0)} OFF`}
+                    {offer.discount_type === 'percentage' ? `${offer.discount_value}% OFF` : `${config.currencySymbol}${Number(offer.discount_value).toFixed(0)} OFF`}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(offer.start_date).toLocaleDateString()} - {new Date(offer.end_date).toLocaleDateString()}
@@ -354,7 +354,7 @@ export const OffersManager = () => {
                     required
                   >
                     <option value="percentage">Percentage (%)</option>
-                    <option value="fixed_amount">Fixed Amount ($)</option>
+                    <option value="fixed_amount">Fixed Amount ({config.currencySymbol})</option>
                   </select>
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export const OffersManager = () => {
                 >
                   {products.map(product => (
                     <option key={product.id} value={product.id}>
-                      {product.name} (${Number(product.retail_price).toFixed(0)})
+                      {product.name} ({config.currencySymbol}{Number(product.retail_price).toFixed(0)})
                     </option>
                   ))}
                 </select>

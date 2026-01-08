@@ -238,7 +238,7 @@ const RatingPage: React.FC = () => {
               <div className="flex-1">
                 <p className="font-medium">{item.name}</p>
                 <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                <p className="text-sm text-gray-600">Price: ${Number(item.price).toFixed(2)}</p>
+                <p className="text-sm text-gray-600">Price: {config.currencySymbol}{Number(item.price).toFixed(2)}</p>
                 <div className="flex items-center space-x-1 mt-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star

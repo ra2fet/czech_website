@@ -23,7 +23,7 @@ import MessagesManager from './MessagesManager';
 import JobsManager from './JobsManager';
 import ApplicationsManager from './ApplicationsManager';
 import { FaqsManager } from './FaqsManager'; // Import FaqsManager
-import { HelpCircle, ShoppingCart, Building, DollarSign, Truck, Gift, Settings } from 'lucide-react';
+import { HelpCircle, ShoppingCart, Building, Euro, Truck, Gift, Settings } from 'lucide-react';
 import { OrdersManager } from './OrdersManager'; // Import OrdersManager
 import { CompanyManager } from './CompanyManager'; // Import CompanyManager
 import TaxFeesManager from './TaxFeesManager';
@@ -58,7 +58,7 @@ export function AdminDashboard() {
     { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle }, // Add new FAQ navigation item
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart }, // Add new Orders navigation item
     // Conditionally add feature-dependent navigation items
-    ...(isFeatureEnabled('enableTaxPurchase') ? [{ name: 'Tax Fees', href: '/admin/tax-fees', icon: DollarSign }] : []),
+    ...(isFeatureEnabled('enableTaxPurchase') ? [{ name: 'Tax Fees', href: '/admin/tax-fees', icon: Euro }] : []),
     ...(isFeatureEnabled('enableShippingByPriceZone') ? [{ name: 'Shipping Rates', href: '/admin/shipping-rates', icon: Truck }] : []),
     ...(isFeatureEnabled('enableDiscountCoupons') ? [{ name: 'Coupon Codes', href: '/admin/coupon-codes', icon: Gift }] : []),
     ...(isFeatureEnabled('enableProductOffers') ? [{ name: 'Offers', href: '/admin/offers', icon: Gift }] : []),

@@ -7,6 +7,7 @@ import { PaymentForm } from '../payment/PaymentForm';
 import { PaymentSuccessDisplay } from '../payment/PaymentSuccessDisplay';
 import toast from 'react-hot-toast'; // Import toast
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import config from '../../config';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -104,7 +105,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                   onError={handlePaymentError}
                   onBack={() => setShowPayment(false)}
                   couponCode={state.couponCode}
-                   couponId={state.couponId} 
+                  couponId={state.couponId}
                   taxFee={state.taxFee}
                   shippingFee={state.shippingFee}
                   discount={state.discount}
@@ -140,11 +141,10 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                 className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl shadow-sm flex-shrink-0"
                               />
                               <span
-                                className={`absolute -top-2 -right-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  item.type === 'wholesale'
+                                className={`absolute -top-2 -right-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${item.type === 'wholesale'
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-green-100 text-green-800'
-                                }`}
+                                  }`}
                               >
                                 {item.type === 'wholesale' ? 'Wholesale' : 'Retail'}
                               </span>
@@ -167,7 +167,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                               <div className="flex items-center justify-between mb-3">
                                 <div>
                                   <p className="text-lg font-bold text-blue-600">
-                                    ${Number(item?.price).toFixed(2)}
+                                    {config.currencySymbol}{Number(item?.price).toFixed(2)}
                                   </p>
                                   <p className="text-xs text-gray-500">per unit</p>
                                 </div>
@@ -195,7 +195,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                 </div>
                                 <div className="text-right">
                                   <div className="font-bold text-gray-900">
-                                    ${(Number(item.price) * item.quantity).toFixed(2)}
+                                    {config.currencySymbol}{(Number(item.price) * item.quantity).toFixed(2)}
                                   </div>
                                   <div className="text-xs text-gray-500">total</div>
                                 </div>
@@ -214,11 +214,11 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                     <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="font-semibold">${state.subtotal.toFixed(2)}</span>
+                        <span className="font-semibold">{config.currencySymbol}{state.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
                         <span>Total</span>
-                        <span className="text-blue-600">${state.subtotal.toFixed(2)}</span>
+                        <span className="text-blue-600">{config.currencySymbol}{state.subtotal.toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -227,7 +227,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                         onClick={handleCheckoutClick}
                         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
-                        <span className="text-lg">Checkout • ${state.subtotal.toFixed(2)}</span>
+                        <span className="text-lg">Checkout • {config.currencySymbol}{state.subtotal.toFixed(2)}</span>
                       </button>
                       <button
                         onClick={clearCart}

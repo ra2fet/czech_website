@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import config from '../../config';
- 
+
 interface ShippingRate {
     id: number;
     min_price: number;
@@ -80,7 +80,7 @@ const ShippingRatesManager: React.FC = () => {
             setLoading(false);
             return;
         }
-        if ( isNaN(percentageRate)) {
+        if (isNaN(percentageRate)) {
             setError('Please enter a valid percentage rate greater than 0.');
             setLoading(false);
             return;
@@ -105,8 +105,8 @@ const ShippingRatesManager: React.FC = () => {
         } catch (error) {
             setError('Failed to save shipping rate. Please check your input.');
             console.error(error);
-            
-     
+
+
 
         } finally {
             setLoading(false);
@@ -241,8 +241,8 @@ const ShippingRatesManager: React.FC = () => {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {shippingRates.map((rate) => (
                                     <tr key={rate.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap">${Number(rate.min_price).toFixed(0)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{rate.max_price !== null ? `$${Number(rate.max_price).toFixed(0)}` : 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{config.currencySymbol}{Number(rate.min_price).toFixed(0)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{rate.max_price !== null ? `${config.currencySymbol}${Number(rate.max_price).toFixed(0)}` : 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{(Number(rate.percentage_rate * 100).toFixed(2))}%</td>
                                         <td className="px-6 py-4 whitespace-nowrap">{rate.is_active ? 'Yes' : 'No'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

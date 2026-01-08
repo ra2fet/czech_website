@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, DollarSign, CheckCircle } from 'lucide-react';
+import { Loader2, Euro, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -195,11 +195,11 @@ export function DashboardStats() {
                   <div>
                     <p className="text-sm text-green-600 font-medium">Total Sales</p>
                     <p className="text-3xl font-bold text-accent-900 mt-2">
-                      ${dashboardData.total_sales ? dashboardData.total_sales.toLocaleString() : '0.00'}
+                      {config.currencySymbol}{dashboardData.total_sales ? dashboardData.total_sales.toLocaleString() : '0.00'}
                     </p>
                   </div>
                   <div className="p-4 bg-green-600 rounded-lg">
-                    <DollarSign className="h-6 w-6 text-white" />
+                    <Euro className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </motion.div>

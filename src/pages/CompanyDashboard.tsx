@@ -228,21 +228,19 @@ export const CompanyDashboard = () => {
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'orders'
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'orders'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               Order History
             </button>
             <button
               onClick={() => setActiveTab('addresses')}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'addresses'
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'addresses'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               Saved Addresses
             </button>
@@ -264,20 +262,19 @@ export const CompanyDashboard = () => {
                   <div key={order.id} className="bg-gray-50 p-4 rounded-md shadow-sm">
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="font-semibold text-lg">Order #{order.id}</h3>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {order.status}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">Date: {new Date(order.order_date).toLocaleDateString()}</p>
-                    <p className="text-sm text-gray-600">Total: ${Number(order.total_amount).toFixed(2)}</p>
+                    <p className="text-sm text-gray-600">Total: {config.currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
                     <p className="text-sm text-gray-600">Shipping Address: {order.address_name} ({order.street_name}, {order.house_number}, {order.city}, {order.postcode})</p>
                     <div className="mt-2 border-t border-gray-200 pt-2">
                       <p className="font-medium text-gray-700">Items:</p>
                       <ul className="list-disc list-inside text-sm text-gray-600">
                         {order.items.map((item, index) => (
-                          <li key={index}>{item.product_name} (x{item.quantity}) - ${Number(item.price).toFixed(2)} ({item.product_type})</li>
+                          <li key={index}>{item.product_name} (x{item.quantity}) - {config.currencySymbol}{Number(item.price).toFixed(2)} ({item.product_type})</li>
                         ))}
                       </ul>
                     </div>
