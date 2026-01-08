@@ -223,6 +223,7 @@ const JobApplicationSection = () => {
   const [openPositions, setOpenPositions] = useState<Position[]>([]);
   const [positionsLoading, setPositionsLoading] = useState(true);
   const [positionsError, setPositionsError] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOpenPositions = async () => {
@@ -245,10 +246,27 @@ const JobApplicationSection = () => {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Frontend validation for file extension
+      const allowedExtensions = ['pdf', 'doc', 'docx'];
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+      if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+        setFileError(t('job_invalid_file_format_error') || 'Invalid file format. Please upload PDF, DOC, or DOCX.');
+        return;
+      }
+
+      // Check file size (optional, but good practice since backend has a limit)
+      if (file.size > 10 * 1024 * 1024) {
+        setFileError(t('errors.file.size_exceeded') || 'File size exceeds 10MB limit.');
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('resume', file); // 'resume' must match the field name in multer upload.single('resume')
+      formData.append('resume', file);
 
       try {
         const response = await config.axios.post('/contact/upload-resume', formData, {
@@ -260,12 +278,12 @@ const JobApplicationSection = () => {
           setFormData(prev => ({ ...prev, resume_url: response.data.filePath }));
           console.log('Resume uploaded successfully:', response.data.filePath);
         } else {
-          console.error('Error uploading resume:', response.data.msg);
-          setFormStatus('error'); // Indicate an error in form status
+          setFileError(response.data.error || t('errors.file.upload_failed') || 'Upload failed');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading resume:', error);
-        setFormStatus('error'); // Indicate an error in form status
+        const errorMessage = error.response?.data?.error || t('errors.file.upload_failed') || 'Upload failed';
+        setFileError(errorMessage);
       }
     }
   };
@@ -423,15 +441,20 @@ const JobApplicationSection = () => {
                     type="file"
                     name="resume_url"
                     id="resume_url"
-                    accept=".pdf"
+                    accept=".pdf,.doc,.docx"
                     className="hidden"
                     onChange={handleFileChange}
                     required
                   />
                 </label>
               </div>
+              {fileError && (
+                <p className="mt-2 text-sm text-danger-600 font-medium animate-pulse">
+                  {fileError}
+                </p>
+              )}
               {formData.resume_url && (
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="mt-2 text-sm text-success-600 font-medium">
                   {t('job_selected_file')} {formData.resume_url.split('/').pop()}
                 </p>
               )}
@@ -653,7 +676,6 @@ export const ContactPage = () => {
                   <Users size={24} className="text-primary-600 mr-2" />
                   <h3 className="text-xl font-bold">{t('contact_open_positions_title')}</h3>
                 </div>
-                {/* The JobApplicationSection handles its own loading/error/empty states */}
                 <p className="text-gray-500">{t('contact_open_positions_message')}</p>
               </div>
             </motion.div>

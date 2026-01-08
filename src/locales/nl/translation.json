@@ -122,15 +122,22 @@
   "job_loading_positions": "Functies laden...",
   "job_error_loading_positions": "Fout bij het laden van functies. Probeer het opnieuw.",
   "job_select_position_option": "Selecteer een functie",
-  "job_resume_label": "CV (PDF)*",
+  "job_resume_label": "CV (PDF, DOC, DOCX)*",
   "job_click_to_upload": "Klik om te uploaden",
   "job_or_drag_and_drop": "of sleep hierheen",
-  "job_pdf_max_size": "PDF (MAX. 10MB)",
+  "job_pdf_max_size": "PDF, DOC, DOCX (MAX. 10MB)",
+  "job_invalid_file_format_error": "Ongeldig bestandsformaat. Upload a.u.b. PDF, DOC of DOCX.",
   "job_selected_file": "Geselecteerd bestand:",
   "job_cover_letter_label": "Motivatiebrief",
   "job_submitting_button": "Verzenden...",
   "job_submit_application_button": "Aanvraag Indienen",
   "job_resume_not_uploaded_error": "CV niet geüpload.",
+  "errors": {
+    "file": {
+      "size_exceeded": "Bestandsgrootte overschrijdt de limiet van 10 MB.",
+      "upload_failed": "Bestand uploaden mislukt. Probeer het opnieuw."
+    }
+  },
   "contact_page_hero_title": "Contacteer Ons",
   "contact_page_hero_subtitle": "Heeft u vragen of wilt u meer informatie? Neem contact op met ons team en we helpen u graag verder.",
   "contact_phone_title": "Telefoon",

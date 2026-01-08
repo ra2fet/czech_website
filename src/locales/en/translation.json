@@ -122,15 +122,22 @@
   "job_loading_positions": "Loading positions...",
   "job_error_loading_positions": "Error loading positions. Please try again.",
   "job_select_position_option": "Select a position",
-  "job_resume_label": "Resume/CV (PDF)*",
+  "job_resume_label": "Resume/CV (PDF, DOC, DOCX)*",
   "job_click_to_upload": "Click to upload",
   "job_or_drag_and_drop": "or drag and drop",
-  "job_pdf_max_size": "PDF (MAX. 10MB)",
+  "job_pdf_max_size": "PDF, DOC, DOCX (MAX. 10MB)",
+  "job_invalid_file_format_error": "Invalid file format. Please upload PDF, DOC, or DOCX.",
   "job_selected_file": "Selected file:",
   "job_cover_letter_label": "Cover Letter",
   "job_submitting_button": "Submitting...",
   "job_submit_application_button": "Submit Application",
   "job_resume_not_uploaded_error": "Resume not uploaded.",
+  "errors": {
+    "file": {
+      "size_exceeded": "File size exceeds 10MB limit.",
+      "upload_failed": "File upload failed. Please try again."
+    }
+  },
   "contact_page_hero_title": "Contact Us",
   "contact_page_hero_subtitle": "Have questions or need more information? Get in touch with our team and we'll be happy to assist you.",
   "contact_phone_title": "Phone",
