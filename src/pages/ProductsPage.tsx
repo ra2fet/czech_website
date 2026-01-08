@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Package, ShoppingBag, Truck, Shield, Zap, DollarSign, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -6,7 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 import toast from 'react-hot-toast';
 import config from '../config'; // Import config
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate and useLocation
 import { useTranslation } from 'react-i18next';
 import { useFeatures, FeatureGuard } from '../contexts/FeatureContext'; // Import feature context
 
@@ -41,6 +41,7 @@ export const ProductsPage = () => {
   const { state: cartState, addItem, clearCart } = useCart(); // Get clearCart from useCart
   const { user } = useAuth(); // Get user from useAuth
   const navigate = useNavigate(); // Initialize useNavigate
+  const location = useLocation(); // Initialize useLocation
 
   // State for the confirmation dialog
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
@@ -58,7 +59,7 @@ export const ProductsPage = () => {
       setLoading(true);
 
       let data: Product[];
-      if (config.useSupabase) {
+      if (config.useSupabase && supabase) {
         console.log('Fetching products from Supabase...');
         const { data: supabaseData, error: fetchError } = await supabase
           .from('products')
@@ -98,6 +99,22 @@ export const ProductsPage = () => {
     }
   };
 
+  // Scroll to product if hash exists in URL
+  useLayoutEffect(() => {
+    if (!loading && location.hash) {
+      const id = location.hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          // Adjust for fixed header
+          const yOffset = -100;
+          const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [loading, location.hash, products]);
+
   const handleToggleViewMode = (mode: 'retail' | 'wholesale') => {
     if (mode === 'wholesale') {
       // Check if wholesale feature is enabled
@@ -105,19 +122,19 @@ export const ProductsPage = () => {
         toast.error(t('wholesale_feature_disabled'));
         return;
       }
-      
+
       if (!user) {
         toast.error(t('login_to_access_wholesale'));
         navigate('/signin'); // Redirect to login page
         return;
       }
-      
+
       // Check if company-only wholesale is enabled
       if (isFeatureEnabled('enableCompanyOnlyWholesale') && user.userType !== 'company') {
         toast.error(t('wholesale_for_company_users_only'));
         return;
       }
-      
+
       if (user.userType === 'company' && !user.isActive) {
         toast.error(t('company_account_not_active'));
         return;
@@ -221,11 +238,10 @@ export const ProductsPage = () => {
               <div className="flex">
                 <button
                   onClick={() => handleToggleViewMode('retail')}
-                  className={`flex items-center px-4 py-2 rounded-l-md ${
-                    viewMode === 'retail'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center px-4 py-2 rounded-l-md ${viewMode === 'retail'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   <ShoppingBag size={18} className="mr-2" />
                   {t('retail_mode')}
@@ -234,11 +250,10 @@ export const ProductsPage = () => {
                 {(!isFeatureEnabled('enableCompanyOnlyWholesale') || (user && user.userType === 'company')) && (
                   <button
                     onClick={() => handleToggleViewMode('wholesale')}
-                    className={`flex items-center px-4 py-2 rounded-r-md ${
-                      viewMode === 'wholesale'
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`flex items-center px-4 py-2 rounded-r-md ${viewMode === 'wholesale'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     <Package size={18} className="mr-2" />
                     {t('wholesale_mode')}
@@ -324,8 +339,9 @@ export const ProductsPage = () => {
               {products.map((product) => (
                 <motion.div
                   key={product.id}
+                  id={product.id}
                   variants={itemVariants}
-                  className="bg-white rounded-lg shadow-md overflow-hidden"
+                  className="bg-white rounded-lg shadow-md overflow-hidden scroll-mt-24"
                 >
                   <div className="md:flex">
                     <div className="md:w-1/3 h-64 md:h-auto">
@@ -371,9 +387,8 @@ export const ProductsPage = () => {
                           {selectedProduct === product.id ? t('hide_details_button') : t('view_details_button')}
                           <ChevronDown
                             size={16}
-                            className={`ml-1 transition-transform duration-300 ${
-                              selectedProduct === product.id ? 'rotate-180' : ''
-                            }`}
+                            className={`ml-1 transition-transform duration-300 ${selectedProduct === product.id ? 'rotate-180' : ''
+                              }`}
                           />
                         </button>
                         <button

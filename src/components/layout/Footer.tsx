@@ -2,10 +2,52 @@ import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import Logo from '../ui/Logo';
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import config from '../../config';
+
+interface Product {
+  id: string;
+  name: string;
+}
 
 export const Footer = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+
+      let data: Product[] = [];
+      if (config.useSupabase && supabase) {
+        const { data: supabaseData, error: fetchError } = await supabase
+          .from('products')
+          .select('id, name')
+          .limit(4);
+
+        if (fetchError) throw fetchError;
+        data = supabaseData as Product[];
+      } else {
+        const response = await config.axios.get(config.apiEndpoints.products);
+        data = (response.data as Product[]).slice(0, 4);
+      }
+
+      if (data && Array.isArray(data)) {
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Error fetching products for footer:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <footer className="bg-accent-900 text-white">
@@ -79,9 +121,7 @@ export const Footer = () => {
               <li>
                 <Link to="/portfolio" className="text-gray-400 hover:text-white transition-colors">{t('portfolio')}</Link>
               </li>
-              <li>
-                <Link to="/locations" className="text-gray-400 hover:text-white transition-colors">{t('locations', 'Locations')}</Link>
-              </li>
+
               <li>
                 <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">{t('contact')}</Link>
               </li>
@@ -92,20 +132,33 @@ export const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">{t('products')}</h3>
             <ul className="space-y-2">
+              {loading ? (
+                <li className="text-gray-500 animate-pulse">{t('loading', 'Loading...')}</li>
+              ) : products.length > 0 ? (
+                products.map((product) => (
+                  <li key={product.id}>
+                    <Link
+                      to={`/products#${product.id}`}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      {product.name}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li>
+                    <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_toilet_paper', 'Babo Toilet Paper')}</Link>
+                  </li>
+                  <li>
+                    <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_kitchen_rolls', 'Babo Kitchen Rolls')}</Link>
+                  </li>
+                </>
+              )}
               <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_toilet_paper', 'Babo Toilet Paper')}</Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_kitchen_rolls', 'Babo Kitchen Rolls')}</Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_napkins', 'Babo Napkins')}</Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('footer_facial_tissues', 'Babo Facial Tissues')}</Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('view_all', 'View All')}</Link>
+                <Link to="/products" className="text-gray-400 hover:text-white transition-colors font-semibold">
+                  {t('view_all', 'View All')}
+                </Link>
               </li>
             </ul>
           </div>
