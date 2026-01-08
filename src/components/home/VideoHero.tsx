@@ -59,7 +59,7 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
             {t('video_hero_title')}
           </h1>
-          <p className="text-xl md:text-2xl opacity-90 mb-8">
+          <p className="text-xl md:text-2xl opacity-90 mb-8 whitespace-pre-line">
             {t('video_hero_subtitle')}
           </p>
           <button
