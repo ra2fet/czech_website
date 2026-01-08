@@ -56,10 +56,10 @@ export const VideoHero = ({ scrollToContent }: VideoHeroProps) => {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="text-center px-4 max-w-4xl"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 drop-shadow-lg">
             {t('video_hero_title')}
           </h1>
-          <p className="text-xl md:text-2xl opacity-90 mb-8 whitespace-pre-line">
+          <p className="text-xl md:text-2xl opacity-90 mb-8 whitespace-pre-line drop-shadow-md">
             {t('video_hero_subtitle')}
           </p>
           <button
