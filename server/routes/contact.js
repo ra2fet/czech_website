@@ -37,13 +37,24 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
   const allowedMimes = [
     'application/pdf',
+    'application/x-pdf',
+    'application/acrobat',
+    'applications/vnd.pdf',
+    'text/pdf',
+    'text/x-pdf',
     'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/octet-stream' // Fallback for some browsers
   ];
-  if (allowedMimes.includes(file.mimetype)) {
+
+  const extension = path.extname(file.originalname).toLowerCase();
+  const allowedExtensions = ['.pdf', '.doc', '.docx'];
+
+  if (allowedMimes.includes(file.mimetype) || allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file format. Only PDF, DOC, and DOCX are allowed.'), false);
+    console.error(`Rejected file: ${file.originalname}, Mime: ${file.mimetype}, Ext: ${extension}`);
+    cb(new Error(`Invalid file format (${file.mimetype}). Only PDF, DOC, and DOCX are allowed.`), false);
   }
 };
 
@@ -144,7 +155,8 @@ router.post('/upload-resume', async (req, res, next) => {
     }
     return res.status(400).json({ error: req.t('errors.file.upload_failed') });
   } else if (error) {
-    return res.status(400).json({ error: req.t('errors.file.invalid_format') });
+    // If it's a custom error from fileFilter, use its message if available
+    return res.status(400).json({ error: error.message || req.t('errors.file.invalid_format') });
   }
   next();
 });

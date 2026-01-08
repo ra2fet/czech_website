@@ -278,10 +278,12 @@ const JobApplicationSection = () => {
           setFormData(prev => ({ ...prev, resume_url: response.data.filePath }));
           console.log('Resume uploaded successfully:', response.data.filePath);
         } else {
+          setFormData(prev => ({ ...prev, resume_url: '' }));
           setFileError(response.data.error || t('errors.file.upload_failed') || 'Upload failed');
         }
       } catch (error: any) {
         console.error('Error uploading resume:', error);
+        setFormData(prev => ({ ...prev, resume_url: '' }));
         const errorMessage = error.response?.data?.error || t('errors.file.upload_failed') || 'Upload failed';
         setFileError(errorMessage);
       }
@@ -429,13 +431,18 @@ const JobApplicationSection = () => {
                 {t('job_resume_label')}
               </label>
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center  pt-5 w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                <label className={`flex flex-col items-center justify-center pt-5 w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 ${fileError
+                  ? 'border-danger-500 bg-danger-50'
+                  : formData.resume_url
+                    ? 'border-success-500 bg-success-100'
+                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                  }`}>
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FileText size={24} className="text-gray-400 mb-2" />
-                    <p className="mb-2 text-sm text-gray-500">
+                    <FileText size={24} className={`${fileError ? 'text-danger-500' : formData.resume_url ? 'text-success-600' : 'text-gray-400'} mb-2`} />
+                    <p className={`mb-2 text-sm ${fileError ? 'text-danger-700' : formData.resume_url ? 'text-success-700' : 'text-gray-500'}`}>
                       <span className="font-semibold">{t('job_click_to_upload')}</span> {t('job_or_drag_and_drop')}
                     </p>
-                    <p className="text-xs text-gray-500">{t('job_pdf_max_size')}</p>
+                    <p className={`text-xs ${fileError ? 'text-danger-600' : formData.resume_url ? 'text-success-600' : 'text-gray-500'}`}>{t('job_pdf_max_size')}</p>
                   </div>
                   <input
                     type="file"
@@ -449,11 +456,15 @@ const JobApplicationSection = () => {
                 </label>
               </div>
               {fileError && (
-                <p className="mt-2 text-sm text-danger-600 font-medium animate-pulse">
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-2 text-sm text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"
+                >
                   {fileError}
-                </p>
+                </motion.p>
               )}
-              {formData.resume_url && (
+              {formData.resume_url && !fileError && (
                 <p className="mt-2 text-sm text-success-600 font-medium">
                   {t('job_selected_file')} {formData.resume_url.split('/').pop()}
                 </p>
