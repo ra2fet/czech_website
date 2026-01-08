@@ -6,16 +6,16 @@ const { v4: uuidv4 } = require('uuid'); // Import uuid for generating unique tok
 
 // Helper function to check if a feature is enabled
 const isFeatureEnabled = async (featureName) => {
-  try {
-    const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
-    if (settings.length > 0) {
-      return settings[0][featureName] === 1 || settings[0][featureName] === true;
+    try {
+        const [settings] = await db.promise().query('SELECT * FROM feature_settings WHERE id = 1');
+        if (settings.length > 0) {
+            return settings[0][featureName] === 1 || settings[0][featureName] === true;
+        }
+        return true; // Default to enabled if no settings found
+    } catch (error) {
+        console.error('Error checking feature setting:', error);
+        return true; // Default to enabled on error
     }
-    return true; // Default to enabled if no settings found
-  } catch (error) {
-    console.error('Error checking feature setting:', error);
-    return true; // Default to enabled on error
-  }
 };
 
 
@@ -117,10 +117,10 @@ router.get('/public-single-by-token/:ratingToken', async (req, res) => {
 // Route to create a new order
 router.post('/', authenticateToken, async (req, res) => {
     // Check if order creation is enabled (assuming this feature exists)
-    const orderCreationEnabled = await isFeatureEnabled('enableOrderCreation');
-    if (!orderCreationEnabled) {
-        return res.status(403).json({ message: 'Order creation is currently disabled' });
-    }
+    // const orderCreationEnabled = await isFeatureEnabled('enableOrderCreation');
+    // if (!orderCreationEnabled) {
+    //     return res.status(403).json({ message: 'Order creation is currently disabled' });
+    // }
 
     const { userId, totalAmount, addressId, cartItems } = req.body;
 
@@ -139,10 +139,10 @@ router.post('/', authenticateToken, async (req, res) => {
             const ratingEnabled = await isFeatureEnabled('enableOrderRating');
             const autoEmailEnabled = await isFeatureEnabled('enableAutoRatingEmail');
             const send3DaysEnabled = await isFeatureEnabled('enableRatingLinkAfter3Days');
-            
+
             // Generate rating token only if rating system is enabled
             const ratingToken = ratingEnabled ? uuidv4() : null;
-            
+
             // Calculate send date only if auto rating emails are enabled
             let sendRatingEmailDate = null;
             if (ratingEnabled && autoEmailEnabled) {
