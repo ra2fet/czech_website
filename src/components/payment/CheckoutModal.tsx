@@ -283,7 +283,7 @@ export const CheckoutModal = ({
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
+                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]`}
                 >
                     {/* Left Side: Form */}
                     <div className="flex-1 p-6 md:p-8 overflow-y-auto">
@@ -467,69 +467,71 @@ export const CheckoutModal = ({
                     </div>
 
                     {/* Right Side: Summary */}
-                    <div className="w-full md:w-80 bg-gray-50 p-6 md:p-8 border-l border-gray-100 overflow-y-auto">
-                        <h3 className="font-bold text-gray-900 mb-6 flex items-center">
-                            <ShoppingBag size={20} className="mr-2 text-blue-600" />
-                            {t('checkout_order_summary_title')}
-                        </h3>
+                    {step !== 'success' && (
+                        <div className="w-full md:w-80 bg-gray-50 p-6 md:p-8 border-l border-gray-100 overflow-y-auto">
+                            <h3 className="font-bold text-gray-900 mb-6 flex items-center">
+                                <ShoppingBag size={20} className="mr-2 text-blue-600" />
+                                {t('checkout_order_summary_title')}
+                            </h3>
 
-                        <div className="space-y-4 mb-8">
-                            {cartItems.map((item) => (
-                                <div key={item.id} className="flex space-x-3">
-                                    <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                        <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
+                            <div className="space-y-4 mb-8">
+                                {cartItems.map((item) => (
+                                    <div key={item.id} className="flex space-x-3">
+                                        <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                                            <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
                                     </div>
-                                    <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="space-y-3 border-t border-gray-200 pt-6">
-                            <div className="flex justify-between text-sm text-gray-500">
-                                <span>{t('cart_subtotal_label')}</span>
-                                <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
+                                ))}
                             </div>
 
-                            <FeatureGuard feature="enableTaxPurchase">
+                            <div className="space-y-3 border-t border-gray-200 pt-6">
                                 <div className="flex justify-between text-sm text-gray-500">
-                                    <span>{t('checkout_tax_label')}</span>
-                                    <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
+                                    <span>{t('cart_subtotal_label')}</span>
+                                    <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
                                 </div>
-                            </FeatureGuard>
 
-                            <FeatureGuard feature="enableShippingByPriceZone">
-                                <div className="flex justify-between text-sm text-gray-500">
-                                    <span className="flex items-center"><Truck size={14} className="mr-1" /> {t('checkout_shipping_label')}</span>
-                                    <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
+                                <FeatureGuard feature="enableTaxPurchase">
+                                    <div className="flex justify-between text-sm text-gray-500">
+                                        <span>{t('checkout_tax_label')}</span>
+                                        <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
+                                    </div>
+                                </FeatureGuard>
+
+                                <FeatureGuard feature="enableShippingByPriceZone">
+                                    <div className="flex justify-between text-sm text-gray-500" >
+                                        <span className="flex items-center"><Truck size={14} className="mr-1" /> {t('checkout_shipping_label')}</span>
+                                        <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
+                                    </div>
+                                </FeatureGuard>
+
+                                {discount > 0 && (
+                                    <div className="flex justify-between text-sm text-red-600 font-medium">
+                                        <span>{t('checkout_discount_label', { code: couponCode })}</span>
+                                        <span>-{config.currencySymbol}{discount.toFixed(2)}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
+                                    <span>{t('cart_total_title')}</span>
+                                    <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
                                 </div>
-                            </FeatureGuard>
+                            </div>
 
-                            {discount > 0 && (
-                                <div className="flex justify-between text-sm text-red-600 font-medium">
-                                    <span>{t('checkout_discount_label', { code: couponCode })}</span>
-                                    <span>-{config.currencySymbol}{discount.toFixed(2)}</span>
+                            <div className="mt-8 p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                                <div className="flex items-center space-x-2 text-gray-500 text-xs">
+                                    <ShieldCheck size={14} className="text-green-600" />
+                                    <span>{t('checkout_secure_ssl')}</span>
                                 </div>
-                            )}
-
-                            <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
-                                <span>{t('cart_total_title')}</span>
-                                <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
+                                <div className="flex items-center space-x-2 text-gray-500 text-xs">
+                                    <ShieldCheck size={14} className="text-green-600" />
+                                    <span>{t('checkout_money_back')}</span>
+                                </div>
                             </div>
                         </div>
-
-                        <div className="mt-8 p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
-                            <div className="flex items-center space-x-2 text-gray-500 text-xs">
-                                <ShieldCheck size={14} className="text-green-600" />
-                                <span>{t('checkout_secure_ssl')}</span>
-                            </div>
-                            <div className="flex items-center space-x-2 text-gray-500 text-xs">
-                                <ShieldCheck size={14} className="text-green-600" />
-                                <span>{t('checkout_money_back')}</span>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </motion.div>
             </div>
         </AnimatePresence>
