@@ -431,5 +431,6 @@
   "checkout_error_fill_all_fields": "Vul alle adresvelden in",
   "checkout_error_invalid_province": "Ongeldige provincie",
   "checkout_error_save_address": "Opslaan van adres mislukt",
-  "checkout_error_select_address": "Selecteer een adres"
+  "checkout_error_select_address": "Selecteer een adres",
+  "checkout_error_country_not_supported": "Uw land wordt niet ondersteund voor betalingen"
 }

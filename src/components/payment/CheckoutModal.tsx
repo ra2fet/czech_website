@@ -140,7 +140,13 @@ const CheckoutForm = ({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <PaymentElement options={{ layout: 'tabs' }} />
+            <PaymentElement
+                options={{ layout: 'tabs' }}
+                onLoadError={(event) => {
+                    console.error('Stripe Payment Element load error:', event);
+                    setErrorMessage(t('checkout_error_country_not_supported'));
+                }}
+            />
             {errorMessage && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
                     {errorMessage}

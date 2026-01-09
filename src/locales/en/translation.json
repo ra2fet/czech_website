@@ -431,5 +431,6 @@
   "checkout_error_fill_all_fields": "Please fill all address fields",
   "checkout_error_invalid_province": "Invalid province",
   "checkout_error_save_address": "Failed to save address",
-  "checkout_error_select_address": "Please select an address"
+  "checkout_error_select_address": "Please select an address",
+  "checkout_error_country_not_supported": "Your country is not supported for payment"
 }
