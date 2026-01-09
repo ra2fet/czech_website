@@ -525,10 +525,10 @@ export const CheckoutModal = ({
                                     <ShieldCheck size={14} className="text-green-600" />
                                     <span>{t('checkout_secure_ssl')}</span>
                                 </div>
-                                <div className="flex items-center space-x-2 text-gray-500 text-xs">
+                                {/* <div className="flex items-center space-x-2 text-gray-500 text-xs">
                                     <ShieldCheck size={14} className="text-green-600" />
                                     <span>{t('checkout_money_back')}</span>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     )}
