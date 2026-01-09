@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useState, useEffect, useLayoutEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Package, ShoppingBag, Truck, Shield, Zap, Euro, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../contexts/CartContext';
@@ -47,8 +47,6 @@ export const ProductsPage = () => {
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [productToAddToCart, setProductToAddToCart] = useState<Product | null>(null);
 
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   useEffect(() => {
     fetchProducts();
@@ -202,15 +200,6 @@ export const ProductsPage = () => {
     toast.error(t('product_not_added_toast'));
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -313,7 +302,7 @@ export const ProductsPage = () => {
       </section>
 
       {/* Products List */}
-      <section ref={ref} className="section-padding bg-gray-50">
+      <section className="section-padding bg-gray-50">
         <div className="container-custom">
           {loading ? (
             <div className="text-center py-12">
@@ -336,18 +325,16 @@ export const ProductsPage = () => {
               </button>
             </div>
           ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-              className="space-y-8"
-            >
+            <div className="space-y-8">
               {products.map((product) => (
                 <motion.div
                   key={product.id}
                   id={product.id}
                   variants={itemVariants}
-                  className="bg-white rounded-lg shadow-md overflow-hidden scroll-mt-24"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.1 }}
+                  className="bg-white rounded-lg shadow-md overflow-hidden scroll-mt-24 min-h-[400px] md:min-h-0"
                 >
                   <div className="md:flex">
                     <div className="md:w-1/3 h-64 md:h-auto">
@@ -518,7 +505,7 @@ export const ProductsPage = () => {
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           )}
         </div>
       </section>
