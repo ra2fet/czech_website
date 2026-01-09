@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
-import { PaymentForm } from '../payment/PaymentForm';
+import { CheckoutModal } from '../payment/CheckoutModal';
 import { PaymentSuccessDisplay } from '../payment/PaymentSuccessDisplay';
-import toast from 'react-hot-toast'; // Import toast
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import config from '../../config';
 
@@ -18,27 +17,23 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { state, removeItem, updateQuantity, clearCart } = useCart();
   const { user } = useAuth(); // Get user from AuthContext
   const navigate = useNavigate(); // Initialize useNavigate
-  const [showPayment, setShowPayment] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSuccessDisplay, setShowSuccessDisplay] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false); // New state for sign-in prompt
 
 
   const handlePaymentSuccess = () => {
     clearCart();
-    setShowPayment(false);
+    setShowPaymentModal(false);
     setShowSuccessDisplay(true);
   };
 
-  const handlePaymentError = (error: Error) => {
-    console.error('Payment failed:', error);
-    toast.error('Payment failed. Please try again.');
-  };
 
   const handleCheckoutClick = () => {
     if (!user) {
       setShowSignInPrompt(true);
     } else {
-      setShowPayment(true);
+      setShowPaymentModal(true);
     }
   };
 
@@ -98,19 +93,6 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                   }}
                 />
               </div>
-            ) : showPayment ? (
-              <div className="flex-1 min-h-0">
-                <PaymentForm
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  onBack={() => setShowPayment(false)}
-                  couponCode={state.couponCode}
-                  couponId={state.couponId}
-                  taxFee={state.taxFee}
-                  shippingFee={state.shippingFee}
-                  discount={state.discount}
-                />
-              </div>
             ) : (
               <>
                 {/* Cart Content */}
@@ -142,8 +124,8 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                               />
                               <span
                                 className={`absolute -top-2 -right-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${item.type === 'wholesale'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-green-100 text-green-800'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-green-100 text-green-800'
                                   }`}
                               >
                                 {item.type === 'wholesale' ? 'Wholesale' : 'Retail'}
@@ -269,6 +251,16 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
           )}
         </>
       )}
+      <CheckoutModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        couponCode={state.couponCode}
+        couponId={state.couponId}
+        taxFee={state.taxFee}
+        shippingFee={state.shippingFee}
+        discount={state.discount}
+        onSuccess={handlePaymentSuccess}
+      />
     </AnimatePresence>
   );
 };

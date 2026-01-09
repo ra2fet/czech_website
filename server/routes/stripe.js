@@ -1,0 +1,27 @@
+const express = require('express');
+const router = express.Router();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { authenticateToken } = require('../middleware/auth');
+
+router.post('/create-payment-intent', authenticateToken, async (req, res) => {
+    const { amount, currency } = req.body;
+
+    try {
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(amount * 100), // Stripe expects amount in cents
+            currency: currency || 'eur',
+            automatic_payment_methods: {
+                enabled: true,
+            },
+        });
+
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+        });
+    } catch (error) {
+        console.error('Error creating payment intent:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = router;

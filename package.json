@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^3.0.7",
     "@supabase/supabase-js": "^2.39.7",
     "@tanstack/react-table": "^8.13.2",
