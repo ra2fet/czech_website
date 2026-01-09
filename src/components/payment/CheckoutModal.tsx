@@ -15,6 +15,7 @@ import {
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFeatures } from '../../contexts/FeatureContext';
+import { useTranslation } from 'react-i18next';
 import config from '../../config';
 import toast from 'react-hot-toast';
 
@@ -64,6 +65,7 @@ const CheckoutForm = ({
     const elements = useElements();
     const { user } = useAuth();
     const { state: { items: cartItems }, clearCart } = useCart();
+    const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -149,12 +151,12 @@ const CheckoutForm = ({
                 {isProcessing ? (
                     <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Processing...</span>
+                        <span>{t('checkout_processing')}</span>
                     </>
                 ) : (
                     <>
                         <ShieldCheck size={20} />
-                        <span>Pay {config.currencySymbol}{amount.toFixed(2)}</span>
+                        <span>{t('checkout_pay_button', { amount: `${config.currencySymbol}${amount.toFixed(2)}` })}</span>
                     </>
                 )}
             </button>
@@ -175,6 +177,7 @@ export const CheckoutModal = ({
     const { user } = useAuth();
     const { state: { items: cartItems, subtotal } } = useCart();
     const { features } = useFeatures();
+    const { t } = useTranslation();
 
     const [step, setStep] = useState<'address' | 'payment' | 'success'>('address');
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
@@ -302,8 +305,8 @@ export const CheckoutModal = ({
                         {step === 'address' && (
                             <div className="space-y-6 animate-fade-in">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Shipping Information</h2>
-                                    <p className="text-gray-500">Where should we send your order?</p>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_shipping_info_title')}</h2>
+                                    <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
                                 </div>
 
                                 <div className="space-y-4">
@@ -336,7 +339,7 @@ export const CheckoutModal = ({
                                     >
                                         <div className="flex items-center space-x-3 text-gray-600">
                                             <PlusCircle size={24} className={selectedAddressId === 'new' ? 'text-blue-600' : ''} />
-                                            <span className="font-semibold">Add New Address</span>
+                                            <span className="font-semibold">{t('checkout_add_new_address')}</span>
                                         </div>
 
                                         <AnimatePresence>
@@ -349,25 +352,25 @@ export const CheckoutModal = ({
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     <input
-                                                        placeholder="Address Name (e.g. Home)"
+                                                        placeholder={t('checkout_address_name_placeholder')}
                                                         className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                         value={newAddress.address_name}
                                                         onChange={e => setNewAddress({ ...newAddress, address_name: e.target.value })}
                                                     />
                                                     <input
-                                                        placeholder="Street Name"
+                                                        placeholder={t('checkout_street_placeholder')}
                                                         className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                         value={newAddress.street_name}
                                                         onChange={e => setNewAddress({ ...newAddress, street_name: e.target.value })}
                                                     />
                                                     <input
-                                                        placeholder="House Number"
+                                                        placeholder={t('checkout_house_number_placeholder')}
                                                         className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                         value={newAddress.house_number}
                                                         onChange={e => setNewAddress({ ...newAddress, house_number: e.target.value })}
                                                     />
                                                     <input
-                                                        placeholder="City"
+                                                        placeholder={t('checkout_city_placeholder')}
                                                         className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                         value={newAddress.city}
                                                         onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
@@ -377,11 +380,11 @@ export const CheckoutModal = ({
                                                         value={newAddress.province}
                                                         onChange={e => setNewAddress({ ...newAddress, province: e.target.value })}
                                                     >
-                                                        <option value="">Select Province</option>
+                                                        <option value="">{t('checkout_select_province')}</option>
                                                         {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                                                     </select>
                                                     <input
-                                                        placeholder="Postcode"
+                                                        placeholder={t('checkout_postcode_placeholder')}
                                                         className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                         value={newAddress.postcode}
                                                         onChange={e => setNewAddress({ ...newAddress, postcode: e.target.value })}
@@ -396,7 +399,7 @@ export const CheckoutModal = ({
                                     onClick={handleNextToPayment}
                                     className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
                                 >
-                                    <span>Continue to Payment</span>
+                                    <span>{t('checkout_continue_to_payment')}</span>
                                     <ChevronRight size={20} />
                                 </button>
                             </div>
@@ -409,12 +412,12 @@ export const CheckoutModal = ({
                                     className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
                                 >
                                     <ArrowLeft size={18} className="mr-1" />
-                                    <span>Back to Address</span>
+                                    <span>{t('checkout_back_to_address')}</span>
                                 </button>
 
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Details</h2>
-                                    <p className="text-gray-500">Secure payment powered by Stripe</p>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_payment_details_title')}</h2>
+                                    <p className="text-gray-500">{t('checkout_payment_details_subtitle')}</p>
                                 </div>
 
                                 <Elements stripe={stripePromise} options={{ mode: 'payment', amount: Math.round(calculateTotal() * 100), currency: 'eur' }}>
@@ -444,8 +447,8 @@ export const CheckoutModal = ({
                                     <CheckCircle2 size={48} />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h2>
-                                    <p className="text-gray-500">Thank you for your purchase. We've sent a confirmation email to your inbox.</p>
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('checkout_order_confirmed_title')}</h2>
+                                    <p className="text-gray-500">{t('checkout_order_confirmed_message')}</p>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -454,7 +457,7 @@ export const CheckoutModal = ({
                                     }}
                                     className="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-all shadow-lg"
                                 >
-                                    Return to Shopping
+                                    {t('checkout_return_to_shopping')}
                                 </button>
                             </div>
                         )}
@@ -464,7 +467,7 @@ export const CheckoutModal = ({
                     <div className="w-full md:w-80 bg-gray-50 p-6 md:p-8 border-l border-gray-100 overflow-y-auto">
                         <h3 className="font-bold text-gray-900 mb-6 flex items-center">
                             <ShoppingBag size={20} className="mr-2 text-blue-600" />
-                            Order Summary
+                            {t('checkout_order_summary_title')}
                         </h3>
 
                         <div className="space-y-4 mb-8">
@@ -473,7 +476,7 @@ export const CheckoutModal = ({
                                     <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                        <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
                                     </div>
                                     <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
                                 </div>
@@ -482,33 +485,33 @@ export const CheckoutModal = ({
 
                         <div className="space-y-3 border-t border-gray-200 pt-6">
                             <div className="flex justify-between text-sm text-gray-500">
-                                <span>Subtotal</span>
+                                <span>{t('cart_subtotal_label')}</span>
                                 <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
                             </div>
 
                             <FeatureGuard feature="enableTaxPurchase">
                                 <div className="flex justify-between text-sm text-gray-500">
-                                    <span>Estimated Tax</span>
+                                    <span>{t('checkout_tax_label')}</span>
                                     <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
                                 </div>
                             </FeatureGuard>
 
                             <FeatureGuard feature="enableShippingByPriceZone">
                                 <div className="flex justify-between text-sm text-gray-500">
-                                    <span className="flex items-center"><Truck size={14} className="mr-1" /> Shipping</span>
+                                    <span className="flex items-center"><Truck size={14} className="mr-1" /> {t('checkout_shipping_label')}</span>
                                     <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
                                 </div>
                             </FeatureGuard>
 
                             {discount > 0 && (
                                 <div className="flex justify-between text-sm text-red-600 font-medium">
-                                    <span>Discount ({couponCode})</span>
+                                    <span>{t('checkout_discount_label', { code: couponCode })}</span>
                                     <span>-{config.currencySymbol}{discount.toFixed(2)}</span>
                                 </div>
                             )}
 
                             <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
-                                <span>Total</span>
+                                <span>{t('cart_total_title')}</span>
                                 <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
                             </div>
                         </div>
@@ -516,11 +519,11 @@ export const CheckoutModal = ({
                         <div className="mt-8 p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
                             <div className="flex items-center space-x-2 text-gray-500 text-xs">
                                 <ShieldCheck size={14} className="text-green-600" />
-                                <span>Secure SSL Encryption</span>
+                                <span>{t('checkout_secure_ssl')}</span>
                             </div>
                             <div className="flex items-center space-x-2 text-gray-500 text-xs">
                                 <ShieldCheck size={14} className="text-green-600" />
-                                <span>30-Day Money Back Guarantee</span>
+                                <span>{t('checkout_money_back')}</span>
                             </div>
                         </div>
                     </div>

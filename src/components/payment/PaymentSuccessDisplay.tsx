@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import Confetti from 'react-confetti';
+import { useTranslation } from 'react-i18next';
 import useWindowSize from '../../hooks/useWindowSize';
 
 interface PaymentSuccessDisplayProps {
@@ -11,6 +12,7 @@ interface PaymentSuccessDisplayProps {
 export const PaymentSuccessDisplay = ({ onClose }: PaymentSuccessDisplayProps) => {
   const { width, height } = useWindowSize();
   const [showConfetti, setShowConfetti] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,20 +41,20 @@ export const PaymentSuccessDisplay = ({ onClose }: PaymentSuccessDisplayProps) =
           >
             <CheckCircle size={80} className="text-green-500" />
           </motion.div>
-          
+
           <h1 className="text-4xl font-extrabold text-gray-800 mb-4">
-            Payment Successful!
+            {t('payment_success_title')}
           </h1>
-          
+
           <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-            Your order has been placed successfully. Thank you for your purchase!
+            {t('payment_success_message')}
           </p>
-          
+
           <button
             onClick={onClose}
             className="btn btn-primary"
           >
-            Close
+            {t('job_close_button')}
           </button>
         </div>
       </motion.div>

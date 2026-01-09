@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
 import { CheckoutModal } from '../payment/CheckoutModal';
 import { PaymentSuccessDisplay } from '../payment/PaymentSuccessDisplay';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useTranslation } from 'react-i18next';
 import config from '../../config';
 
 interface CartSidebarProps {
@@ -17,6 +18,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { state, removeItem, updateQuantity, clearCart } = useCart();
   const { user } = useAuth(); // Get user from AuthContext
   const navigate = useNavigate(); // Initialize useNavigate
+  const { t } = useTranslation();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSuccessDisplay, setShowSuccessDisplay] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false); // New state for sign-in prompt
@@ -69,9 +71,9 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               <div className="flex items-center">
                 <ShoppingCart size={24} className="text-blue-600 mr-3" />
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Cart</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('cart_title')}</h2>
                   {state.itemCount > 0 && (
-                    <span className="text-sm text-gray-500">{state.itemCount} items</span>
+                    <span className="text-sm text-gray-500">{t('cart_items_count', { count: state.itemCount })}</span>
                   )}
                 </div>
               </div>
@@ -102,8 +104,8 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                       <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <ShoppingCart size={32} className="opacity-50" />
                       </div>
-                      <h3 className="text-lg font-medium mb-2 text-gray-900">Your cart is empty</h3>
-                      <p className="text-sm text-center">Add some amazing products to get started on your shopping journey</p>
+                      <h3 className="text-lg font-medium mb-2 text-gray-900">{t('cart_empty_title')}</h3>
+                      <p className="text-sm text-center">{t('cart_empty_message')}</p>
                     </div>
                   ) : (
                     <div className="p-4 sm:p-6 space-y-4">
@@ -128,7 +130,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                   : 'bg-green-100 text-green-800'
                                   }`}
                               >
-                                {item.type === 'wholesale' ? 'Wholesale' : 'Retail'}
+                                {item.type === 'wholesale' ? t('cart_wholesale_tag') : t('cart_retail_tag')}
                               </span>
                             </div>
 
@@ -140,7 +142,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                 <button
                                   onClick={() => removeItem(item.id)}
                                   className="text-red-400 hover:text-red-600 transition-colors p-1 hover:bg-red-50 rounded-full flex-shrink-0"
-                                  title="Remove item"
+                                  title={t('cart_remove_item')}
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -151,7 +153,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                   <p className="text-lg font-bold text-blue-600">
                                     {config.currencySymbol}{Number(item?.price).toFixed(2)}
                                   </p>
-                                  <p className="text-xs text-gray-500">per unit</p>
+                                  <p className="text-xs text-gray-500">{t('cart_per_unit')}</p>
                                 </div>
                               </div>
 
@@ -179,7 +181,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                                   <div className="font-bold text-gray-900">
                                     {config.currencySymbol}{(Number(item.price) * item.quantity).toFixed(2)}
                                   </div>
-                                  <div className="text-xs text-gray-500">total</div>
+                                  <div className="text-xs text-gray-500">{t('cart_total_label')}</div>
                                 </div>
                               </div>
                             </div>
@@ -195,11 +197,11 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                   <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50 sticky bottom-0 z-10">
                     <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Subtotal</span>
+                        <span className="text-gray-600">{t('cart_subtotal_label')}</span>
                         <span className="font-semibold">{config.currencySymbol}{state.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
-                        <span>Total</span>
+                        <span>{t('cart_total_title')}</span>
                         <span className="text-blue-600">{config.currencySymbol}{state.subtotal.toFixed(2)}</span>
                       </div>
                     </div>
@@ -209,13 +211,13 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                         onClick={handleCheckoutClick}
                         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
-                        <span className="text-lg">Checkout • {config.currencySymbol}{state.subtotal.toFixed(2)}</span>
+                        <span className="text-lg">{t('cart_checkout_button', { amount: `${config.currencySymbol}${state.subtotal.toFixed(2)}` })}</span>
                       </button>
                       <button
                         onClick={clearCart}
                         className="w-full text-gray-600 hover:text-red-600 transition-colors py-2 text-sm font-medium"
                       >
-                        Clear Cart
+                        {t('cart_clear_button')}
                       </button>
                     </div>
                   </div>
@@ -228,22 +230,22 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
           {showSignInPrompt && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
               <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Sign In Required</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">{t('cart_signin_required_title')}</h3>
                 <p className="text-gray-600 mb-6">
-                  You need to sign in to proceed with checkout.
+                  {t('cart_signin_required_message')}
                 </p>
                 <div className="flex justify-center space-x-4">
                   <button
                     onClick={handleSignInRedirect}
                     className="px-5 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
                   >
-                    Sign In
+                    {t('cart_signin_button')}
                   </button>
                   <button
                     onClick={() => setShowSignInPrompt(false)}
                     className="px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
                   >
-                    Cancel
+                    {t('cancel_button')}
                   </button>
                 </div>
               </div>
