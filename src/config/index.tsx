@@ -64,7 +64,8 @@ axiosInstance.interceptors.response.use(
 const config = {
   useSupabase: env.VITE_USE_SUPABASE === 'true' || false, // Convert string to boolean, default to false
   enableSessionTimeout: env.VITE_ENABLE_SESSION_TIMEOUT === 'true' || true, // Enable session timeout by default
-  stripePublishableKey: env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SnCcPHJCu1f3QDfwTHhA9LfqLgQ3OrKo5BUABX6okdIiwkb4A9h6YbcnH0CxfuUAbz3qVjdo5WZu9EVgQwiEz6l008bpB5Izm',
+  stripePublishableKey: env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51SnCcBHESo6ilS6rK5foKr8nepQHXGsA0ejp5k76zptAltVmXzXtbMwAo7KVHdpotyRR8nUJY1nDtIG4duvjqjay00LEbx8OF1',
+  // stripePublishableKey: env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SnCcPHJCu1f3QDfwTHhA9LfqLgQ3OrKo5BUABX6okdIiwkb4A9h6YbcnH0CxfuUAbz3qVjdo5WZu9EVgQwiEz6l008bpB5Izm',
   backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api/v3'),
   apiEndpoints: {
     auth: {
