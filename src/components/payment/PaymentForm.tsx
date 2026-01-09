@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import config from '../../config';
 import toast from 'react-hot-toast';
 import { useFeatures, FeatureGuard } from '../../contexts/FeatureContext'; // Import feature context
+import { useTranslation } from 'react-i18next';
 
 interface PaymentFormProps {
   onSuccess?: () => void;
@@ -39,6 +40,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
   const { user } = useAuth();
   const { state: { items: cartItems, subtotal, couponStatus }, clearCart, applyCoupon, removeCoupon, fetchAndCalculateFees } = useCart();
   const { features } = useFeatures();
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -287,15 +289,15 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
             >
               <ArrowLeft size={20} className="mr-1" />
-              <span className="text-sm font-medium">Back</span>
+              <span className="text-sm font-medium">{t('dashboard_back_button')}</span>
             </button>
           )}
           <h3 className="text-xl font-bold text-gray-900 flex-grow text-center">
-            Checkout
+            {t('payment_form_checkout')}
           </h3>
           <div className="flex items-center text-green-600">
             <Lock size={16} className="mr-1" />
-            <span className="text-xs font-medium hidden sm:inline">Secure</span>
+            <span className="text-xs font-medium hidden sm:inline">{t('payment_form_secure')}</span>
           </div>
         </div>
 
@@ -304,16 +306,16 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
           <div className="space-y-6">
             {/* Order Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-              <h4 className="font-semibold text-gray-900 mb-2">Order Summary</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">{t('checkout_order_summary_title')}</h4>
               <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Subtotal ({cartItems.length} items)</span>
+                <span>{t('cart_subtotal_label')} ({t('cart_items_count', { count: cartItems.length })})</span>
                 <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
               </div>
 
               {/* Conditionally show tax fee based on feature toggle */}
               <FeatureGuard feature="enableTaxPurchase">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Tax Fee</span>
+                  <span>{t('checkout_tax_label')}</span>
                   <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
                 </div>
               </FeatureGuard>
@@ -321,7 +323,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               {/* Conditionally show shipping fee based on feature toggle */}
               <FeatureGuard feature="enableShippingByPriceZone">
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Shipping</span>
+                  <span>{t('checkout_shipping_label')}</span>
                   <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
                 </div>
               </FeatureGuard>
@@ -330,24 +332,24 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               <FeatureGuard feature="enableDiscountCoupons">
                 {discount > 0 && (
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Discount ({couponCode})</span>
+                    <span>{t('checkout_discount_label', { code: couponCode })}</span>
                     <span className="text-red-600">-{config.currencySymbol}{Number(discount).toFixed(0)}</span>
                   </div>
                 )}
               </FeatureGuard>
 
               <div className="flex justify-between font-bold text-lg text-gray-900 pt-2 border-t border-blue-200">
-                <span>Total</span>
+                <span>{t('cart_total_title')}</span>
                 <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
               </div>
             </div>
 
             {/* Shipping Address */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 text-lg">Shipping Address</h4>
+              <h4 className="font-semibold text-gray-900 text-lg">{t('checkout_shipping_info_title')}</h4>
               <div>
                 <label htmlFor="address-select" className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Address *
+                  {t('dashboard_address_name_label')} *
                 </label>
                 <div className="relative">
                   <select
@@ -358,13 +360,13 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                     className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm appearance-none"
                     required
                   >
-                    <option value="" disabled>Select a saved address</option>
+                    <option value="" disabled>{t('checkout_select_province')}</option>
                     {savedAddresses.map((address) => (
                       <option key={address.id} value={address.id}>
                         {address.address_name} ({address.street_name}, {address.city})
                       </option>
                     ))}
-                    <option value="new">Add New Address</option>
+                    <option value="new">{t('checkout_add_new_address')}</option>
                   </select>
                   <MapPin size={20} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
@@ -379,12 +381,12 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                   className="space-y-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50"
                 >
                   <h5 className="font-semibold text-gray-800 flex items-center">
-                    <PlusCircle size={18} className="mr-2 text-blue-600" /> Add New Address
+                    <PlusCircle size={18} className="mr-2 text-blue-600" /> {t('checkout_add_new_address')}
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="address_name" className="block text-sm font-medium text-gray-700 mb-2">
-                        Address Name *
+                        {t('dashboard_address_name_label')} *
                       </label>
                       <input
                         type="text"
@@ -393,13 +395,13 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         value={newAddress.address_name}
                         onChange={handleNewAddressChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="e.g., Home, Office, Warehouse"
+                        placeholder={t('checkout_address_name_placeholder')}
                         required
                       />
                     </div>
                     <div>
                       <label htmlFor="street_name" className="block text-sm font-medium text-gray-700 mb-2">
-                        Street Name *
+                        {t('dashboard_street_name_label')} *
                       </label>
                       <input
                         type="text"
@@ -408,13 +410,13 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         value={newAddress.street_name}
                         onChange={handleNewAddressChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="e.g., Main St"
+                        placeholder={t('checkout_street_placeholder')}
                         required
                       />
                     </div>
                     <div>
                       <label htmlFor="house_number" className="block text-sm font-medium text-gray-700 mb-2">
-                        House Number *
+                        {t('dashboard_house_number_label')} *
                       </label>
                       <input
                         type="text"
@@ -423,13 +425,13 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         value={newAddress.house_number}
                         onChange={handleNewAddressChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="e.g., 123"
+                        placeholder={t('checkout_house_number_placeholder')}
                         required
                       />
                     </div>
                     <div>
                       <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                        City *
+                        {t('dashboard_city_label')} *
                       </label>
                       <input
                         type="text"
@@ -438,13 +440,13 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         value={newAddress.city}
                         onChange={handleNewAddressChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="e.g., New York"
+                        placeholder={t('checkout_city_placeholder')}
                         required
                       />
                     </div>
                     <div>
                       <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
-                        Province *
+                        {t('dashboard_province_label')} *
                       </label>
                       <select
                         id="province"
@@ -454,7 +456,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                         required
                       >
-                        <option value="">Select Province</option>
+                        <option value="">{t('checkout_select_province')}</option>
                         {provinces.map((province) => (
                           <option key={province.id} value={province.name}>
                             {province.name}
@@ -464,7 +466,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                     </div>
                     <div className="sm:col-span-2">
                       <label htmlFor="postcode" className="block text-sm font-medium text-gray-700 mb-2">
-                        Postcode *
+                        {t('dashboard_postcode_label')} *
                       </label>
                       <input
                         type="text"
@@ -473,7 +475,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                         value={newAddress.postcode}
                         onChange={handleNewAddressChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        placeholder="e.g., 10001"
+                        placeholder={t('checkout_postcode_placeholder')}
                         required
                       />
                     </div>
@@ -485,11 +487,11 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
             {/* Coupon Code Input - Only show if discount coupons are enabled */}
             <FeatureGuard feature="enableDiscountCoupons">
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-2">Have a coupon code?</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('payment_form_have_coupon')}</h3>
                 <div className="flex space-x-2">
                   <input
                     type="text"
-                    placeholder="Enter coupon code"
+                    placeholder={t('payment_form_coupon_placeholder')}
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value)}
                     className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
@@ -504,7 +506,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                       }}
                       className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
                     >
-                      Remove
+                      {t('payment_form_remove_coupon')}
                     </button>
                   ) : (
                     <button
@@ -517,7 +519,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                       className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                       disabled={!couponInput.trim()}
                     >
-                      Apply
+                      {t('payment_form_apply_coupon')}
                     </button>
                   )}
                 </div>
@@ -556,7 +558,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label htmlFor="expMonth" className="block text-sm font-medium text-gray-700 mb-2">
-                    Month *
+                    {t('payment_form_month_label')}
                   </label>
                   <input
                     type="text"
@@ -573,7 +575,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                 </div>
                 <div>
                   <label htmlFor="expYear" className="block text-sm font-medium text-gray-700 mb-2">
-                    Year *
+                    {t('payment_form_year_label')}
                   </label>
                   <input
                     type="text"
@@ -590,7 +592,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                 </div>
                 <div>
                   <label htmlFor="cvc" className="block text-sm font-medium text-gray-700 mb-2">
-                    CVC *
+                    {t('payment_form_cvc_label')}
                   </label>
                   <input
                     type="text"
@@ -656,17 +658,17 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Processing Payment...
+                  {t('checkout_processing')}
                 </div>
               ) : (
                 <span className="text-lg">
-                  Complete Payment • {config.currencySymbol}{calculateTotal().toFixed(2)}
+                  {t('payment_form_complete_payment', { amount: `${config.currencySymbol}${calculateTotal().toFixed(2)}` })}
                 </span>
               )}
             </button>
             <div className="text-center text-xs text-gray-500 flex items-center justify-center">
               <Lock size={12} className="mr-1" />
-              <span>Your payment information is encrypted and secure</span>
+              <span>{t('payment_form_encrypted_notice')}</span>
             </div>
           </div>
         </div>

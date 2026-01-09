@@ -234,13 +234,13 @@ export const CheckoutModal = ({
             // Validate new address
             const required = ['address_name', 'city', 'province', 'street_name', 'house_number', 'postcode'];
             if (required.some(f => !newAddress[f as keyof typeof newAddress])) {
-                toast.error('Please fill all address fields');
+                toast.error(t('checkout_error_fill_all_fields'));
                 return;
             }
 
             const province = provinces.find(p => p.name === newAddress.province);
             if (!province) {
-                toast.error('Invalid province');
+                toast.error(t('checkout_error_invalid_province'));
                 return;
             }
 
@@ -252,12 +252,12 @@ export const CheckoutModal = ({
                 setSelectedAddressId(response.data.id);
                 setStep('payment');
             } catch (err) {
-                toast.error('Failed to save address');
+                toast.error(t('checkout_error_save_address'));
             }
         } else if (selectedAddressId) {
             setStep('payment');
         } else {
-            toast.error('Please select an address');
+            toast.error(t('checkout_error_select_address'));
         }
     };
 
