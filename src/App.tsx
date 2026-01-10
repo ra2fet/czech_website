@@ -31,6 +31,7 @@ import { VerifyEmailPage } from './pages/VerifyEmailPage'; // Import VerifyEmail
 import { OffersPage } from './pages/OffersPage'; // Import OffersPage
 import RatingPage from './pages/RatingPage'; // Import RatingPage
 import { LanguageProvider } from './contexts/LanguageContext'; // Import LanguageProvider
+import { PaymentCallbackPage } from './pages/PaymentCallbackPage'; // Import PaymentCallbackPage
 import { FeatureProvider, FeatureGuard } from './contexts/FeatureContext'; // Import FeatureProvider
 
 
@@ -99,6 +100,7 @@ function App() {
                   <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
                   <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
                   <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
+                  <Route path="/payment-callback" element={<PaymentCallbackPage />} /> {/* Stripe payment callback */}
                   <Route
                     path="/admin/*"
                     element={

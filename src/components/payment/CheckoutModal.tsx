@@ -91,12 +91,31 @@ const CheckoutForm = ({
                 currency: 'eur',
             });
 
+            // Save pending order for redirect scenarios (e.g. Ideal, Klarna)
+            const pendingOrder = {
+                userId: user?.id,
+                totalAmount: amount,
+                addressId,
+                cartItems: cartItems.map(item => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    price: item.price,
+                    type: item.type,
+                })),
+                couponCode,
+                couponId,
+                taxFee,
+                shippingFee,
+                discount,
+            };
+            sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
             // Confirm payment with Stripe
             const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
                 elements,
                 clientSecret,
                 confirmParams: {
-                    return_url: `${window.location.origin}/`,
+                    return_url: `${window.location.origin}/payment-callback`,
                 },
                 redirect: 'if_required',
             });
@@ -126,6 +145,7 @@ const CheckoutForm = ({
                     await config.axios.put(`coupon-codes/use/${couponId}`).catch(console.error);
                 }
 
+                sessionStorage.removeItem('pendingOrder');
                 clearCart();
                 onSuccess();
                 toast.success('Payment successful and order placed!');
@@ -141,7 +161,14 @@ const CheckoutForm = ({
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <PaymentElement
-                options={{ layout: 'tabs' }}
+                options={{
+                    layout: 'tabs',
+                    defaultValues: {
+                        billingDetails: {
+                            email: user?.email || undefined,
+                        }
+                    }
+                }}
                 onLoadError={(event) => {
                     console.error('Stripe Payment Element load error:', event);
                     setErrorMessage(t('checkout_error_country_not_supported'));
@@ -429,7 +456,14 @@ export const CheckoutModal = ({
                                     <p className="text-gray-500">{t('checkout_payment_details_subtitle')}</p>
                                 </div>
 
-                                <Elements stripe={stripePromise} options={{ mode: 'payment', amount: Math.round(calculateTotal() * 100), currency: 'eur' }}>
+                                <Elements
+                                    stripe={stripePromise}
+                                    options={{
+                                        mode: 'payment',
+                                        amount: Math.round(calculateTotal() * 100),
+                                        currency: 'eur'
+                                    }}
+                                >
                                     <CheckoutForm
                                         amount={calculateTotal()}
                                         addressId={selectedAddressId as number}

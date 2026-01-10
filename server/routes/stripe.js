@@ -8,10 +8,11 @@ router.post('/create-payment-intent', authenticateToken, async (req, res) => {
 
     try {
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100), // Stripe expects amount in cents
+            amount: Math.round(amount * 100),
             currency: currency || 'eur',
             automatic_payment_methods: {
                 enabled: true,
+                allow_redirects: 'always', // Required for iDEAL and Klarna
             },
         });
 
