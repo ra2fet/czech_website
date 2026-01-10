@@ -460,8 +460,9 @@ export const CheckoutModal = ({
                                     stripe={stripePromise}
                                     options={{
                                         mode: 'payment',
-                                        amount: Math.round(calculateTotal() * 100),
-                                        currency: 'eur'
+                                        amount: Math.max(1, Math.round(calculateTotal() * 100)),
+                                        currency: 'eur',
+                                        payment_method_types: ['card', 'ideal', 'klarna'],
                                     }}
                                 >
                                     <CheckoutForm
