@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, ShoppingBag, Truck, Shield, Zap, Euro, ChevronDown } from 'lucide-react';
+import { Package, ShoppingBag, Truck, Shield, Zap, Euro } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
@@ -35,7 +35,6 @@ export const ProductsPage = () => {
   const { t } = useTranslation();
   const { isFeatureEnabled } = useFeatures(); // Get feature status
   const [viewMode, setViewMode] = useState<'retail' | 'wholesale'>('retail');
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { state: cartState, addItem, clearCart } = useCart(); // Get clearCart from useCart
@@ -46,6 +45,7 @@ export const ProductsPage = () => {
   // State for the confirmation dialog
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [productToAddToCart, setProductToAddToCart] = useState<Product | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
 
   useEffect(() => {
@@ -147,9 +147,6 @@ export const ProductsPage = () => {
     setViewMode(mode);
   };
 
-  const toggleProductDetails = (productId: string) => {
-    setSelectedProduct(selectedProduct === productId ? null : productId);
-  };
 
   // Handle adding product to cart
   const handleAddToCart = (product: Product) => {
@@ -224,7 +221,6 @@ export const ProductsPage = () => {
         </div>
       </section>
 
-      {/* View Mode Selector - Only show if wholesale products are enabled */}
       <FeatureGuard feature="enableWholesaleProducts">
         <section className="bg-gray-100 py-6 border-b border-gray-200">
           <div className="container-custom">
@@ -301,6 +297,8 @@ export const ProductsPage = () => {
         </div>
       </section>
 
+      <div id="product-list" className="sr-only" />
+
       {/* Products List */}
       <section className="section-padding bg-gray-50">
         <div className="container-custom">
@@ -325,7 +323,7 @@ export const ProductsPage = () => {
               </button>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="product-grid">
               {products.map((product) => (
                 <motion.div
                   key={product.id}
@@ -334,173 +332,67 @@ export const ProductsPage = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.1 }}
-                  className="bg-white rounded-lg shadow-md overflow-hidden scroll-mt-24 min-h-[400px] md:min-h-0"
+                  className="card card-hover flex flex-col h-full scroll-mt-24"
                 >
-                  <div className="md:flex">
-                    <div className="md:w-1/3 h-64 md:h-auto">
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';
-                        }}
-                      />
-                      <div
-                        className="w-full h-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center"
-                        style={{ display: product.image_url ? 'none' : 'flex' }}
-                      >
-                        <Package size={48} className="text-primary-600" />
+                  {/* Image Container */}
+                  <div className="relative aspect-[4/5] overflow-hidden group">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 bg-gradient-to-br from-primary-100/50 to-secondary-100/50 flex items-center justify-center"
+                      style={{ display: product.image_url ? 'none' : 'flex' }}
+                    >
+                      <Package size={64} className="text-primary-600/50" />
+                    </div>
+
+                    {/* Price Overlay on Image */}
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+                      <div className="text-lg font-bold text-primary-600">
+                        {viewMode === 'wholesale'
+                          ? `${config.currencySymbol}${product.wholesale_price}`
+                          : `${config.currencySymbol}${product.retail_price}`}
                       </div>
                     </div>
-                    <div className="md:w-2/3 p-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-2xl font-bold mb-2">{product.name}</h3>
-                          <p className="text-gray-600 mb-4">{product.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-primary-600">
-                            {viewMode === 'wholesale'
-                              ? `${config.currencySymbol}${product.wholesale_price}`
-                              : `${config.currencySymbol}${product.retail_price}`}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}
-                          </div>
+                  </div>
+
+                  <div className="p-6 flex-grow flex flex-col">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold mb-2 line-clamp-1">{product.name}</h3>
+                      <p className="text-gray-600 text-sm line-clamp-2 min-h-[2rem]">
+                        {product.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-auto space-y-4 text-center">
+                      <div className="flex items-center justify-between text-sm text-gray-500 pb-4 border-b border-gray-100">
+                        <span>{viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}</span>
+                        <div className="flex items-center gap-1">
+                          <Truck size={14} className="text-primary-500" />
+                          <span>{t('fast_shipping_title')}</span>
                         </div>
                       </div>
 
-                      <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                      <div className="grid grid-cols-2 gap-3">
                         <button
-                          onClick={() => toggleProductDetails(product.id)}
-                          className="flex items-center text-primary-600 font-medium hover:text-primary-700 mb-4 sm:mb-0"
+                          onClick={() => setQuickViewProduct(product)}
+                          className="flex items-center justify-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg text-primary-600 border border-primary-200 hover:bg-primary-50 transition-all duration-300"
                         >
-                          {selectedProduct === product.id ? t('hide_details_button') : t('view_details_button')}
-                          <ChevronDown
-                            size={16}
-                            className={`ml-1 transition-transform duration-300 ${selectedProduct === product.id ? 'rotate-180' : ''
-                              }`}
-                          />
+                          {t('details')}
                         </button>
                         <button
                           onClick={() => handleAddToCart(product)}
-                          className="btn btn-primary"
+                          className="btn btn-primary !py-2 !px-4 text-sm"
                         >
                           {t('add_to_cart_button')}
                         </button>
                       </div>
-
-                      {/* Product Details */}
-                      {selectedProduct === product.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-6 pt-4 border-t border-gray-200"
-                        >
-                          <h4 className="text-lg font-bold mb-3">
-                            {viewMode === 'wholesale' ? t('wholesale_specs_title') : t('product_specs_title')}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {viewMode === 'wholesale' ? (
-                              <>
-                                <div className="flex items-center">
-                                  <Package size={18} className="text-gray-500 mr-2" />
-                                  <span>{t('quantity_per_package')} {product.wholesale_specs?.quantity} {t('units_label')}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>{t('material_label')} {product.wholesale_specs?.material}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="text-gray-500 mr-2"
-                                  >
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                  </svg>
-                                  <span>{t('package_dimensions_label')} {product.wholesale_specs?.dimensions}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="text-gray-500 mr-2"
-                                  >
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                                  </svg>
-                                  <span>{t('total_weight_label')} {product.wholesale_specs?.weight}</span>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-center">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="text-gray-500 mr-2"
-                                  >
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                  </svg>
-                                  <span>{t('dimensions_label')} {product.retail_specs?.dimensions}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="18"
-                                    height="18"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="text-gray-500 mr-2"
-                                  >
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                                    <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                    <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                                  </svg>
-                                  <span>{t('weight_label')} {product.retail_specs?.weight}</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Zap size={18} className="text-gray-500 mr-2" />
-                                  <span>{t('material_label')} {product.retail_specs?.material}</span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -509,6 +401,132 @@ export const ProductsPage = () => {
           )}
         </div>
       </section>
+
+      {/* Quick View Modal */}
+      {quickViewProduct && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setQuickViewProduct(null)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden relative z-10 flex flex-col md:flex-row"
+          >
+            <button
+              onClick={() => setQuickViewProduct(null)}
+              className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md p-2 rounded-full hover:bg-white transition-colors shadow-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            {/* Left: Image */}
+            <div className="md:w-1/2 bg-gray-100 flex items-center justify-center p-8">
+              <img
+                src={quickViewProduct.image_url}
+                alt={quickViewProduct.name}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-inner"
+              />
+            </div>
+
+            {/* Right: Info */}
+            <div className="md:w-1/2 p-8 overflow-y-auto">
+              <div className="mb-6">
+                <div className="text-primary-600 font-bold text-sm uppercase tracking-wider mb-2">
+                  {viewMode === 'wholesale' ? t('wholesale_mode') : t('retail_mode')}
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">{quickViewProduct.name}</h2>
+                <div className="text-2xl font-bold text-gray-900 mb-6">
+                  {config.currencySymbol}{viewMode === 'wholesale' ? quickViewProduct.wholesale_price : quickViewProduct.retail_price}
+                </div>
+                <div className="prose prose-sm text-gray-600 leading-relaxed mb-8">
+                  {quickViewProduct.description}
+                </div>
+              </div>
+
+              {/* Specs Grid */}
+              <div className="space-y-4 mb-8">
+                <h3 className="text-sm font-bold text-gray-900 border-b pb-2">
+                  {viewMode === 'wholesale' ? t('wholesale_specs_title') : t('product_specs_title')}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {viewMode === 'wholesale' ? (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <Package size={18} className="text-primary-500" />
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('quantity')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.wholesale_specs?.quantity} {t('units_label')}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Zap size={18} className="text-primary-500" />
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('material_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.wholesale_specs?.material}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-[18px] text-center font-bold text-primary-500 text-xs">D</div>
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold text-nowrap">{t('package_dimensions_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.wholesale_specs?.dimensions}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-[18px] h-[18px] border-2 border-primary-500 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('total_weight_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.wholesale_specs?.weight}</div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="w-[18px] text-center font-bold text-primary-500 text-xs">D</div>
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('dimensions_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.retail_specs?.dimensions}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-[18px] h-[18px] border-2 border-primary-500 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('weight_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.retail_specs?.weight}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Zap size={18} className="text-primary-500" />
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase font-bold">{t('material_label')}</div>
+                          <div className="text-sm text-gray-900">{quickViewProduct.retail_specs?.material}</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  handleAddToCart(quickViewProduct);
+                  setQuickViewProduct(null);
+                }}
+                className="w-full btn btn-primary flex items-center justify-center gap-2"
+              >
+                <ShoppingBag size={20} />
+                {t('add_to_cart_button')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Clear Cart Confirmation Dialog */}
       {showClearCartDialog && (

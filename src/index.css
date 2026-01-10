@@ -7,27 +7,32 @@
   html {
     @apply scroll-smooth;
   }
-  
+
   body {
     @apply text-accent-900 leading-relaxed;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold leading-tight;
   }
-  
+
   h1 {
     @apply text-4xl md:text-5xl lg:text-6xl;
   }
-  
+
   h2 {
     @apply text-3xl md:text-4xl;
   }
-  
+
   h3 {
     @apply text-2xl md:text-3xl;
   }
-  
+
   p {
     @apply my-4;
   }
@@ -35,33 +40,34 @@
 
 @layer components {
 
-  .rafatbg{
-    @apply  bg-[#8B6B2035] bg-[url('/public/babo-packagebg2.jpg')]  bg-blend-multiply
+  .rafatbg {
+    @apply bg-[#8B6B2035] bg-[url('/public/babo-packagebg2.jpg')] bg-blend-multiply
   }
+
   .btn {
     @apply inline-block px-6 py-3 rounded-md font-medium transition-all duration-300;
   }
-  
+
   .btn-primary {
     @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 transform hover:scale-105;
   }
-  
+
   .btn-secondary {
     @apply bg-secondary-500 text-accent-900 hover:bg-secondary-400 focus:ring-4 focus:ring-secondary-300 transform hover:scale-105;
   }
-  
+
   .container-custom {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
-  
+
   .section-padding {
     @apply py-16 md:py-24;
   }
-  
+
   .card {
     @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 border border-gray-100;
   }
-  
+
   .card-hover {
     @apply hover:shadow-2xl transform hover:-translate-y-2 hover:border-primary-200;
   }
@@ -86,8 +92,13 @@
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Hover effects */
@@ -125,15 +136,53 @@
   100% { transform: translateX(100%); } */
 
   /* start fully outside on the right to left */
-    0% { transform: translateX(0); }   
-    100% { transform: translateX(-100%); } /* slide half the width (since duplicated) */
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+
+  /* slide half the width (since duplicated) */
 }
 
 .animate-marquee {
-  display: inline-flex; /* Use inline-flex to align items in a row */
-  white-space: nowrap;          /* prevent line breaks */
+  display: inline-flex;
+  /* Use inline-flex to align items in a row */
+  white-space: nowrap;
+  /* prevent line breaks */
   animation: marquee 15s linear infinite;
 }
- 
 
- 
+@keyframes slow-zoom {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-slow-zoom {
+  animation: slow-zoom 20s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}

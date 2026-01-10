@@ -432,5 +432,11 @@
   "checkout_error_invalid_province": "Ongeldige provincie",
   "checkout_error_save_address": "Opslaan van adres mislukt",
   "checkout_error_select_address": "Selecteer een adres",
-  "checkout_error_country_not_supported": "Uw land wordt niet ondersteund voor betalingen"
+  "checkout_error_country_not_supported": "Uw land wordt niet ondersteund voor betalingen",
+  "shop_now_button": "Nu winkelen",
+  "learn_more_button": "Meer informatie",
+  "details": "Details",
+  "quantity": "Aantal",
+  "show_more": "Toon meer",
+  "show_less": "Toon minder"
 }

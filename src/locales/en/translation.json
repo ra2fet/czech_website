@@ -437,5 +437,11 @@
   "guest_info_title": "Guest Information",
   "guest_name_label": "Full Name",
   "guest_email_label": "Email Address",
-  "guest_phone_label": "Phone Number (Optional)"
+  "guest_phone_label": "Phone Number (Optional)",
+  "shop_now_button": "Shop Now",
+  "learn_more_button": "Learn More",
+  "details": "Details",
+  "quantity": "Quantity",
+  "show_more": "Show More",
+  "show_less": "Show Less"
 }
