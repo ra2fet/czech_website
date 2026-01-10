@@ -5,7 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { BlogsPage } from './pages/BlogsPage';
-import { PortfolioPage } from './pages/PortfolioPage';
+// import { PortfolioPage } from './pages/PortfolioPage';
 import { LocationsPage } from './pages/LocationsPage';
 import { ContactPage } from './pages/ContactPage';
 import { AboutUsPage } from './pages/AboutUsPage';
@@ -88,8 +88,8 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/blogs" element={<BlogsPage />} />
-                  <Route path="/portfolio" element={<PortfolioPage />} />
-                  <Route path="/locations" element={<LocationsPage />} />
+                  {/* <Route path="/portfolio" element={<PortfolioPage />} /> */}
+                  {/* <Route path="/locations" element={<LocationsPage />} /> */}
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/about-us" element={<AboutUsPage />} />
                   <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}

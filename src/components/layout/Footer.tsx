@@ -94,10 +94,10 @@ export const Footer = () => {
                 <Twitter size={20} />
                 <span className="sr-only">Twitter</span>
               </a> */}
-              {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://www.instagram.com/babo_bamboe?igsh=MzJtcmw5NHZub3ox&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram size={20} />
                 <span className="sr-only">Instagram</span>
-              </a> */}
+              </a>
               {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Linkedin size={20} />
                 <span className="sr-only">LinkedIn</span>
@@ -118,9 +118,9 @@ export const Footer = () => {
               <li>
                 <Link to="/products" className="text-gray-400 hover:text-white transition-colors">{t('products')}</Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/portfolio" className="text-gray-400 hover:text-white transition-colors">{t('portfolio')}</Link>
-              </li>
+              </li> */}
 
               <li>
                 <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">{t('contact')}</Link>

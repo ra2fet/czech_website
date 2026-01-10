@@ -45,7 +45,7 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
     // Conditionally include offers based on feature toggle
     ...(isFeatureEnabled('enableProductOffers') ? [{ name: t('offers'), href: '/offers' }] : []),
     { name: t('blogs'), href: '/blogs' },
-    { name: t('portfolio'), href: '/portfolio' },
+    // { name: t('portfolio'), href: '/portfolio' },
     // { name: 'Locations', href: '/locations' }, // Uncomment and translate if needed
     { name: t('contact'), href: '/contact' },
   ];
