@@ -64,7 +64,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-full sm:max-w-md lg:max-w-lg bg-white shadow-2xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-[100dvh] w-full sm:max-w-md lg:max-w-lg bg-white shadow-2xl z-50 flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -228,22 +228,31 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
 
           {/* Sign-in Prompt Dialog */}
           {showSignInPrompt && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[60]">
               <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('cart_signin_required_title')}</h3>
                 <p className="text-gray-600 mb-6">
                   {t('cart_signin_required_message')}
                 </p>
-                <div className="flex justify-center space-x-4">
+                <div className="flex flex-col space-y-3">
                   <button
                     onClick={handleSignInRedirect}
-                    className="px-5 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    className="w-full px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
                     {t('cart_signin_button')}
                   </button>
                   <button
+                    onClick={() => {
+                      setShowSignInPrompt(false);
+                      setShowPaymentModal(true);
+                    }}
+                    className="w-full px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    {t('cart_guest_checkout_button')}
+                  </button>
+                  <button
                     onClick={() => setShowSignInPrompt(false)}
-                    className="px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+                    className="w-full px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
                   >
                     {t('cancel_button')}
                   </button>

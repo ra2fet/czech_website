@@ -12,6 +12,8 @@ interface User {
   email: string;
   userType: 'customer' | 'company' | 'admin';
   isActive: boolean;
+  full_name?: string;
+  phone_number?: string;
 }
 
 interface AuthContextType {

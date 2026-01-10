@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, MapPin, PlusCircle,
     ChevronRight, ArrowLeft, CheckCircle2, ShieldCheck,
-    ShoppingBag, Truck
+    ShoppingBag, Truck, User
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -50,16 +50,20 @@ const CheckoutForm = ({
     couponId,
     taxFee,
     shippingFee,
-    discount
+    discount,
+    guestInfo,
+    guestAddress
 }: {
     onSuccess: () => void;
     amount: number;
-    addressId: number;
+    addressId: number | null;
     couponCode: string | null;
     couponId: number | null;
     taxFee: number;
     shippingFee: number;
     discount: number;
+    guestInfo?: any;
+    guestAddress?: any;
 }) => {
     const stripe = useStripe();
     const elements = useElements();
@@ -93,9 +97,9 @@ const CheckoutForm = ({
 
             // Save pending order for redirect scenarios (e.g. Ideal, Klarna)
             const pendingOrder = {
-                userId: user?.id,
+                userId: user?.id, // Can be undefined for guest
                 totalAmount: amount,
-                addressId,
+                addressId, // Can be null for guest initially
                 cartItems: cartItems.map(item => ({
                     productId: item.productId,
                     quantity: item.quantity,
@@ -107,6 +111,8 @@ const CheckoutForm = ({
                 taxFee,
                 shippingFee,
                 discount,
+                guestInfo,
+                guestAddress
             };
             sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
 
@@ -116,6 +122,19 @@ const CheckoutForm = ({
                 clientSecret,
                 confirmParams: {
                     return_url: `${window.location.origin}/payment-callback`,
+                    payment_method_data: {
+                        billing_details: {
+                            name: user?.full_name || guestInfo?.name,
+                            email: user?.email || guestInfo?.email,
+                            phone: user?.phone_number || guestInfo?.phone,
+                            address: guestAddress ? {
+                                city: guestAddress.city,
+                                line1: `${guestAddress.street_name} ${guestAddress.house_number}`,
+                                postal_code: guestAddress.postcode,
+                                state: guestAddress.province
+                            } : undefined
+                        }
+                    }
                 },
                 redirect: 'if_required',
             });
@@ -139,6 +158,8 @@ const CheckoutForm = ({
                     taxFee,
                     shippingFee,
                     discount,
+                    guestInfo,
+                    guestAddress
                 });
 
                 if (couponId) {
@@ -165,7 +186,8 @@ const CheckoutForm = ({
                     layout: 'tabs',
                     defaultValues: {
                         billingDetails: {
-                            email: user?.email || undefined,
+                            email: user?.email || guestInfo?.email || undefined,
+                            name: user?.full_name || guestInfo?.name || undefined,
                         }
                     }
                 }}
@@ -215,10 +237,31 @@ export const CheckoutModal = ({
     const { features } = useFeatures();
     const { t } = useTranslation();
 
-    const [step, setStep] = useState<'address' | 'payment' | 'success'>('address');
+    const [step, setStep] = useState<'guest_info' | 'address' | 'payment' | 'success'>('address');
+
+    // Reset step based on user login status when opening
+    useEffect(() => {
+        if (isOpen) {
+            if (!user) {
+                setStep('guest_info');
+            } else {
+                setStep('address');
+            }
+        }
+    }, [isOpen, user]);
+
+
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<number | 'new' | ''>('');
     const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+
+    // Guest Info State
+    const [guestInfo, setGuestInfo] = useState({
+        name: '',
+        email: '',
+        phone: ''
+    });
+
     const [newAddress, setNewAddress] = useState({
         address_name: '',
         city: '',
@@ -227,6 +270,8 @@ export const CheckoutModal = ({
         house_number: '',
         postcode: '',
     });
+
+    // ... (keep fetchAddresses and fetchProvinces same)
 
     const fetchAddresses = useCallback(async () => {
         if (!user) return;
@@ -266,6 +311,24 @@ export const CheckoutModal = ({
     };
 
     const handleNextToPayment = async () => {
+        if (!user) {
+            // For guest, we require new address
+            const required = ['address_name', 'city', 'province', 'street_name', 'house_number', 'postcode'];
+            if (required.some(f => !newAddress[f as keyof typeof newAddress])) {
+                toast.error(t('checkout_error_fill_all_fields'));
+                return;
+            }
+            const province = provinces.find(p => p.name === newAddress.province);
+            if (!province) {
+                toast.error(t('checkout_error_invalid_province'));
+                return;
+            }
+            // Prepare province ID for guest address
+            // We can't save it to server yet (since no user ID), so pass it to payment step
+            setStep('payment');
+            return;
+        }
+
         if (selectedAddressId === 'new') {
             // Validate new address
             const required = ['address_name', 'city', 'province', 'street_name', 'house_number', 'postcode'];
@@ -297,6 +360,20 @@ export const CheckoutModal = ({
         }
     };
 
+    const handleGuestInfoNext = () => {
+        if (!guestInfo.name || !guestInfo.email) {
+            toast.error(t('checkout_error_fill_all_fields'));
+            return;
+        }
+        setStep('address');
+        setSelectedAddressId('new'); // Force new address for guests
+        // Trigger generic address name for guest so they don't have to fill it unnecessarily, or prefill
+        if (!newAddress.address_name) {
+            setNewAddress(prev => ({ ...prev, address_name: 'Delivery Address' }));
+        }
+    };
+
+
     if (!isOpen) return null;
 
     return (
@@ -316,18 +393,28 @@ export const CheckoutModal = ({
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]`}
+                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[100dvh] md:h-auto md:max-h-[90vh]`}
                 >
                     {/* Left Side: Form */}
                     <div className="flex-1 p-6 md:p-8 overflow-y-auto">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center space-x-2">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
-                                    {step === 'address' ? '1' : <CheckCircle2 size={18} />}
+                                {/* Steps Indicator */}
+                                {!user && (
+                                    <>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'guest_info' ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
+                                            {step === 'guest_info' ? '1' : <CheckCircle2 size={18} />}
+                                        </div>
+                                        <div className="h-px w-6 bg-gray-200" />
+                                    </>
+                                )}
+
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : (step === 'payment' || step === 'success' || (step !== 'guest_info' && !user)) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                    {step === 'success' || step === 'payment' ? <CheckCircle2 size={18} /> : (user ? '1' : '2')}
                                 </div>
-                                <div className="h-px w-8 bg-gray-200" />
+                                <div className="h-px w-6 bg-gray-200" />
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'payment' ? 'bg-blue-600 text-white' : step === 'success' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                    {step === 'success' ? <CheckCircle2 size={18} /> : '2'}
+                                    {step === 'success' ? <CheckCircle2 size={18} /> : (user ? '2' : '3')}
                                 </div>
                             </div>
                             <button
@@ -338,8 +425,69 @@ export const CheckoutModal = ({
                             </button>
                         </div>
 
+                        {step === 'guest_info' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest_info_title')}</h2>
+                                    <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_name_label')}</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={guestInfo.name}
+                                            onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_email_label')}</label>
+                                        <input
+                                            type="email"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={guestInfo.email}
+                                            onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_phone_label')}</label>
+                                        <input
+                                            type="tel"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            value={guestInfo.phone}
+                                            onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleGuestInfoNext}
+                                    className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
+                                >
+                                    <span>{t('checkout_continue_to_payment')}</span>
+                                    <ChevronRight size={20} />
+                                </button>
+                                <div className="text-center mt-4">
+                                    <button onClick={onClose} className="text-sm text-gray-500 hover:underline">
+                                        {t('cancel_button')}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {step === 'address' && (
                             <div className="space-y-6 animate-fade-in">
+                                {!user && (
+                                    <button
+                                        onClick={() => setStep('guest_info')}
+                                        className="flex items-center text-gray-500 hover:text-gray-700 transition-colors mb-4"
+                                    >
+                                        <ArrowLeft size={18} className="mr-1" />
+                                        <span>{t('checkout_back_to_address')} ({t('guest_info_title')})</span>
+                                    </button>
+                                )}
                                 <div>
                                     <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_shipping_info_title')}</h2>
                                     <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
@@ -370,16 +518,20 @@ export const CheckoutModal = ({
                                     ))}
 
                                     <div
-                                        onClick={() => setSelectedAddressId('new')}
-                                        className={`p-4 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${selectedAddressId === 'new' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}
+                                        onClick={() => {
+                                            if (user) setSelectedAddressId('new');
+                                        }}
+                                        className={`p-4 rounded-2xl border-2 ${user ? 'border-dashed cursor-pointer' : 'border-transparent'} transition-all ${selectedAddressId === 'new' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}
                                     >
-                                        <div className="flex items-center space-x-3 text-gray-600">
-                                            <PlusCircle size={24} className={selectedAddressId === 'new' ? 'text-blue-600' : ''} />
-                                            <span className="font-semibold">{t('checkout_add_new_address')}</span>
-                                        </div>
+                                        {user && (
+                                            <div className="flex items-center space-x-3 text-gray-600">
+                                                <PlusCircle size={24} className={selectedAddressId === 'new' ? 'text-blue-600' : ''} />
+                                                <span className="font-semibold">{t('checkout_add_new_address')}</span>
+                                            </div>
+                                        )}
 
                                         <AnimatePresence>
-                                            {selectedAddressId === 'new' && (
+                                            {(selectedAddressId === 'new' || !user) && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
@@ -467,13 +619,18 @@ export const CheckoutModal = ({
                                 >
                                     <CheckoutForm
                                         amount={calculateTotal()}
-                                        addressId={selectedAddressId as number}
+                                        addressId={selectedAddressId === 'new' ? null : selectedAddressId as number}
                                         couponCode={couponCode}
                                         couponId={couponId}
                                         taxFee={taxFee}
                                         shippingFee={shippingFee}
                                         discount={discount}
                                         onSuccess={() => setStep('success')}
+                                        guestInfo={!user ? guestInfo : undefined}
+                                        guestAddress={(!user || selectedAddressId === 'new') ? {
+                                            ...newAddress,
+                                            province_id: provinces.find(p => p.name === newAddress.province)?.id
+                                        } : undefined}
                                     />
                                 </Elements>
 

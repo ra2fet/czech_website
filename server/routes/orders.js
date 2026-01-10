@@ -114,17 +114,18 @@ router.get('/public-single-by-token/:ratingToken', async (req, res) => {
 });
 
 
-// Route to create a new order
-router.post('/', authenticateToken, async (req, res) => {
+// Route to create a new order (Public to allow guest checkout)
+router.post('/', async (req, res) => {
     // Check if order creation is enabled (assuming this feature exists)
     // const orderCreationEnabled = await isFeatureEnabled('enableOrderCreation');
     // if (!orderCreationEnabled) {
     //     return res.status(403).json({ message: 'Order creation is currently disabled' });
     // }
 
-    const { userId, totalAmount, addressId, cartItems } = req.body;
+    const { userId: bodyUserId, totalAmount, addressId: bodyAddressId, cartItems, guestInfo, guestAddress } = req.body;
 
-    if (!userId || !totalAmount || !addressId || !cartItems || cartItems.length === 0) {
+    // We either need a userId and addressId (authenticated) OR guestInfo and guestAddress (guest)
+    if ((!bodyUserId && !guestInfo) || !totalAmount || (!bodyAddressId && !guestAddress) || !cartItems || cartItems.length === 0) {
         return res.status(400).json({ message: 'Missing required order information.' });
     }
 
@@ -135,6 +136,46 @@ router.post('/', authenticateToken, async (req, res) => {
         }
 
         try {
+            let finalUserId = bodyUserId;
+            let finalAddressId = bodyAddressId;
+
+            // Handle Guest Logic
+            if (!finalUserId && guestInfo) {
+                // Check if user exists by email
+                const [existingUsers] = await db.promise().query('SELECT id FROM users WHERE email = ?', [guestInfo.email]);
+
+                if (existingUsers.length > 0) {
+                    finalUserId = existingUsers[0].id;
+                } else {
+                    // Create new guest user
+                    // We generate a random password for guests or set a flag if possible. 
+                    // Using a random placeholder password since it's required.
+                    const randomPassword = Math.random().toString(36).slice(-8);
+                    const bcrypt = require('bcrypt');
+                    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+                    const [newUserResult] = await db.promise().query(
+                        'INSERT INTO users (full_name, email, password, user_type, is_active, is_verified, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                        [guestInfo.name, guestInfo.email, hashedPassword, 'guest', false, false, guestInfo.phone || '']
+                    );
+                    finalUserId = newUserResult.insertId;
+                }
+            }
+
+            // Handle Guest Address Logic
+            if (!finalAddressId && guestAddress && finalUserId) {
+                // Create address for the user (guest or existing)
+                const [newAddressResult] = await db.promise().query(
+                    'INSERT INTO user_addresses (user_id, address_name, city, province_id, street_name, house_number, postcode) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                    [finalUserId, guestAddress.address_name || 'Guest Address', guestAddress.city, guestAddress.province_id, guestAddress.street_name, guestAddress.house_number, guestAddress.postcode]
+                );
+                finalAddressId = newAddressResult.insertId;
+            }
+
+            if (!finalUserId || !finalAddressId) {
+                throw new Error('Failed to determine user or address for order.');
+            }
+
             // Check if rating features are enabled
             const ratingEnabled = await isFeatureEnabled('enableOrderRating');
             const autoEmailEnabled = await isFeatureEnabled('enableAutoRatingEmail');
@@ -157,9 +198,9 @@ router.post('/', authenticateToken, async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
             const orderValues = [
-                userId,
+                finalUserId,
                 totalAmount,
-                addressId,
+                finalAddressId,
                 'completed',
                 ratingToken,
                 sendRatingEmailDate ? sendRatingEmailDate.toISOString().split('T')[0] : null // Format as YYYY-MM-DD or null

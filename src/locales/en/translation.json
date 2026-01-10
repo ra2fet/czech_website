@@ -372,6 +372,7 @@
   "cart_subtotal_label": "Subtotal",
   "cart_total_title": "Total",
   "cart_checkout_button": "Checkout • {amount}",
+  "cart_guest_checkout_button": "Continue as Guest",
   "cart_clear_button": "Clear Cart",
   "cart_signin_required_title": "Sign In Required",
   "cart_signin_required_message": "You need to sign in to proceed with checkout.",
@@ -432,5 +433,9 @@
   "checkout_error_invalid_province": "Invalid province",
   "checkout_error_save_address": "Failed to save address",
   "checkout_error_select_address": "Please select an address",
-  "checkout_error_country_not_supported": "Your country is not supported for payment"
+  "checkout_error_country_not_supported": "Your country is not supported for payment",
+  "guest_info_title": "Guest Information",
+  "guest_name_label": "Full Name",
+  "guest_email_label": "Email Address",
+  "guest_phone_label": "Phone Number (Optional)"
 }

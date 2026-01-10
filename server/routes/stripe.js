@@ -3,7 +3,8 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { authenticateToken } = require('../middleware/auth');
 
-router.post('/create-payment-intent', authenticateToken, async (req, res) => {
+// Public route to create payment intent (allows guest checkout)
+router.post('/create-payment-intent', async (req, res) => {
     const { amount, currency } = req.body;
 
     try {
