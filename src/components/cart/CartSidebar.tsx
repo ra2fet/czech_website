@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
@@ -22,6 +22,18 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showSuccessDisplay, setShowSuccessDisplay] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false); // New state for sign-in prompt
+
+  // Body scroll lock
+  useEffect(() => {
+    if (isOpen || showSignInPrompt || showPaymentModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, showSignInPrompt, showPaymentModal]);
 
 
   const handlePaymentSuccess = () => {
@@ -227,39 +239,58 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
           </motion.div>
 
           {/* Sign-in Prompt Dialog */}
-          {showSignInPrompt && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto flex items-start justify-center p-4 z-[60]">
-              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl max-w-sm w-full my-auto text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">{t('cart_signin_required_title')}</h3>
-                <p className="text-gray-600 mb-6">
-                  {t('cart_signin_required_message')}
-                </p>
-                <div className="flex flex-col space-y-3">
-                  <button
-                    onClick={handleSignInRedirect}
-                    className="w-full px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          <AnimatePresence>
+            {showSignInPrompt && (
+              <div className="fixed inset-0 z-[70] overflow-y-auto">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setShowSignInPrompt(false)}
+                />
+                <div className="flex min-h-screen items-center justify-center p-4 relative pointer-events-none">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="relative bg-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center pointer-events-auto"
                   >
-                    {t('cart_signin_button')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowSignInPrompt(false);
-                      setShowPaymentModal(true);
-                    }}
-                    className="w-full px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    {t('cart_guest_checkout_button')}
-                  </button>
-                  <button
-                    onClick={() => setShowSignInPrompt(false)}
-                    className="w-full px-5 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
-                  >
-                    {t('cancel_button')}
-                  </button>
+                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <X size={32} className="rotate-45" /> {/* Using X as a plus/plus-like icon or just a placeholder */}
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('cart_signin_required_title')}</h3>
+                    <p className="text-gray-600 mb-8">
+                      {t('cart_signin_required_message')}
+                    </p>
+                    <div className="flex flex-col space-y-3">
+                      <button
+                        onClick={handleSignInRedirect}
+                        className="w-full px-5 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg"
+                      >
+                        {t('cart_signin_button')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowSignInPrompt(false);
+                          setShowPaymentModal(true);
+                        }}
+                        className="w-full px-5 py-4 bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-all"
+                      >
+                        {t('cart_guest_checkout_button')}
+                      </button>
+                      <button
+                        onClick={() => setShowSignInPrompt(false)}
+                        className="w-full px-5 py-2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {t('cancel_button')}
+                      </button>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </AnimatePresence>
         </>
       )}
       <CheckoutModal

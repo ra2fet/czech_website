@@ -168,10 +168,11 @@ export const Header = ({ scrollPosition, showIntro = false }: HeaderProps) => {
           )}
         </AnimatePresence>
 
-        {/* Conditionally render cart sidebar based on customer accounts feature */}
-        <FeatureGuard feature="enableCustomerAccounts">
-          <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-        </FeatureGuard>
-      </header></>
+      </header>
+      {/* Conditionally render cart sidebar based on customer accounts feature */}
+      <FeatureGuard feature="enableCustomerAccounts">
+        <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      </FeatureGuard>
+    </>
   );
 };

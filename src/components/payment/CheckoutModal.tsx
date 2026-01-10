@@ -250,6 +250,18 @@ export const CheckoutModal = ({
         }
     }, [isOpen, user]);
 
+    // Body scroll lock
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
 
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<number | 'new' | ''>('');
@@ -373,364 +385,361 @@ export const CheckoutModal = ({
         }
     };
 
-
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                {/* Backdrop */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-                    onClick={onClose}
-                />
-
-                {/* Modal Content */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-full md:max-h-[90vh]`}
+            <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/60 backdrop-blur-sm">
+                <div
+                    className="flex min-h-screen items-center justify-center p-4 sm:p-6 md:p-8"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) onClose();
+                    }}
                 >
-                    {/* Left Side: Form */}
-                    <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center space-x-2">
-                                {/* Steps Indicator */}
-                                {!user && (
-                                    <>
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'guest_info' ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
-                                            {step === 'guest_info' ? '1' : <CheckCircle2 size={18} />}
-                                        </div>
-                                        <div className="h-px w-6 bg-gray-200" />
-                                    </>
-                                )}
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-5xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-auto md:max-h-[90vh]`}
+                    >
+                        {/* Left Side: Form */}
+                        <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center space-x-2">
+                                    {/* Steps Indicator */}
+                                    {!user && (
+                                        <>
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'guest_info' ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
+                                                {step === 'guest_info' ? '1' : <CheckCircle2 size={18} />}
+                                            </div>
+                                            <div className="h-px w-6 bg-gray-200" />
+                                        </>
+                                    )}
 
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : (step === 'payment' || step === 'success' || (step !== 'guest_info' && !user)) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                    {step === 'success' || step === 'payment' ? <CheckCircle2 size={18} /> : (user ? '1' : '2')}
-                                </div>
-                                <div className="h-px w-6 bg-gray-200" />
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'payment' ? 'bg-blue-600 text-white' : step === 'success' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                    {step === 'success' ? <CheckCircle2 size={18} /> : (user ? '2' : '3')}
-                                </div>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        {step === 'guest_info' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest_info_title')}</h2>
-                                    <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
-                                </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_name_label')}</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                            value={guestInfo.name}
-                                            onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
-                                            required
-                                        />
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : (step === 'payment' || step === 'success' || (step !== 'guest_info' && !user)) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        {step === 'success' || step === 'payment' ? <CheckCircle2 size={18} /> : (user ? '1' : '2')}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_email_label')}</label>
-                                        <input
-                                            type="email"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                            value={guestInfo.email}
-                                            onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_phone_label')}</label>
-                                        <input
-                                            type="tel"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                            value={guestInfo.phone}
-                                            onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                                        />
+                                    <div className="h-px w-6 bg-gray-200" />
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'payment' ? 'bg-blue-600 text-white' : step === 'success' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        {step === 'success' ? <CheckCircle2 size={18} /> : (user ? '2' : '3')}
                                     </div>
                                 </div>
                                 <button
-                                    onClick={handleGuestInfoNext}
-                                    className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
+                                    onClick={onClose}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400"
                                 >
-                                    <span>{t('checkout_continue_to_payment')}</span>
-                                    <ChevronRight size={20} />
+                                    <X size={24} />
                                 </button>
-                                <div className="text-center mt-4">
-                                    <button onClick={onClose} className="text-sm text-gray-500 hover:underline">
-                                        {t('cancel_button')}
+                            </div>
+
+                            {step === 'guest_info' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest_info_title')}</h2>
+                                        <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_name_label')}</label>
+                                            <input
+                                                type="text"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                value={guestInfo.name}
+                                                onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_email_label')}</label>
+                                            <input
+                                                type="email"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                value={guestInfo.email}
+                                                onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_phone_label')}</label>
+                                            <input
+                                                type="tel"
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                value={guestInfo.phone}
+                                                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleGuestInfoNext}
+                                        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
+                                    >
+                                        <span>{t('checkout_continue_to_payment')}</span>
+                                        <ChevronRight size={20} />
+                                    </button>
+                                    <div className="text-center mt-4">
+                                        <button onClick={onClose} className="text-sm text-gray-500 hover:underline">
+                                            {t('cancel_button')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 'address' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    {!user && (
+                                        <button
+                                            onClick={() => setStep('guest_info')}
+                                            className="flex items-center text-gray-500 hover:text-gray-700 transition-colors mb-4"
+                                        >
+                                            <ArrowLeft size={18} className="mr-1" />
+                                            <span>{t('checkout_back_to_address')} ({t('guest_info_title')})</span>
+                                        </button>
+                                    )}
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_shipping_info_title')}</h2>
+                                        <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {savedAddresses.map((addr) => (
+                                            <div
+                                                key={addr.id}
+                                                onClick={() => setSelectedAddressId(addr.id)}
+                                                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200'}`}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className={`p-2 rounded-lg ${selectedAddressId === addr.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                            <MapPin size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-gray-900">{addr.address_name}</p>
+                                                            <p className="text-sm text-gray-500">{addr.street_name}, {addr.city}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedAddressId === addr.id ? 'border-blue-600' : 'border-gray-300'}`}>
+                                                        {selectedAddressId === addr.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        <div
+                                            onClick={() => {
+                                                if (user) setSelectedAddressId('new');
+                                            }}
+                                            className={`p-4 rounded-2xl border-2 ${user ? 'border-dashed cursor-pointer' : 'border-transparent'} transition-all ${selectedAddressId === 'new' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}
+                                        >
+                                            {user && (
+                                                <div className="flex items-center space-x-3 text-gray-600">
+                                                    <PlusCircle size={24} className={selectedAddressId === 'new' ? 'text-blue-600' : ''} />
+                                                    <span className="font-semibold">{t('checkout_add_new_address')}</span>
+                                                </div>
+                                            )}
+
+                                            <AnimatePresence>
+                                                {(selectedAddressId === 'new' || !user) && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="mt-6 grid grid-cols-2 gap-4"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <input
+                                                            placeholder={t('checkout_address_name_placeholder')}
+                                                            className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            value={newAddress.address_name}
+                                                            onChange={e => setNewAddress({ ...newAddress, address_name: e.target.value })}
+                                                        />
+                                                        <input
+                                                            placeholder={t('checkout_street_placeholder')}
+                                                            className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            value={newAddress.street_name}
+                                                            onChange={e => setNewAddress({ ...newAddress, street_name: e.target.value })}
+                                                        />
+                                                        <input
+                                                            placeholder={t('checkout_house_number_placeholder')}
+                                                            className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            value={newAddress.house_number}
+                                                            onChange={e => setNewAddress({ ...newAddress, house_number: e.target.value })}
+                                                        />
+                                                        <input
+                                                            placeholder={t('checkout_city_placeholder')}
+                                                            className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            value={newAddress.city}
+                                                            onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
+                                                        />
+                                                        <select
+                                                            className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                                                            value={newAddress.province}
+                                                            onChange={e => setNewAddress({ ...newAddress, province: e.target.value })}
+                                                        >
+                                                            <option value="">{t('checkout_select_province')}</option>
+                                                            {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                                        </select>
+                                                        <input
+                                                            placeholder={t('checkout_postcode_placeholder')}
+                                                            className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                            value={newAddress.postcode}
+                                                            onChange={e => setNewAddress({ ...newAddress, postcode: e.target.value })}
+                                                        />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleNextToPayment}
+                                        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
+                                    >
+                                        <span>{t('checkout_continue_to_payment')}</span>
+                                        <ChevronRight size={20} />
                                     </button>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {step === 'address' && (
-                            <div className="space-y-6 animate-fade-in">
-                                {!user && (
+                            {step === 'payment' && (
+                                <div className="space-y-6 animate-fade-in">
                                     <button
-                                        onClick={() => setStep('guest_info')}
-                                        className="flex items-center text-gray-500 hover:text-gray-700 transition-colors mb-4"
+                                        onClick={() => setStep('address')}
+                                        className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
                                     >
                                         <ArrowLeft size={18} className="mr-1" />
-                                        <span>{t('checkout_back_to_address')} ({t('guest_info_title')})</span>
+                                        <span>{t('checkout_back_to_address')}</span>
                                     </button>
-                                )}
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_shipping_info_title')}</h2>
-                                    <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
-                                </div>
 
-                                <div className="space-y-4">
-                                    {savedAddresses.map((addr) => (
-                                        <div
-                                            key={addr.id}
-                                            onClick={() => setSelectedAddressId(addr.id)}
-                                            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedAddressId === addr.id ? 'border-blue-600 bg-blue-50/50' : 'border-gray-100 hover:border-gray-200'}`}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-3">
-                                                    <div className={`p-2 rounded-lg ${selectedAddressId === addr.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                                        <MapPin size={20} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-gray-900">{addr.address_name}</p>
-                                                        <p className="text-sm text-gray-500">{addr.street_name}, {addr.city}</p>
-                                                    </div>
-                                                </div>
-                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedAddressId === addr.id ? 'border-blue-600' : 'border-gray-300'}`}>
-                                                    {selectedAddressId === addr.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
-                                                </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_payment_details_title')}</h2>
+                                        <p className="text-gray-500">{t('checkout_payment_details_subtitle')}</p>
+                                    </div>
+
+                                    <Elements
+                                        stripe={stripePromise}
+                                        options={{
+                                            mode: 'payment',
+                                            amount: Math.max(1, Math.round(calculateTotal() * 100)),
+                                            currency: 'eur',
+                                            payment_method_types: ['card', 'ideal', 'klarna'],
+                                        }}
+                                    >
+                                        <CheckoutForm
+                                            amount={calculateTotal()}
+                                            addressId={selectedAddressId === 'new' ? null : selectedAddressId as number}
+                                            couponCode={couponCode}
+                                            couponId={couponId}
+                                            taxFee={taxFee}
+                                            shippingFee={shippingFee}
+                                            discount={discount}
+                                            onSuccess={() => setStep('success')}
+                                            guestInfo={!user ? guestInfo : undefined}
+                                            guestAddress={(!user || selectedAddressId === 'new') ? {
+                                                ...newAddress,
+                                                province_id: provinces.find(p => p.name === newAddress.province)?.id
+                                            } : undefined}
+                                        />
+                                    </Elements>
+
+                                    <div className="flex items-center justify-center space-x-4 pt-4 grayscale opacity-50">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 'success' && (
+                                <div className="text-center py-12 space-y-6 animate-fade-in">
+                                    <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <CheckCircle2 size={48} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('checkout_order_confirmed_title')}</h2>
+                                        <p className="text-gray-500">{t('checkout_order_confirmed_message')}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            onSuccess();
+                                            onClose();
+                                        }}
+                                        className="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-all shadow-lg"
+                                    >
+                                        {t('checkout_return_to_shopping')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Side: Summary */}
+                        {step !== 'success' && (
+                            <div className="w-full md:w-80 bg-gray-50 p-6 md:p-8 border-l border-gray-100 overflow-y-auto">
+                                <h3 className="font-bold text-gray-900 mb-6 flex items-center">
+                                    <ShoppingBag size={20} className="mr-2 text-blue-600" />
+                                    {t('checkout_order_summary_title')}
+                                </h3>
+
+                                <div className="space-y-4 mb-8">
+                                    {cartItems.map((item) => (
+                                        <div key={item.id} className="flex space-x-3">
+                                            <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                                                <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
                                             </div>
+                                            <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
                                         </div>
                                     ))}
-
-                                    <div
-                                        onClick={() => {
-                                            if (user) setSelectedAddressId('new');
-                                        }}
-                                        className={`p-4 rounded-2xl border-2 ${user ? 'border-dashed cursor-pointer' : 'border-transparent'} transition-all ${selectedAddressId === 'new' ? 'border-blue-600 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'}`}
-                                    >
-                                        {user && (
-                                            <div className="flex items-center space-x-3 text-gray-600">
-                                                <PlusCircle size={24} className={selectedAddressId === 'new' ? 'text-blue-600' : ''} />
-                                                <span className="font-semibold">{t('checkout_add_new_address')}</span>
-                                            </div>
-                                        )}
-
-                                        <AnimatePresence>
-                                            {(selectedAddressId === 'new' || !user) && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="mt-6 grid grid-cols-2 gap-4"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <input
-                                                        placeholder={t('checkout_address_name_placeholder')}
-                                                        className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                        value={newAddress.address_name}
-                                                        onChange={e => setNewAddress({ ...newAddress, address_name: e.target.value })}
-                                                    />
-                                                    <input
-                                                        placeholder={t('checkout_street_placeholder')}
-                                                        className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                        value={newAddress.street_name}
-                                                        onChange={e => setNewAddress({ ...newAddress, street_name: e.target.value })}
-                                                    />
-                                                    <input
-                                                        placeholder={t('checkout_house_number_placeholder')}
-                                                        className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                        value={newAddress.house_number}
-                                                        onChange={e => setNewAddress({ ...newAddress, house_number: e.target.value })}
-                                                    />
-                                                    <input
-                                                        placeholder={t('checkout_city_placeholder')}
-                                                        className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                        value={newAddress.city}
-                                                        onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
-                                                    />
-                                                    <select
-                                                        className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
-                                                        value={newAddress.province}
-                                                        onChange={e => setNewAddress({ ...newAddress, province: e.target.value })}
-                                                    >
-                                                        <option value="">{t('checkout_select_province')}</option>
-                                                        {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                                                    </select>
-                                                    <input
-                                                        placeholder={t('checkout_postcode_placeholder')}
-                                                        className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                        value={newAddress.postcode}
-                                                        onChange={e => setNewAddress({ ...newAddress, postcode: e.target.value })}
-                                                    />
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
                                 </div>
 
-                                <button
-                                    onClick={handleNextToPayment}
-                                    className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
-                                >
-                                    <span>{t('checkout_continue_to_payment')}</span>
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        )}
-
-                        {step === 'payment' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <button
-                                    onClick={() => setStep('address')}
-                                    className="flex items-center text-gray-500 hover:text-gray-700 transition-colors"
-                                >
-                                    <ArrowLeft size={18} className="mr-1" />
-                                    <span>{t('checkout_back_to_address')}</span>
-                                </button>
-
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_payment_details_title')}</h2>
-                                    <p className="text-gray-500">{t('checkout_payment_details_subtitle')}</p>
-                                </div>
-
-                                <Elements
-                                    stripe={stripePromise}
-                                    options={{
-                                        mode: 'payment',
-                                        amount: Math.max(1, Math.round(calculateTotal() * 100)),
-                                        currency: 'eur',
-                                        payment_method_types: ['card', 'ideal', 'klarna'],
-                                    }}
-                                >
-                                    <CheckoutForm
-                                        amount={calculateTotal()}
-                                        addressId={selectedAddressId === 'new' ? null : selectedAddressId as number}
-                                        couponCode={couponCode}
-                                        couponId={couponId}
-                                        taxFee={taxFee}
-                                        shippingFee={shippingFee}
-                                        discount={discount}
-                                        onSuccess={() => setStep('success')}
-                                        guestInfo={!user ? guestInfo : undefined}
-                                        guestAddress={(!user || selectedAddressId === 'new') ? {
-                                            ...newAddress,
-                                            province_id: provinces.find(p => p.name === newAddress.province)?.id
-                                        } : undefined}
-                                    />
-                                </Elements>
-
-                                <div className="flex items-center justify-center space-x-4 pt-4 grayscale opacity-50">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 'success' && (
-                            <div className="text-center py-12 space-y-6 animate-fade-in">
-                                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <CheckCircle2 size={48} />
-                                </div>
-                                <div>
-                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('checkout_order_confirmed_title')}</h2>
-                                    <p className="text-gray-500">{t('checkout_order_confirmed_message')}</p>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        onSuccess();
-                                        onClose();
-                                    }}
-                                    className="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition-all shadow-lg"
-                                >
-                                    {t('checkout_return_to_shopping')}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Side: Summary */}
-                    {step !== 'success' && (
-                        <div className="w-full md:w-80 bg-gray-50 p-6 md:p-8 border-l border-gray-100 overflow-y-auto">
-                            <h3 className="font-bold text-gray-900 mb-6 flex items-center">
-                                <ShoppingBag size={20} className="mr-2 text-blue-600" />
-                                {t('checkout_order_summary_title')}
-                            </h3>
-
-                            <div className="space-y-4 mb-8">
-                                {cartItems.map((item) => (
-                                    <div key={item.id} className="flex space-x-3">
-                                        <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                            <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
-                                        </div>
-                                        <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="space-y-3 border-t border-gray-200 pt-6">
-                                <div className="flex justify-between text-sm text-gray-500">
-                                    <span>{t('cart_subtotal_label')}</span>
-                                    <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
-                                </div>
-
-                                <FeatureGuard feature="enableTaxPurchase">
+                                <div className="space-y-3 border-t border-gray-200 pt-6">
                                     <div className="flex justify-between text-sm text-gray-500">
-                                        <span>{t('checkout_tax_label')}</span>
-                                        <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
+                                        <span>{t('cart_subtotal_label')}</span>
+                                        <span>{config.currencySymbol}{subtotal.toFixed(2)}</span>
                                     </div>
-                                </FeatureGuard>
 
-                                <FeatureGuard feature="enableShippingByPriceZone">
-                                    <div className="flex justify-between text-sm text-gray-500" >
-                                        <span className="flex items-center"><Truck size={14} className="mr-1" /> {t('checkout_shipping_label')}</span>
-                                        <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
+                                    <FeatureGuard feature="enableTaxPurchase">
+                                        <div className="flex justify-between text-sm text-gray-500">
+                                            <span>{t('checkout_tax_label')}</span>
+                                            <span>{config.currencySymbol}{taxFee.toFixed(2)}</span>
+                                        </div>
+                                    </FeatureGuard>
+
+                                    <FeatureGuard feature="enableShippingByPriceZone">
+                                        <div className="flex justify-between text-sm text-gray-500" >
+                                            <span className="flex items-center"><Truck size={14} className="mr-1" /> {t('checkout_shipping_label')}</span>
+                                            <span>{config.currencySymbol}{shippingFee.toFixed(2)}</span>
+                                        </div>
+                                    </FeatureGuard>
+
+                                    {discount > 0 && (
+                                        <div className="flex justify-between text-sm text-red-600 font-medium">
+                                            <span>{t('checkout_discount_label', { code: couponCode })}</span>
+                                            <span>-{config.currencySymbol}{discount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
+                                        <span>{t('cart_total_title')}</span>
+                                        <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
                                     </div>
-                                </FeatureGuard>
-
-                                {discount > 0 && (
-                                    <div className="flex justify-between text-sm text-red-600 font-medium">
-                                        <span>{t('checkout_discount_label', { code: couponCode })}</span>
-                                        <span>-{config.currencySymbol}{discount.toFixed(2)}</span>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-between text-lg font-bold text-gray-900 pt-3 border-t border-gray-200">
-                                    <span>{t('cart_total_title')}</span>
-                                    <span className="text-blue-600">{config.currencySymbol}{calculateTotal().toFixed(2)}</span>
                                 </div>
-                            </div>
 
-                            <div className="mt-8 p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
-                                <div className="flex items-center space-x-2 text-gray-500 text-xs">
-                                    <ShieldCheck size={14} className="text-green-600" />
-                                    <span>{t('checkout_secure_ssl')}</span>
-                                </div>
-                                {/* <div className="flex items-center space-x-2 text-gray-500 text-xs">
+                                <div className="mt-8 p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                                    <div className="flex items-center space-x-2 text-gray-500 text-xs">
+                                        <ShieldCheck size={14} className="text-green-600" />
+                                        <span>{t('checkout_secure_ssl')}</span>
+                                    </div>
+                                    {/* <div className="flex items-center space-x-2 text-gray-500 text-xs">
                                     <ShieldCheck size={14} className="text-green-600" />
                                     <span>{t('checkout_money_back')}</span>
                                 </div> */}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </motion.div>
+                        )}
+                    </motion.div>
+                </div>
             </div>
         </AnimatePresence>
     );
