@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
@@ -228,8 +228,8 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
 
           {/* Sign-in Prompt Dialog */}
           {showSignInPrompt && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-[60]">
-              <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto flex items-start justify-center p-4 z-[60]">
+              <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl max-w-sm w-full my-auto text-center">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">{t('cart_signin_required_title')}</h3>
                 <p className="text-gray-600 mb-6">
                   {t('cart_signin_required_message')}

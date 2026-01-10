@@ -393,7 +393,7 @@ export const CheckoutModal = ({
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[100dvh] md:h-auto md:max-h-[90vh]`}
+                    className={`relative w-full ${step === 'success' ? 'max-w-2xl' : 'max-w-4xl'} bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-full md:max-h-[90vh]`}
                 >
                     {/* Left Side: Form */}
                     <div className="flex-1 p-6 md:p-8 overflow-y-auto">

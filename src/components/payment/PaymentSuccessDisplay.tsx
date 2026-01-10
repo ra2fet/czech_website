@@ -24,7 +24,7 @@ export const PaymentSuccessDisplay = ({ onClose }: PaymentSuccessDisplayProps) =
   }, [onClose]);
 
   return (
-    <div className="min-h-full flex items-center justify-center relative overflow-hidden">
+    <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 relative">
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={500} />}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
