@@ -332,10 +332,10 @@ export const ProductsPage = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.1 }}
-                  className="card card-hover flex flex-col h-full scroll-mt-24"
+                  className="card card-hover flex flex-col h-full scroll-mt-24 max-w-[340px] mx-auto w-full"
                 >
                   {/* Image Container */}
-                  <div className="relative aspect-[4/5] overflow-hidden group">
+                  <div className="relative aspect-[6/7] overflow-hidden group">
                     <img
                       src={product.image_url}
                       alt={product.name}
@@ -372,7 +372,7 @@ export const ProductsPage = () => {
 
                     <div className="mt-auto space-y-4 text-center">
                       <div className="flex items-center justify-between text-sm text-gray-500 pb-4 border-b border-gray-100">
-                        <span>{viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}</span>
+                        <span>{viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}</span
                         <div className="flex items-center gap-1">
                           <Truck size={14} className="text-primary-500" />
                           <span>{t('fast_shipping_title')}</span>

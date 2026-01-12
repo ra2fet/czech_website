@@ -242,10 +242,10 @@ export const CheckoutModal = ({
     // Reset step based on user login status when opening
     useEffect(() => {
         if (isOpen) {
+            setStep('address');
             if (!user) {
-                setStep('guest_info');
-            } else {
-                setStep('address');
+                setSelectedAddressId('new');
+                setNewAddress(prev => ({ ...prev }));
             }
         }
     }, [isOpen, user]);
@@ -324,6 +324,12 @@ export const CheckoutModal = ({
 
     const handleNextToPayment = async () => {
         if (!user) {
+            // Validate Guest Info first
+            if (!guestInfo.name || !guestInfo.email) {
+                toast.error(t('checkout_error_fill_all_fields'));
+                return;
+            }
+
             // For guest, we require new address
             const required = ['address_name', 'city', 'province', 'street_name', 'house_number', 'postcode'];
             if (required.some(f => !newAddress[f as keyof typeof newAddress])) {
@@ -372,18 +378,7 @@ export const CheckoutModal = ({
         }
     };
 
-    const handleGuestInfoNext = () => {
-        if (!guestInfo.name || !guestInfo.email) {
-            toast.error(t('checkout_error_fill_all_fields'));
-            return;
-        }
-        setStep('address');
-        setSelectedAddressId('new'); // Force new address for guests
-        // Trigger generic address name for guest so they don't have to fill it unnecessarily, or prefill
-        if (!newAddress.address_name) {
-            setNewAddress(prev => ({ ...prev, address_name: 'Delivery Address' }));
-        }
-    };
+
 
     if (!isOpen) return null;
 
@@ -407,22 +402,12 @@ export const CheckoutModal = ({
                         <div className="flex-1 p-6 md:p-8 overflow-y-auto">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center space-x-2">
-                                    {/* Steps Indicator */}
-                                    {!user && (
-                                        <>
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'guest_info' ? 'bg-blue-600 text-white' : 'bg-green-100 text-green-600'}`}>
-                                                {step === 'guest_info' ? '1' : <CheckCircle2 size={18} />}
-                                            </div>
-                                            <div className="h-px w-6 bg-gray-200" />
-                                        </>
-                                    )}
-
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : (step === 'payment' || step === 'success' || (step !== 'guest_info' && !user)) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                        {step === 'success' || step === 'payment' ? <CheckCircle2 size={18} /> : (user ? '1' : '2')}
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'address' ? 'bg-blue-600 text-white' : (step === 'payment' || step === 'success') ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                        {step === 'success' || step === 'payment' ? <CheckCircle2 size={18} /> : '1'}
                                     </div>
                                     <div className="h-px w-6 bg-gray-200" />
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'payment' ? 'bg-blue-600 text-white' : step === 'success' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                        {step === 'success' ? <CheckCircle2 size={18} /> : (user ? '2' : '3')}
+                                        {step === 'success' ? <CheckCircle2 size={18} /> : '2'}
                                     </div>
                                 </div>
                                 <button
@@ -433,68 +418,46 @@ export const CheckoutModal = ({
                                 </button>
                             </div>
 
-                            {step === 'guest_info' && (
-                                <div className="space-y-6 animate-fade-in">
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest_info_title')}</h2>
-                                        <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_name_label')}</label>
-                                            <input
-                                                type="text"
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                value={guestInfo.name}
-                                                onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_email_label')}</label>
-                                            <input
-                                                type="email"
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                value={guestInfo.email}
-                                                onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_phone_label')}</label>
-                                            <input
-                                                type="tel"
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                value={guestInfo.phone}
-                                                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={handleGuestInfoNext}
-                                        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center space-x-2 mt-8"
-                                    >
-                                        <span>{t('checkout_continue_to_payment')}</span>
-                                        <ChevronRight size={20} />
-                                    </button>
-                                    <div className="text-center mt-4">
-                                        <button onClick={onClose} className="text-sm text-gray-500 hover:underline">
-                                            {t('cancel_button')}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+
 
                             {step === 'address' && (
                                 <div className="space-y-6 animate-fade-in">
                                     {!user && (
-                                        <button
-                                            onClick={() => setStep('guest_info')}
-                                            className="flex items-center text-gray-500 hover:text-gray-700 transition-colors mb-4"
-                                        >
-                                            <ArrowLeft size={18} className="mr-1" />
-                                            <span>{t('checkout_back_to_address')} ({t('guest_info_title')})</span>
-                                        </button>
+                                        <div className="space-y-4 mb-8 pb-8 border-b border-gray-100">
+                                            <div>
+                                                <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest_info_title')}</h2>
+                                                <p className="text-gray-500">{t('checkout_shipping_info_subtitle')}</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_name_label')}</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    value={guestInfo.name}
+                                                    onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_email_label')}</label>
+                                                <input
+                                                    type="email"
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    value={guestInfo.email}
+                                                    onChange={(e) => setGuestInfo({ ...guestInfo, email: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest_phone_label')}</label>
+                                                <input
+                                                    type="tel"
+                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                    value={guestInfo.phone}
+                                                    onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
                                     )}
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('checkout_shipping_info_title')}</h2>
