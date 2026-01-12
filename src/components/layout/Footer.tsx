@@ -56,9 +56,9 @@ export const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <Logo isScrolled={true} isFooter={true} />
-            <p className="text-gray-400 mt-4">
+            {/* <p className="text-gray-400 mt-4">
               {t('footer_company_description', 'Providing sustainable products and exceptional service since 2010. Your trusted partner for eco-friendly solutions.')}
-            </p>
+            </p> */}
             <div className="flex space-x-4">
               <a
                 href="https://www.facebook.com/share/1aNXnXD8xx/?mibextid=wwXIfr"
@@ -174,6 +174,10 @@ export const Footer = () => {
               <li className="flex items-center">
                 <Phone size={20} className="mr-2 flex-shrink-0 text-primary-500" />
                 <a href="tel:+31640887984" className="text-gray-400 hover:text-white transition-colors">+31-640887984</a>
+              </li>
+              <li className="flex items-center">
+                <Phone size={20} className="mr-2 flex-shrink-0 text-primary-500" />
+                <a href="https://wa.me/31624330577" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">+31 6 24330577</a>
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="mr-2 flex-shrink-0 text-primary-500" />
