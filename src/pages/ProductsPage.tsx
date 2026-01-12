@@ -372,7 +372,7 @@ export const ProductsPage = () => {
 
                     <div className="mt-auto space-y-4 text-center">
                       <div className="flex items-center justify-between text-sm text-gray-500 pb-4 border-b border-gray-100">
-                        <span>{viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}</span
+                        <span>{viewMode === 'wholesale' ? t('wholesale_price_label') : t('per_unit_label')}</span>
                         <div className="flex items-center gap-1">
                           <Truck size={14} className="text-primary-500" />
                           <span>{t('fast_shipping_title')}</span>
