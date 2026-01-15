@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/db'); // Assuming you have a db connection
 const { authenticateToken, adminProtect } = require('../middleware/auth'); // Import auth middleware
 const { v4: uuidv4 } = require('uuid'); // Import uuid for generating unique tokens
+const { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } = require('../utils/emailService');
 
 // Helper function to check if a feature is enabled
 const isFeatureEnabled = async (featureName) => {
@@ -194,14 +195,15 @@ router.post('/', async (req, res) => {
 
             // Insert order into the orders table
             const orderQuery = `
-                INSERT INTO orders (user_id, total_amount, address_id, payment_status, rating_token, send_rating_email_date)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO orders (user_id, total_amount, address_id, payment_status, status, rating_token, send_rating_email_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
             const orderValues = [
                 finalUserId,
                 totalAmount,
                 finalAddressId,
                 'completed',
+                'prepared',
                 ratingToken,
                 sendRatingEmailDate ? sendRatingEmailDate.toISOString().split('T')[0] : null // Format as YYYY-MM-DD or null
             ];
@@ -219,13 +221,46 @@ router.post('/', async (req, res) => {
                 let orderItemsInserted = 0;
 
                 if (cartItems.length === 0) {
-                    db.commit((commitErr) => {
+                    db.commit(async (commitErr) => {
                         if (commitErr) {
                             db.rollback(() => {
                                 console.error('Error committing transaction (no items), rolling back:', commitErr);
                                 res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
                             });
                         } else {
+                            // Send confirmation email asynchronously
+                            try {
+                                const lang = req.language || 'en';
+                                const [orderDetails] = await db.promise().query(`
+                                    SELECT o.id, o.total_amount, u.email, u.full_name as customer_name,
+                                           ua.street_name, ua.house_number, ua.city, ua.postcode, pt.name as province
+                                    FROM orders o
+                                    JOIN users u ON o.user_id = u.id
+                                    JOIN user_addresses ua ON o.address_id = ua.id
+                                    LEFT JOIN provinces p ON ua.province_id = p.id
+                                    LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
+                                    WHERE o.id = ?
+                                `, [lang, orderId]);
+
+                                if (orderDetails.length > 0) {
+                                    const o = orderDetails[0];
+                                    sendOrderConfirmationEmail(o.email, {
+                                        orderId: o.id,
+                                        totalAmount: o.total_amount,
+                                        items: [],
+                                        address: {
+                                            street_name: o.street_name,
+                                            house_number: o.house_number,
+                                            city: o.city,
+                                            postcode: o.postcode,
+                                            province: o.province || ''
+                                        },
+                                        customerName: o.customer_name
+                                    }, lang);
+                                }
+                            } catch (emailTriggerErr) {
+                                console.error('Failed to trigger order confirmation email (no items):', emailTriggerErr);
+                            }
                             res.status(201).json({ message: 'Order created successfully', orderId });
                         }
                     });
@@ -246,13 +281,54 @@ router.post('/', async (req, res) => {
                             }
                             orderItemsInserted++;
                             if (orderItemsInserted === cartItems.length) {
-                                db.commit((commitErr) => {
+                                db.commit(async (commitErr) => {
                                     if (commitErr) {
                                         db.rollback(() => {
                                             console.error('Error committing transaction, rolling back:', commitErr);
                                             res.status(500).json({ message: 'Failed to create order', error: commitErr.message });
                                         });
                                     } else {
+                                        // Send confirmation email asynchronously
+                                        try {
+                                            const lang = req.language || 'en';
+                                            const [orderDetails] = await db.promise().query(`
+                                                SELECT o.id, o.total_amount, u.email, u.full_name as customer_name,
+                                                       ua.street_name, ua.house_number, ua.city, ua.postcode, pt.name as province
+                                                FROM orders o
+                                                JOIN users u ON o.user_id = u.id
+                                                JOIN user_addresses ua ON o.address_id = ua.id
+                                                LEFT JOIN provinces p ON ua.province_id = p.id
+                                                LEFT JOIN provinces_translations pt ON p.id = pt.province_id AND pt.language_code = ?
+                                                WHERE o.id = ?
+                                            `, [lang, orderId]);
+
+                                            const [itemsWithNames] = await db.promise().query(`
+                                                SELECT oi.quantity, oi.price, pt.name as product_name
+                                                FROM order_items oi
+                                                JOIN products_translations pt ON oi.product_id = pt.product_id AND pt.language_code = ?
+                                                WHERE oi.order_id = ?
+                                            `, [lang, orderId]);
+
+                                            if (orderDetails.length > 0) {
+                                                const o = orderDetails[0];
+                                                sendOrderConfirmationEmail(o.email, {
+                                                    orderId: o.id,
+                                                    totalAmount: o.total_amount,
+                                                    items: itemsWithNames,
+                                                    address: {
+                                                        street_name: o.street_name,
+                                                        house_number: o.house_number,
+                                                        city: o.city,
+                                                        postcode: o.postcode,
+                                                        province: o.province || ''
+                                                    },
+                                                    customerName: o.customer_name
+                                                }, lang);
+                                            }
+                                        } catch (emailTriggerErr) {
+                                            console.error('Failed to trigger order confirmation email:', emailTriggerErr);
+                                        }
+
                                         res.status(201).json({ message: 'Order created successfully', orderId });
                                     }
                                 });
@@ -401,6 +477,47 @@ router.get('/', authenticateToken, adminProtect, (req, res) => {
             );
         });
     });
+});
+
+// Route to update order status (Admin only)
+router.patch('/update-status/:orderId', authenticateToken, adminProtect, async (req, res) => {
+    const { orderId } = req.params;
+    const { status, rejectionReason } = req.body;
+
+    const validStatuses = ['prepared', 'on the way', 'completed', 'rejected'];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: 'Invalid status.' });
+    }
+
+    try {
+        await db.promise().query(
+            'UPDATE orders SET status = ?, rejection_reason = ? WHERE id = ?',
+            [status, rejectionReason || null, orderId]
+        );
+
+        // Fetch user info for notification
+        const [orderDetails] = await db.promise().query(`
+            SELECT o.id, u.email, u.full_name as customer_name
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            WHERE o.id = ?
+        `, [orderId]);
+
+        if (orderDetails.length > 0) {
+            const o = orderDetails[0];
+            sendOrderStatusUpdateEmail(o.email, {
+                orderId: o.id,
+                status: status,
+                rejectionReason: rejectionReason,
+                customerName: o.customer_name
+            }, req.language || 'en');
+        }
+
+        res.status(200).json({ message: 'Order status updated successfully.' });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: 'Failed to update order status.', error: error.message });
+    }
 });
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Euro, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -86,7 +86,6 @@ export function DashboardStats() {
 
   const pieChartBranchOptions = useMemo(() => {
     if (!dashboardData?.orders_by_branches) return { series: [], labels: [] };
-    // const series = dashboardData.orders_by_branches.map(item => item.count);
     const labels = dashboardData.orders_by_branches.map(item => item.branch_name);
     return {
       chart: { type: 'donut' as const },
@@ -107,7 +106,6 @@ export function DashboardStats() {
 
   const pieChartClientOptions = useMemo(() => {
     if (!dashboardData?.orders_by_clients) return { series: [], labels: [] };
-    // const series = dashboardData.orders_by_clients.map(item => item.count);
     const labels = dashboardData.orders_by_clients.map(item => item.client_name);
     return {
       chart: { type: 'donut' as const },
@@ -185,47 +183,103 @@ export function DashboardStats() {
       ) : (
         dashboardData && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Total Sales Card */}
               <motion.div
-                whileHover={{ y: -5 }}
-                className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200"
+                whileHover={{ y: -2 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-green-200 transition-colors"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-green-50 rounded-lg text-green-600">
+                    <Euro className="h-5 w-5" />
+                  </div>
                   <div>
-                    <p className="text-sm text-green-600 font-medium">Total Sales</p>
-                    <p className="text-3xl font-bold text-accent-900 mt-2">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Sales</p>
+                    <p className="text-xl font-bold text-gray-900 mt-0.5">
                       {config.currencySymbol}{dashboardData.total_sales ? dashboardData.total_sales.toLocaleString() : '0.00'}
                     </p>
-                  </div>
-                  <div className="p-4 bg-green-600 rounded-lg">
-                    <Euro className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </motion.div>
 
               {/* Total Completed Orders Card */}
               <motion.div
-                whileHover={{ y: -5 }}
-                className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-sm border border-purple-200"
+                whileHover={{ y: -2 }}
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-purple-200 transition-colors"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
                   <div>
-                    <p className="text-sm text-purple-600 font-medium">Total Completed Orders</p>
-                    <p className="text-3xl font-bold text-accent-900 mt-2">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Completed Orders</p>
+                    <p className="text-xl font-bold text-gray-900 mt-0.5">
                       {dashboardData.total_completed_orders ? dashboardData.total_completed_orders.toLocaleString() : '0'}
                     </p>
-                  </div>
-                  <div className="p-4 bg-purple-600 rounded-lg">
-                    <CheckCircle className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </motion.div>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Orders by Month Bar Chart */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-accent-900 mb-4">Orders by Month</h3>
+                {barChartData.labels.length > 0 ? (
+                  <Bar data={barChartData} options={{ responsive: true, plugins: { legend: { position: 'top' as const }, title: { display: false } } }} />
+                ) : (
+                  <p className="text-gray-600">No orders by month data available.</p>
+                )}
+              </div>
+
+              {/* Orders by Product Pie Chart */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-accent-900 mb-4">Orders by Product</h3>
+                {dashboardData.top_products && dashboardData.top_products.length > 0 ? (
+                  <ApexChart
+                    options={{
+                      chart: { type: 'donut' as const },
+                      labels: dashboardData.top_products.map(p => p.product_name),
+                      legend: { position: 'bottom' },
+                      responsive: [{
+                        breakpoint: 480,
+                        options: {
+                          chart: { width: 250 },
+                          legend: { position: 'bottom' }
+                        }
+                      }]
+                    }}
+                    series={dashboardData.top_products.map(p => p.quantity_sold)}
+                    type="donut"
+                    height={350}
+                  />
+                ) : (
+                  <p className="text-gray-600">No product sales data available.</p>
+                )}
+              </div>
+
+              {/* Orders by Province Pie Chart */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-accent-900 mb-4">Orders by Province</h3>
+                {pieChartBranchSeries.length > 0 ? (
+                  <ApexChart options={pieChartBranchOptions} series={pieChartBranchSeries} type="donut" height={350} />
+                ) : (
+                  <p className="text-gray-600">No orders by province data available.</p>
+                )}
+              </div>
+
+              {/* Orders by Clients Pie Chart (Optional) */}
+              {dashboardData.orders_by_clients && dashboardData.orders_by_clients.length > 0 && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                  <h3 className="text-lg font-semibold text-accent-900 mb-4">Orders by Clients</h3>
+                  <ApexChart options={pieChartClientOptions} series={pieChartClientSeries} type="donut" height={350} />
+                </div>
+              )}
+            </div>
+
             {/* Top Products Table */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <h3 className="text-xl font-semibold text-accent-900 mb-4">Quantity Sold (Top Products)</h3>
+              <h3 className="text-lg font-semibold text-accent-900 mb-4">Quantity Sold (Top Products)</h3>
               {dashboardData.top_products && dashboardData.top_products.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -251,36 +305,6 @@ export function DashboardStats() {
                 </div>
               ) : (
                 <p className="text-gray-600">No top products data available.</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Orders by Month Bar Chart */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold text-accent-900 mb-4">Orders by Month</h3>
-                {barChartData.labels.length > 0 ? (
-                  <Bar data={barChartData} options={{ responsive: true, plugins: { legend: { position: 'top' as const }, title: { display: false } } }} />
-                ) : (
-                  <p className="text-gray-600">No orders by month data available.</p>
-                )}
-              </div>
-
-              {/* Orders by Province Pie Chart */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-xl font-semibold text-accent-900 mb-4">Orders by Province</h3>
-                {pieChartBranchSeries.length > 0 ? (
-                  <ApexChart options={pieChartBranchOptions} series={pieChartBranchSeries} type="donut" height={350} />
-                ) : (
-                  <p className="text-gray-600">No orders by province data available.</p>
-                )}
-              </div>
-
-              {/* Orders by Clients Pie Chart (Optional) */}
-              {dashboardData.orders_by_clients && dashboardData.orders_by_clients.length > 0 && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                  <h3 className="text-xl font-semibold text-accent-900 mb-4">Orders by Clients</h3>
-                  <ApexChart options={pieChartClientOptions} series={pieChartClientSeries} type="donut" height={350} />
-                </div>
               )}
             </div>
           </div>

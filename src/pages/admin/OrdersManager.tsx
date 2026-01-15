@@ -35,6 +35,8 @@ interface Order {
   total_amount: number;
   payment_status: string;
   order_date: string;
+  status: 'prepared' | 'on the way' | 'completed' | 'rejected';
+  rejection_reason?: string;
   items: OrderItem[];
   ratings?: Rating[]; // Optional, as not all orders might have ratings
   overall_rating?: number; // Add overall order rating
@@ -58,6 +60,23 @@ export function OrdersManager() {
       }
       return newSet;
     });
+  };
+
+  const handleStatusUpdate = async (orderId: number, newStatus: string, reason?: string) => {
+    try {
+      await config.axios.patch(`orders/update-status/${orderId}`, {
+        status: newStatus,
+        rejectionReason: reason
+      });
+
+      // Update local state
+      setOrders(prev => prev.map(order =>
+        order.id === orderId ? { ...order, status: newStatus as any, rejection_reason: reason } : order
+      ));
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update order status');
+    }
   };
 
   useEffect(() => {
@@ -142,12 +161,43 @@ export function OrdersManager() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">Order #{order.id}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.payment_status === 'completed' ? 'bg-success-100 text-success-800' : 'bg-warning-100 text-warning-800'
-                  }`}>
-                  {order.payment_status}
-                </span>
+              <div className="flex flex-col space-y-2 mb-4 pb-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">Order #{order.id}</h3>
+                  <div className="flex flex-col items-end">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'completed' ? 'bg-success-100 text-success-800' :
+                        order.status === 'rejected' ? 'bg-error-100 text-error-800' :
+                          order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
+                            'bg-warning-100 text-warning-800'
+                      }`}>
+                      {order.status || 'prepared'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <select
+                    className="text-sm p-1 border rounded bg-gray-50 focus:ring-1 focus:ring-primary-500"
+                    value={order.status || 'prepared'}
+                    onChange={(e) => {
+                      const nextStatus = e.target.value;
+                      if (nextStatus === 'rejected') {
+                        const reason = window.prompt('Enter rejection reason:');
+                        if (reason) handleStatusUpdate(order.id, nextStatus, reason);
+                      } else {
+                        handleStatusUpdate(order.id, nextStatus);
+                      }
+                    }}
+                  >
+                    <option value="prepared">Prepared</option>
+                    <option value="on the way">On the way</option>
+                    <option value="completed">Completed</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                {order.status === 'rejected' && order.rejection_reason && (
+                  <p className="text-xs text-error-600 mt-1 italic">Reason: {order.rejection_reason}</p>
+                )}
               </div>
 
               <div className="space-y-3 text-gray-700 mb-4">

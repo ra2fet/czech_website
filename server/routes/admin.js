@@ -265,6 +265,20 @@ router.get('/dashboard', async (req, res) => {
     const [ordersByClientsResult] = await db.promise().query(ordersByClientsQuery);
     const orders_by_clients = ordersByClientsResult;
 
+    // Orders by Product (New pie chart data)
+    const ordersByProductQuery = `
+      SELECT pt.name AS product_name, SUM(oi.quantity) AS count
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      JOIN products_translations pt ON p.id = pt.product_id
+      JOIN orders o ON oi.order_id = o.id
+      WHERE pt.language_code = ? ${dateConditionWithoutWhere}
+      GROUP BY pt.name
+      ORDER BY count DESC
+    `;
+    const [ordersByProductResult] = await db.promise().query(ordersByProductQuery, [languageCode]);
+    const orders_by_product = ordersByProductResult;
+
     res.json({
       total_sales,
       total_completed_orders,
@@ -272,6 +286,7 @@ router.get('/dashboard', async (req, res) => {
       orders_by_month,
       orders_by_branches,
       orders_by_clients,
+      orders_by_product
     });
 
   } catch (error) {

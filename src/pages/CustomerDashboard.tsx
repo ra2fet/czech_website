@@ -9,7 +9,8 @@ interface Order {
   id: number;
   order_date: string;
   total_amount: number;
-  status: string;
+  status: 'prepared' | 'on the way' | 'completed' | 'rejected';
+  rejection_reason?: string;
   address_name: string; // Added address_name
   street_name: string;
   house_number: string;
@@ -221,8 +222,8 @@ export const CustomerDashboard = () => {
             <button
               onClick={() => setActiveTab('orders')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'orders'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Order History
@@ -230,8 +231,8 @@ export const CustomerDashboard = () => {
             <button
               onClick={() => setActiveTab('addresses')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'addresses'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Saved Addresses
@@ -254,11 +255,19 @@ export const CustomerDashboard = () => {
                   <div key={order.id} className="bg-gray-50 p-4 rounded-md shadow-sm">
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="font-semibold text-lg">Order #{order.id}</h3>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          order.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
+                              'bg-yellow-100 text-yellow-800'
                         }`}>
-                        {order.status}
+                        {order.status || 'prepared'}
                       </span>
                     </div>
+                    {order.status === 'rejected' && order.rejection_reason && (
+                      <div className="mb-3 p-3 bg-red-50 border-l-4 border-red-500 rounded text-sm text-red-700">
+                        <strong>Reason for rejection: </strong> {order.rejection_reason}
+                      </div>
+                    )}
                     <p className="text-sm text-gray-600">Date: {new Date(order.order_date).toLocaleDateString()}</p>
                     <p className="text-sm text-gray-600">Total: {config.currencySymbol}{Number(order.total_amount).toFixed(2)}</p>
                     <p className="text-sm text-gray-600">Shipping Address: {order.address_name} ({order.street_name}, {order.house_number}, {order.city}, {order.postcode})</p>
