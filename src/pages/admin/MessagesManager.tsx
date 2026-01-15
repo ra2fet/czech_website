@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-  Eye,
   Trash2,
   X,
   Mail,
+  MailOpen,
+  Maximize2,
   Phone,
   User,
   Calendar,
@@ -150,18 +151,18 @@ const MessagesManager: React.FC = () => {
                 {messages.map((message) => (
                   <tr
                     key={message.id}
-                    className={`hover:bg-gray-50 transition-colors group ${!message.is_read ? 'bg-primary-50/30' : ''}`}
+                    className={`transition-colors group ${message.is_read ? 'bg-gray-100/70 hover:bg-gray-200/40 grayscale-[0.1]' : 'bg-white hover:bg-gray-50'}`}
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${!message.is_read ? 'bg-primary-600 text-white shadow-md' : 'bg-primary-100 text-primary-700'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${!message.is_read ? 'bg-primary-600 text-white shadow-md' : 'bg-gray-200 text-gray-500'}`}>
                           {message.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="ml-3">
-                          <p className={`text-sm ${!message.is_read ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
+                          <p className={`text-sm ${!message.is_read ? 'font-bold text-gray-900' : 'font-medium text-gray-500'}`}>
                             {message.name}
                             {!message.is_read && (
-                              <span className="ml-2 inline-block w-2 h-2 bg-primary-600 rounded-full"></span>
+                              <span className="ml-2 inline-block w-2 h-2 bg-primary-600 rounded-full animate-pulse"></span>
                             )}
                           </p>
                         </div>
@@ -169,12 +170,12 @@ const MessagesManager: React.FC = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex flex-col space-y-1">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Mail size={14} className="mr-2 text-gray-400" />
+                        <div className={`flex items-center text-sm ${message.is_read ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Mail size={14} className="mr-2 opacity-70" />
                           {message.email}
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Phone size={14} className="mr-2 text-gray-400" />
+                        <div className={`flex items-center text-sm ${message.is_read ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <Phone size={14} className="mr-2 opacity-70" />
                           {message.phone || 'N/A'}
                         </div>
                       </div>
@@ -191,7 +192,7 @@ const MessagesManager: React.FC = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
-                        <p className="text-sm text-gray-900 font-medium">
+                        <p className={`text-sm font-medium ${message.is_read ? 'text-gray-500' : 'text-gray-900'}`}>
                           {new Date(message.created_at).toLocaleDateString()}
                         </p>
                         <p className="text-xs text-gray-400">
@@ -203,17 +204,17 @@ const MessagesManager: React.FC = () => {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => toggleReadStatus(message.id, message.is_read)}
-                          className={`p-2 rounded-lg transition-colors ${message.is_read ? 'text-gray-400 hover:bg-gray-100' : 'text-primary-600 hover:bg-primary-50'}`}
+                          className={`p-2 rounded-lg transition-colors ${message.is_read ? 'text-gray-400 hover:bg-gray-200' : 'text-primary-600 hover:bg-primary-50'}`}
                           title={message.is_read ? 'Mark as Unread' : 'Mark as Read'}
                         >
-                          {message.is_read ? <Mail size={18} /> : <div className="w-[18px] h-[18px] border-2 border-primary-600 rounded-full flex items-center justify-center"><div className="w-2 h-2 bg-primary-600 rounded-full"></div></div>}
+                          {message.is_read ? <MailOpen size={18} /> : <Mail size={18} className="text-primary-600" />}
                         </button>
                         <button
                           onClick={() => handleSelectMessage(message)}
-                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          className={`p-2 rounded-lg transition-colors ${message.is_read ? 'text-gray-400 hover:bg-gray-200' : 'text-primary-600 hover:bg-primary-50'}`}
                           title="View Details"
                         >
-                          <Eye size={18} />
+                          <Maximize2 size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(message.id)}
@@ -235,7 +236,7 @@ const MessagesManager: React.FC = () => {
       {/* Message View Modal */}
       {selectedMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-gray-50 px-8 py-6 flex items-center justify-between border-b border-gray-100">
               <div className="flex items-center">
@@ -261,49 +262,49 @@ const MessagesManager: React.FC = () => {
             </div>
 
             {/* Modal Content */}
-            <div className="px-8 py-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="space-y-4">
+            <div className="px-8 py-8 overflow-y-auto flex-1 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div className="space-y-6">
                   <div className="flex items-start">
-                    <div className="p-2 bg-gray-50 rounded-lg text-gray-400 mr-3 mt-0.5">
-                      <User size={18} />
+                    <div className="p-3 bg-gray-50 rounded-xl text-gray-400 mr-4 mt-0.5">
+                      <User size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Sender Name</p>
-                      <p className="text-gray-900 font-semibold">{selectedMessage.name}</p>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Sender Name</p>
+                      <p className="text-lg text-gray-900 font-bold">{selectedMessage.name}</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="p-2 bg-gray-50 rounded-lg text-gray-400 mr-3 mt-0.5">
-                      <Mail size={18} />
+                    <div className="p-3 bg-gray-50 rounded-xl text-gray-400 mr-4 mt-0.5">
+                      <Mail size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Email Address</p>
-                      <a href={`mailto:${selectedMessage.email}`} className="text-primary-600 font-semibold hover:underline">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</p>
+                      <a href={`mailto:${selectedMessage.email}`} className="text-lg text-primary-600 font-bold hover:underline">
                         {selectedMessage.email}
                       </a>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex items-start">
-                    <div className="p-2 bg-gray-50 rounded-lg text-gray-400 mr-3 mt-0.5">
-                      <Phone size={18} />
+                    <div className="p-3 bg-gray-50 rounded-xl text-gray-400 mr-4 mt-0.5">
+                      <Phone size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone Number</p>
-                      <p className="text-gray-900 font-semibold">{selectedMessage.phone || 'Not provided'}</p>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Phone Number</p>
+                      <p className="text-lg text-gray-900 font-bold">{selectedMessage.phone || 'Not provided'}</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="p-2 bg-gray-50 rounded-lg text-gray-400 mr-3 mt-0.5">
-                      <Calendar size={18} />
+                    <div className="p-3 bg-gray-50 rounded-xl text-gray-400 mr-4 mt-0.5">
+                      <Calendar size={20} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Received</p>
-                      <p className="text-gray-900 font-semibold">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Date Received</p>
+                      <p className="text-lg text-gray-900 font-bold">
                         {new Date(selectedMessage.created_at).toLocaleString(undefined, {
-                          dateStyle: 'full',
+                          dateStyle: 'medium',
                           timeStyle: 'short'
                         })}
                       </p>
@@ -312,14 +313,14 @@ const MessagesManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                <div className="mb-4">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Subject</p>
-                  <p className="text-lg font-bold text-gray-900">{selectedMessage.subject}</p>
+              <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 mb-6">
+                <div className="mb-6">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Subject</p>
+                  <p className="text-2xl font-black text-gray-900 leading-tight">{selectedMessage.subject}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Message</p>
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Message</p>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg font-medium min-h-[12rem]">
                     {selectedMessage.message}
                   </div>
                 </div>
@@ -347,9 +348,7 @@ const MessagesManager: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <div className="w-4 h-4 mr-2 border-2 border-primary-600 rounded-full flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-primary-600 rounded-full"></div>
-                      </div>
+                      <MailOpen size={18} className="mr-2" />
                       Mark as Read
                     </>
                   )}
