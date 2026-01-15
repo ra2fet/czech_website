@@ -70,23 +70,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [signOut, redirectToLogin]);
 
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.axios
-        .get('/auth/user', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          // Set default axios header for future requests
-          config.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          setUser(response.data);
+      // Immediately set the default axios header if we have a token
+      config.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-          // Refresh the session timer so the user isn't logged out immediately after refreshing
-          // if their token is still valid on the server.
+      config.axios
+        .get('/auth/user')
+        .then((response) => {
+          setUser(response.data);
           localStorage.setItem('loginTime', Date.now().toString());
 
-          // Start timeout check only if user is successfully authenticated and feature is enabled
           if (config.enableSessionTimeout) {
             timeoutRef.current = setInterval(checkSessionTimeout, CHECK_INTERVAL);
           }
@@ -94,29 +106,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .catch((error) => {
           console.error('Error fetching user:', error);
 
-          // Check for 401, 403, or 404 to determine if we should logout
-          // 404 means the endpoint exists but the specific resource (user) was not found,
-          // which implies the token refers to a non-existent user.
           const status = error.response?.status;
           if (status === 401 || status === 403 || status === 404) {
             console.log(`Authentication/User fetch failed (${status}). clearing session.`);
             localStorage.removeItem('token');
             localStorage.removeItem('loginTime');
 
-            // Only redirect to login if there's a specific auth error and not already on signin
             if (window.location.pathname !== '/signin') {
               signOut();
               redirectToLogin();
             }
           } else {
-            console.log('Non-auth error occurred during user fetch. Not logging out.', status);
-            // Optionally keep the user logged in locally or handle gracefully
-            // But if we fail to fetch the user, we can't set the user state. 
-            // Ideally we should retry or show an error state, but definitely NOT logout on network error.
+            console.log('Non-auth error occurred during user fetch. Attempting to recover from token.', status);
+            // On 500 or other errors, try to recover user info from JWT to avoid logout
+            const decoded = parseJwt(token);
+            if (decoded) {
+              setUser({
+                id: decoded.id,
+                email: decoded.email,
+                userType: decoded.userType,
+                isActive: decoded.isActive,
+                full_name: decoded.full_name,
+              });
 
-            // If we don't clear the token, we end up ensuring setLoading(false) runs
-            // and the app might show a broken state if 'user' is null.
-            // However, clearing local storage on a temporal 500 error is annoying.
+              if (config.enableSessionTimeout) {
+                timeoutRef.current = setInterval(checkSessionTimeout, CHECK_INTERVAL);
+              }
+            }
           }
         })
         .finally(() => {
@@ -124,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
     } else {
       setLoading(false);
-      localStorage.removeItem('loginTime'); // Ensure loginTime is cleared if no token
+      localStorage.removeItem('loginTime');
     }
 
     return () => {
@@ -132,14 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearInterval(timeoutRef.current);
       }
     };
-  }, []); // Empty dependency array to run only on mount and unmount
+  }, []);
 
   // Effect to manage timeout interval when user state changes
   useEffect(() => {
     if (timeoutRef.current) {
       clearInterval(timeoutRef.current);
     }
-    if (user && config.enableSessionTimeout) { // Only start interval if user is logged in and feature is enabled
+    if (user && config.enableSessionTimeout) {
       timeoutRef.current = setInterval(checkSessionTimeout, CHECK_INTERVAL);
     }
     return () => {
@@ -147,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearInterval(timeoutRef.current);
       }
     };
-  }, [user, checkSessionTimeout]); // Re-run when user state changes
+  }, [user, checkSessionTimeout]);
 
 
   const signIn = useCallback(async (email: string, password: string) => {

@@ -11,9 +11,11 @@ const env = import.meta.env || {};
 const isProduction = env.MODE === 'production';
 
 // Force localhost in dev mode to avoid connecting to production by mistake
-const apiBaseUrl = isProduction
-  ? (env.VITE_BACKEND_BASE_URL || 'https://babobambo.com/api/v3')
-  : 'http://localhost:5001/api/v3';
+// const apiBaseUrl = isProduction
+//   ? (env.VITE_BACKEND_BASE_URL || 'https://babobambo.com/api/v3')
+//   : 'http://localhost:5001/api/v3';
+
+const apiBaseUrl = env.VITE_BACKEND_BASE_URL;
 
 // Create Axios instance with base URL
 const axiosInstance = axios.create({
