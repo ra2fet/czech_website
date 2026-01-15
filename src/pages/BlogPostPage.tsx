@@ -5,6 +5,7 @@ import { BookOpen, Calendar, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import config from '../config';
+const DEFAULT_BLOG_IMAGE = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000';
 import { useTranslation } from 'react-i18next';
 
 interface Blog {
@@ -48,6 +49,10 @@ export const BlogPostPage = () => {
       try {
         let data;
         if (config.useSupabase) {
+          if (!supabase) {
+            console.error('Supabase client is not initialized');
+            throw new Error('Supabase client is not initialized');
+          }
           const { data: supabaseData, error: fetchError } = await supabase
             .from('blogs')
             .select('*')
@@ -138,13 +143,25 @@ export const BlogPostPage = () => {
         >
           <ArrowLeft size={20} className="mr-2" /> {t('back_to_blogs_button')}
         </button>
-        {blog.image_url && (
+        <div className="relative h-64 md:h-96 overflow-hidden">
           <img
-            src={blog.image_url}
+            src={blog.image_url || DEFAULT_BLOG_IMAGE}
             alt={blog.title}
-            className="w-full h-64 object-cover"
+            className="w-full h-full object-cover"
+            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src !== DEFAULT_BLOG_IMAGE) {
+                target.src = DEFAULT_BLOG_IMAGE;
+              }
+            }}
           />
-        )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {!blog.image_url && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <BookOpen size={64} className="text-white/60 drop-shadow-2xl" />
+            </div>
+          )}
+        </div>
         <div className="p-6">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{blog.title}</h1>
           <div className="flex items-center text-sm text-gray-500 mb-6">

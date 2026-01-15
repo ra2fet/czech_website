@@ -1,10 +1,12 @@
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { Calendar, ArrowRight } from 'lucide-react';
+import { BookOpen, Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import config from '../../config';
+
+const DEFAULT_BLOG_IMAGE = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000';
 
 interface Blog {
   id: string;
@@ -128,12 +130,24 @@ export const NewsSection = () => {
                 variants={itemVariants}
                 className="card card-hover"
               >
-                <div className="h-48 overflow-hidden">
+                <div className="h-48 relative overflow-hidden group">
                   <img
-                    src={blog.image_url}
+                    src={blog.image_url || DEFAULT_BLOG_IMAGE}
                     alt={blog.title}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      const target = e.target as HTMLImageElement;
+                      if (target.src !== DEFAULT_BLOG_IMAGE) {
+                        target.src = DEFAULT_BLOG_IMAGE;
+                      }
+                    }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {!blog.image_url && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary-900/10">
+                      <BookOpen size={40} className="text-white/80 drop-shadow-lg" />
+                    </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <div className="flex items-center text-gray-500 mb-2">

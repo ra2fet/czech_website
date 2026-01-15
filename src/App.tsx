@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { X } from 'lucide-react';
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
 import { BlogsPage } from './pages/BlogsPage';
@@ -20,7 +21,7 @@ import { ScrollToTop } from './components/utils/ScrollToTop';
 import { ChatBot } from './components/chat/ChatBot';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider, useCart } from './contexts/CartContext';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar, toast } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import IntroScreen from './components/layout/IntroScreen'; // Import IntroScreen
 import NewsletterPopup from './components/layout/NewsletterPopup'; // Import NewsletterPopup
@@ -129,7 +130,35 @@ function App() {
               </main>
               {!isAdminRoute && <Footer />}
               {!isAdminRoute && <ChatBot />}
-              <Toaster position="top-right" />
+              <Toaster
+                position="top-right"
+                containerStyle={{
+                  top: 60,
+                }}
+                toastOptions={{
+                  duration: 2000,
+                  className: 'bg-white text-gray-900 shadow-xl border border-gray-100',
+                }}
+              >
+                {(t) => (
+                  <ToastBar toast={t}>
+                    {({ icon, message }: { icon: ReactNode; message: ReactNode }) => (
+                      <div className="flex items-center">
+                        {icon}
+                        <div className="mx-2">{message}</div>
+                        {t.type !== 'loading' && (
+                          <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="ml-2 hover:bg-gray-100 rounded-full p-1 transition-colors text-gray-400 hover:text-gray-600"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </ToastBar>
+                )}
+              </Toaster>
             </div>
           </LanguageProvider>
         </CartProvider>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import config from '../../config';
 import toast from 'react-hot-toast';
-import { PlusCircle, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Eye, EyeOff, X, Plus } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -65,6 +65,7 @@ export const OffersManager = () => {
     product_ids: [],
     translations: {},
   });
+  const [productSearchTerm, setProductSearchTerm] = useState('');
 
   useEffect(() => {
     if (!loadingLanguages) {
@@ -173,10 +174,20 @@ export const OffersManager = () => {
     }));
   };
 
-  const handleProductSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(option => parseInt(option.value));
-    setFormState(prev => ({ ...prev, product_ids: selectedOptions }));
+  const toggleProductSelection = (productId: number) => {
+    setFormState(prev => {
+      const isSelected = prev.product_ids.includes(productId);
+      if (isSelected) {
+        return { ...prev, product_ids: prev.product_ids.filter(id => id !== productId) };
+      } else {
+        return { ...prev, product_ids: [...prev.product_ids, productId] };
+      }
+    });
   };
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+  );
 
   const handleDateChange = (date: Date | null, name: 'start_date' | 'end_date') => {
     setFormState(prev => ({ ...prev, [name]: date }));
@@ -308,8 +319,14 @@ export const OffersManager = () => {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-8">
+          <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
             <h3 className="text-2xl font-bold mb-6">{isEditing ? 'Edit Offer' : 'Add New Offer'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               {languages.map(lang => (
@@ -397,21 +414,57 @@ export const OffersManager = () => {
                 </div>
               </div>
               <div>
-                <label htmlFor="product_ids" className="block text-sm font-medium text-gray-700">Products (Select multiple)</label>
-                <select
-                  name="product_ids"
-                  id="product_ids"
-                  multiple
-                  value={formState.product_ids.map(String)} // Convert numbers to strings for select value
-                  onChange={handleProductSelection}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-40"
-                >
-                  {products.map(product => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} ({config.currencySymbol}{Number(product.retail_price).toFixed(0)})
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Products ({formState.product_ids.length} selected)
+                </label>
+                <div className="border border-gray-300 rounded-md overflow-hidden bg-gray-50">
+                  <div className="p-2 border-b bg-white">
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                      className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+                    {filteredProducts.length === 0 ? (
+                      <p className="text-center py-4 text-gray-500 text-sm">No products found</p>
+                    ) : (
+                      filteredProducts.map(product => {
+                        const isSelected = formState.product_ids.includes(product.id);
+                        return (
+                          <div
+                            key={product.id}
+                            onClick={() => toggleProductSelection(product.id)}
+                            className={`flex items-center p-2 rounded-md cursor-pointer transition-colors ${isSelected
+                              ? 'bg-blue-50 border-blue-200 border'
+                              : 'bg-white border-transparent border hover:bg-gray-100'
+                              }`}
+                          >
+                            <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded overflow-hidden mr-3">
+                              {product.image_url ? (
+                                <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <Plus size={16} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-grow">
+                              <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                              <div className="text-xs text-gray-500">{config.currencySymbol}{Number(product.retail_price).toFixed(2)}</div>
+                            </div>
+                            <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 bg-white'
+                              }`}>
+                              {isSelected && <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="flex items-center">
                 <input

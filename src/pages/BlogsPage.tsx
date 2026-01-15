@@ -16,6 +16,7 @@ interface Blog {
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import config from '../config'; // Import config
+const DEFAULT_BLOG_IMAGE = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000';
 
 export const BlogsPage = () => {
   const { t } = useTranslation();
@@ -36,6 +37,10 @@ export const BlogsPage = () => {
 
       let data;
       if (config.useSupabase) {
+        if (!supabase) {
+          console.error('Supabase client is not initialized');
+          throw new Error('Supabase client is not initialized');
+        }
         console.log('Fetching blogs from Supabase...');
         const { data: supabaseData, error: fetchError } = await supabase
           .from('blogs') // Assuming a 'blogs' table in Supabase
@@ -145,25 +150,24 @@ export const BlogsPage = () => {
                   className="bg-white rounded-lg shadow-md overflow-hidden"
                 >
                   <div className="md:flex">
-                    <div className="md:w-1/3 h-64 md:h-auto">
+                    <div className="md:w-1/3 h-64 md:h-auto relative overflow-hidden group">
                       <img
-                        src={blog.image_url}
+                        src={blog.image_url || DEFAULT_BLOG_IMAGE}
                         alt={blog.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                         onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          if (target.nextElementSibling instanceof HTMLElement) {
-                            target.nextElementSibling.style.display = 'flex';
+                          if (target.src !== DEFAULT_BLOG_IMAGE) {
+                            target.src = DEFAULT_BLOG_IMAGE;
                           }
                         }}
                       />
-                      <div
-                        className="w-full h-full bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center"
-                        style={{ display: blog.image_url ? 'none' : 'flex' }}
-                      >
-                        <BookOpen size={48} className="text-primary-600" />
-                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      {!blog.image_url && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-primary-900/10">
+                          <BookOpen size={48} className="text-white/80 drop-shadow-lg" />
+                        </div>
+                      )}
                     </div>
                     <div className="md:w-2/3 p-6">
                       <div>
