@@ -256,46 +256,6 @@ export const ProductsPage = () => {
         </section>
       </FeatureGuard>
 
-      {/* Features Section */}
-      <section className="py-12 bg-white">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary-100 p-4 rounded-full mb-4">
-                <Truck size={32} className="text-primary-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">{t('fast_shipping_title')}</h3>
-              <p className="text-gray-600">
-                {viewMode === 'wholesale'
-                  ? t('fast_shipping_wholesale_desc')
-                  : t('fast_shipping_retail_desc')}
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary-100 p-4 rounded-full mb-4">
-                <Shield size={32} className="text-primary-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">{t('quality_guaranteed_title')}</h3>
-              <p className="text-gray-600">
-                {t('quality_guaranteed_desc')}
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-primary-100 p-4 rounded-full mb-4">
-                <Euro size={32} className="text-primary-600" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">
-                {viewMode === 'wholesale' ? t('volume_discounts_title') : t('competitive_pricing_title')}
-              </h3>
-              <p className="text-gray-600">
-                {viewMode === 'wholesale'
-                  ? t('volume_discounts_desc')
-                  : t('competitive_pricing_desc')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <div id="product-list" className="sr-only" />
 
@@ -401,6 +361,49 @@ export const ProductsPage = () => {
           )}
         </div>
       </section>
+
+
+      {/* Features Section */}
+      <section className="py-12 bg-white">
+        <div className="container-custom">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary-100 p-4 rounded-full mb-4">
+                <Truck size={32} className="text-primary-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">{t('fast_shipping_title')}</h3>
+              <p className="text-gray-600">
+                {viewMode === 'wholesale'
+                  ? t('fast_shipping_wholesale_desc')
+                  : t('fast_shipping_retail_desc')}
+              </p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary-100 p-4 rounded-full mb-4">
+                <Shield size={32} className="text-primary-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">{t('quality_guaranteed_title')}</h3>
+              <p className="text-gray-600">
+                {t('quality_guaranteed_desc')}
+              </p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-primary-100 p-4 rounded-full mb-4">
+                <Euro size={32} className="text-primary-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">
+                {viewMode === 'wholesale' ? t('volume_discounts_title') : t('competitive_pricing_title')}
+              </h3>
+              <p className="text-gray-600">
+                {viewMode === 'wholesale'
+                  ? t('volume_discounts_desc')
+                  : t('competitive_pricing_desc')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
       {/* Quick View Modal */}
       {quickViewProduct && (

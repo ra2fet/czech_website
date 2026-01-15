@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, XCircle, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, XCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 import config from '../../config';
@@ -72,6 +72,7 @@ export function ProductsManager() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [formData, setFormData] = useState<ProductFormState>({
     image_url: '',
@@ -103,6 +104,7 @@ export function ProductsManager() {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
+    setRemoveImage(false);
     if (currentProduct && languages.length > 0) {
       const existingTranslations: { [key: string]: { name: string; description: string; } } = {};
       languages.forEach(lang => {
@@ -198,14 +200,15 @@ export function ProductsManager() {
     setSubmitting(true);
 
     try {
-      const productData = {
+      const productData: any = {
         ...formData,
+        image_url: formData.image_url || null,
         retail_price: parseFloat(formData.retail_price),
         wholesale_price: parseFloat(formData.wholesale_price)
       };
 
-      // Preserve existing local image if not replaced and no new URL provided
-      if (!productData.image_url && currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
+      // Preserve existing local image if not replaced and no new URL provided, and not explicitly removed
+      if (!removeImage && !productData.image_url && currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && !selectedFile) {
         productData.image_url = currentProduct.image_url;
       }
 
@@ -235,7 +238,7 @@ export function ProductsManager() {
 
         if (selectedFile) {
           data.append('image', selectedFile);
-        } else {
+        } else if (!removeImage) {
           if (formData.image_url) {
             data.append('image_url', formData.image_url);
           } else if (currentProduct?.image_url && !currentProduct.image_url.startsWith('http')) {
@@ -290,7 +293,7 @@ export function ProductsManager() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     setFormData((prev: ProductFormState) => ({ ...prev, [name]: value }));
   };
 
@@ -346,6 +349,7 @@ export function ProductsManager() {
               translations: initialTranslations,
             });
             setSelectedFile(null);
+            setRemoveImage(false);
             setIsModalOpen(true);
           }}
           className="btn btn-primary flex items-center"
@@ -397,11 +401,17 @@ export function ProductsManager() {
                 products.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <img
-                        src={getImageUrl(product.image_url)}
-                        alt={product.name}
-                        className="h-12 w-12 object-cover rounded"
-                      />
+                      {product.image_url ? (
+                        <img
+                          src={getImageUrl(product.image_url)}
+                          alt={product.name}
+                          className="h-12 w-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+                          <ImageIcon size={20} />
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-accent-900">
@@ -503,7 +513,10 @@ export function ProductsManager() {
                   type="url"
                   name="image_url"
                   value={formData.image_url}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    if (e.target.value) setRemoveImage(false);
+                  }}
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="https://example.com/image.jpg"
                 />
@@ -516,6 +529,7 @@ export function ProductsManager() {
                       if (e.target.files && e.target.files[0]) {
                         const file = e.target.files[0];
                         setSelectedFile(file);
+                        setRemoveImage(false);
                         setFormData(prev => ({ ...prev, image_url: '' }));
 
                         // Create preview URL
@@ -525,27 +539,32 @@ export function ProductsManager() {
                     }}
                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
-                  {previewUrl ? (
-                    <div className="mt-2 text-center">
-                      <p className="text-sm text-green-600 mb-1">
-                        Preview: {selectedFile?.name}
+                  {(previewUrl || (currentProduct?.image_url && !removeImage)) && (
+                    <div className="mt-4 flex flex-col items-center">
+                      <div className="relative group">
+                        <img
+                          src={previewUrl || (currentProduct ? getImageUrl(currentProduct.image_url) : '')}
+                          alt="Preview"
+                          className="h-32 w-32 object-cover rounded-md border border-gray-200 shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFile(null);
+                            if (previewUrl) URL.revokeObjectURL(previewUrl);
+                            setPreviewUrl(null);
+                            setFormData(prev => ({ ...prev, image_url: '' }));
+                            setRemoveImage(true);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-md hover:bg-red-200 transition-colors"
+                          title="Remove Image"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500">
+                        {previewUrl ? `New upload: ${selectedFile?.name}` : 'Current image'}
                       </p>
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-32 w-32 object-cover mx-auto rounded-md border-2 border-primary-500 shadow-sm"
-                      />
-                    </div>
-                  ) : currentProduct?.image_url && !currentProduct.image_url.startsWith('http') && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600 mb-1">
-                        Current file: {currentProduct.image_url.split('/').pop()}
-                      </p>
-                      <img
-                        src={getImageUrl(currentProduct.image_url)}
-                        alt={currentProduct.name}
-                        className="h-32 w-32 object-cover rounded-md border border-gray-200"
-                      />
                     </div>
                   )}
                 </div>

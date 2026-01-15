@@ -24,6 +24,10 @@ export const ChatBot = () => {
       answer: "Hi there! How can I help you today?"
     },
     {
+      question: "Contact",
+      answer: "You can reach us at +31-640887984, email us at info@babobamboo.com, or message us on WhatsApp at +31 6 24330577. We're here to help!"
+    },
+    {
       question: "How are you?",
       answer: "I'm a bot, so I don't have feelings, but I'm ready to assist you!"
     },
@@ -165,7 +169,7 @@ export const ChatBot = () => {
     const userMessage = { text: inputValue, isUser: true };
     setMessages(prev => [...prev, userMessage]);
 
-    let botResponse = "I'm sorry, I couldn't find a specific answer to your question. Please contact our support team for more detailed assistance.";
+    let botResponse = "I'm sorry, I couldn't find a specific answer to your question. Please contact our support team at +31-640887984, email us at info@babobamboo.com, or reach out via WhatsApp at +31 6 24330577 for more detailed assistance.";
 
     // Check local conversations first
     const matchingLocal = localConversations.find(conv =>
@@ -248,11 +252,10 @@ export const ChatBot = () => {
                       className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
-                          message.isUser
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                        className={`max-w-[80%] rounded-lg p-3 ${message.isUser
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                          }`}
                       >
                         {message.text}
                       </div>
