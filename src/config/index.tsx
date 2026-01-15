@@ -15,7 +15,8 @@ const isProduction = env.MODE === 'production';
 //   ? (env.VITE_BACKEND_BASE_URL || 'https://babobambo.com/api/v3')
 //   : 'http://localhost:5001/api/v3';
 
-const apiBaseUrl = env.VITE_BACKEND_BASE_URL;
+const apiBaseUrl = env.VITE_BACKEND_BASE_URL || 'https://babobambo.com/api/v3';
+
 
 // Create Axios instance with base URL
 const axiosInstance = axios.create({
