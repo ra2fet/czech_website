@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Euro, CheckCircle } from 'lucide-react';
+import { Loader2, Euro, CheckCircle, DownloadCloud } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import ApexChart from 'react-apexcharts';
 import config from '../../config';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, ChartTooltip, Legend);
 
 interface DashboardData {
   total_sales: number;
@@ -16,6 +16,7 @@ interface DashboardData {
   orders_by_month: Array<{ month: string; count: number }>;
   orders_by_branches: Array<{ branch_name: string; count: number }>;
   orders_by_clients?: Array<{ client_name: string; count: number }>;
+  orders_by_product: Array<{ product_name: string; count: number }>;
 }
 
 type DateFilter = "All Orders" | "Today" | "Yesterday" | "This Month" | "This Year" | "Custom Date";
@@ -63,6 +64,64 @@ export function DashboardStats() {
   const handleCustomDateFetch = () => {
     if (filter === "Custom Date") {
       fetchData();
+    }
+  };
+
+  const handleDownload = () => {
+    if (!dashboardData) return;
+
+    try {
+      let csvContent = "data:text/csv;charset=utf-8,";
+
+      // 1. Summary Section
+      csvContent += "REPORT SUMMARY\n";
+      csvContent += `Filter,${filter}\n`;
+      if (filter === "Custom Date") csvContent += `Period,${fromDate} to ${toDate}\n`;
+      csvContent += `Total Sales,${config.currencySymbol}${dashboardData.total_sales}\n`;
+      csvContent += `Total Completed Orders,${dashboardData.total_completed_orders}\n\n`;
+
+      // 2. Orders by Month
+      csvContent += "ORDERS BY MONTH\nMonth,Count\n";
+      dashboardData.orders_by_month.forEach(row => {
+        csvContent += `${row.month},${row.count}\n`;
+      });
+      csvContent += "\n";
+
+      // 3. Orders by Product (Full List)
+      csvContent += "SALES BY PRODUCT\nProduct Name,Quantity Sold\n";
+      dashboardData.orders_by_product.forEach(row => {
+        csvContent += `"${row.product_name.replace(/"/g, '""')}",${row.count}\n`;
+      });
+      csvContent += "\n";
+
+      // 4. Orders by Province/Branch
+      csvContent += "SALES BY PROVINCE\nProvince Name,Count\n";
+      dashboardData.orders_by_branches.forEach(row => {
+        csvContent += `"${row.branch_name.replace(/"/g, '""')}",${row.count}\n`;
+      });
+      csvContent += "\n";
+
+      // 5. Orders by Clients
+      if (dashboardData.orders_by_clients && dashboardData.orders_by_clients.length > 0) {
+        csvContent += "TOP CLIENTS\nClient Name,Order Count\n";
+        dashboardData.orders_by_clients.forEach(row => {
+          csvContent += `"${row.client_name.replace(/"/g, '""')}",${row.count}\n`;
+        });
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      const filename = `Sales_Report_${filter.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Report downloaded successfully");
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to generate report");
     }
   };
 
@@ -132,7 +191,17 @@ export function DashboardStats() {
       className="space-y-6"
     >
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-accent-900">Sales & Order Statistics</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-accent-900">Sales & Order Statistics</h2>
+          <button
+            onClick={handleDownload}
+            disabled={!dashboardData || loading}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+          >
+            <DownloadCloud className="h-4 w-4" />
+            Download
+          </button>
+        </div>
         <div className="flex items-center gap-4">
           <label htmlFor="filter">Filter By:</label>
           <select
@@ -232,25 +301,59 @@ export function DashboardStats() {
                 )}
               </div>
 
-              {/* Orders by Product Pie Chart */}
+              {/* Orders by Product Treemap */}
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-accent-900 mb-4">Orders by Product</h3>
-                {dashboardData.top_products && dashboardData.top_products.length > 0 ? (
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-accent-900">Product Distribution</h3>
+                  <span className="text-xs font-medium px-2 py-1 bg-blue-50 text-blue-600 rounded-full">Sales Volume</span>
+                </div>
+                {dashboardData.orders_by_product && dashboardData.orders_by_product.length > 0 ? (
                   <ApexChart
                     options={{
-                      chart: { type: 'donut' as const },
-                      labels: dashboardData.top_products.map(p => p.product_name),
-                      legend: { position: 'bottom' },
-                      responsive: [{
-                        breakpoint: 480,
-                        options: {
-                          chart: { width: 250 },
-                          legend: { position: 'bottom' }
+                      legend: { show: false },
+                      chart: {
+                        type: 'treemap' as const,
+                        toolbar: { show: false },
+                        animations: {
+                          enabled: true,
+                          speed: 800,
                         }
-                      }]
+                      },
+                      plotOptions: {
+                        treemap: {
+                          distributed: true,
+                          enableShades: false,
+                          useFillColorAsStroke: true
+                        }
+                      },
+                      colors: [
+                        '#6366F1', '#8B5CF6', '#D946EF', '#F43F5E',
+                        '#F97316', '#FACC15', '#22C55E', '#06B6D4',
+                        '#3B82F6', '#10B981'
+                      ], // Vibrant Indigo-to-Cyan palette
+                      dataLabels: {
+                        enabled: true,
+                        style: {
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          fontFamily: 'inherit'
+                        },
+                        offsetY: -2
+                      },
+                      tooltip: {
+                        theme: 'light',
+                        y: {
+                          formatter: (val: number) => `${val} units sold`
+                        }
+                      }
                     }}
-                    series={dashboardData.top_products.map(p => p.quantity_sold)}
-                    type="donut"
+                    series={[{
+                      data: dashboardData.orders_by_product.map(p => ({
+                        x: p.product_name,
+                        y: p.count
+                      }))
+                    }]}
+                    type="treemap"
                     height={350}
                   />
                 ) : (
