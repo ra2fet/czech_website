@@ -232,6 +232,26 @@ router.delete('/messages/:id', authenticateToken, adminProtect, (req, res) => {
   });
 });
 
+// @route   PATCH /api/contact/messages/:id/read
+// @desc    Toggle the read status of a contact message (Admin only)
+// @access  Private
+router.patch('/messages/:id/read', authenticateToken, adminProtect, (req, res) => {
+  const { id } = req.params;
+  const { is_read } = req.body;
+
+  const sql = 'UPDATE messages SET is_read = ? WHERE id = ?';
+  db.query(sql, [is_read, id], (err, result) => {
+    if (err) {
+      console.error('Error updating message status:', err);
+      return res.status(500).json({ error: req.t('errors.database.connection_error') });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: req.t('errors.resources.not_found', { resource: 'Message' }) });
+    }
+    res.json({ message: req.t('success.resources.updated', { resource: 'Message' }), is_read });
+  });
+});
+
 // @route   GET /api/contact/jobs
 // @desc    Get all open job positions (Admin only)
 // @access  Private

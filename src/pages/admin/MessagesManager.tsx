@@ -21,6 +21,7 @@ interface Message {
   subject: string;
   message: string;
   created_at: string;
+  is_read: boolean | number;
 }
 
 const MessagesManager: React.FC = () => {
@@ -58,6 +59,27 @@ const MessagesManager: React.FC = () => {
         toast.error('Failed to delete message.');
         console.error(err);
       }
+    }
+  };
+
+  const toggleReadStatus = async (id: number, currentStatus: boolean | number) => {
+    try {
+      const newStatus = !currentStatus;
+      await config.axios.patch(`/contact/messages/${id}/read`, { is_read: newStatus });
+      setMessages(messages.map(msg => msg.id === id ? { ...msg, is_read: newStatus } : msg));
+      if (selectedMessage?.id === id) {
+        setSelectedMessage({ ...selectedMessage, is_read: newStatus });
+      }
+    } catch (err) {
+      toast.error('Failed to update message status.');
+      console.error(err);
+    }
+  };
+
+  const handleSelectMessage = (message: Message) => {
+    setSelectedMessage(message);
+    if (!message.is_read) {
+      toggleReadStatus(message.id, false);
     }
   };
 
@@ -126,14 +148,22 @@ const MessagesManager: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {messages.map((message) => (
-                  <tr key={message.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <tr
+                    key={message.id}
+                    className={`hover:bg-gray-50 transition-colors group ${!message.is_read ? 'bg-primary-50/30' : ''}`}
+                  >
                     <td className="py-4 px-6">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${!message.is_read ? 'bg-primary-600 text-white shadow-md' : 'bg-primary-100 text-primary-700'}`}>
                           {message.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-semibold text-gray-900">{message.name}</p>
+                          <p className={`text-sm ${!message.is_read ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
+                            {message.name}
+                            {!message.is_read && (
+                              <span className="ml-2 inline-block w-2 h-2 bg-primary-600 rounded-full"></span>
+                            )}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -151,8 +181,12 @@ const MessagesManager: React.FC = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="max-w-xs">
-                        <p className="text-sm font-medium text-gray-900 mb-1">{message.subject}</p>
-                        <p className="text-sm text-gray-500 line-clamp-1">{truncateMessage(message.message)}</p>
+                        <p className={`text-sm mb-1 ${!message.is_read ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                          {message.subject}
+                        </p>
+                        <p className={`text-sm line-clamp-1 ${!message.is_read ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                          {truncateMessage(message.message)}
+                        </p>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -168,7 +202,14 @@ const MessagesManager: React.FC = () => {
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => setSelectedMessage(message)}
+                          onClick={() => toggleReadStatus(message.id, message.is_read)}
+                          className={`p-2 rounded-lg transition-colors ${message.is_read ? 'text-gray-400 hover:bg-gray-100' : 'text-primary-600 hover:bg-primary-50'}`}
+                          title={message.is_read ? 'Mark as Unread' : 'Mark as Read'}
+                        >
+                          {message.is_read ? <Mail size={18} /> : <div className="w-[18px] h-[18px] border-2 border-primary-600 rounded-full flex items-center justify-center"><div className="w-2 h-2 bg-primary-600 rounded-full"></div></div>}
+                        </button>
+                        <button
+                          onClick={() => handleSelectMessage(message)}
                           className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                           title="View Details"
                         >
@@ -202,7 +243,12 @@ const MessagesManager: React.FC = () => {
                   <MessageSquare size={24} />
                 </div>
                 <div className="ml-4">
-                  <h2 className="text-xl font-bold text-gray-900">Message Details</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900">Message Details</h2>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedMessage.is_read ? 'bg-gray-200 text-gray-600' : 'bg-primary-600 text-white'}`}>
+                      {selectedMessage.is_read ? 'Read' : 'Unread'}
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-500">Inquiry ID: #{selectedMessage.id}</p>
                 </div>
               </div>
@@ -282,13 +328,33 @@ const MessagesManager: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="bg-gray-50 px-8 py-5 flex items-center justify-between border-t border-gray-100">
-              <button
-                onClick={() => handleDelete(selectedMessage.id)}
-                className="flex items-center text-red-500 font-semibold hover:text-red-600 transition-colors"
-              >
-                <Trash2 size={18} className="mr-2" />
-                Delete Message
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => handleDelete(selectedMessage.id)}
+                  className="flex items-center text-red-500 font-semibold hover:text-red-600 transition-colors"
+                >
+                  <Trash2 size={18} className="mr-2" />
+                  Delete
+                </button>
+                <button
+                  onClick={() => toggleReadStatus(selectedMessage.id, selectedMessage.is_read)}
+                  className={`flex items-center font-semibold transition-colors ${selectedMessage.is_read ? 'text-gray-500 hover:text-gray-600' : 'text-primary-600 hover:text-primary-700'}`}
+                >
+                  {selectedMessage.is_read ? (
+                    <>
+                      <Mail size={18} className="mr-2" />
+                      Mark as Unread
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-primary-600 rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-primary-600 rounded-full"></div>
+                      </div>
+                      Mark as Read
+                    </>
+                  )}
+                </button>
+              </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setSelectedMessage(null)}
