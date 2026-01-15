@@ -1,6 +1,8 @@
 // frontend/src/config/index.js
 import axios, { AxiosError } from 'axios';
 
+import i18n from '../i18n';
+
 interface ServerError {
   error: string;
 }
@@ -8,20 +10,27 @@ interface ServerError {
 const env = import.meta.env || {};
 const isProduction = env.MODE === 'production';
 
+// Force localhost in dev mode to avoid connecting to production by mistake
+const apiBaseUrl = isProduction
+  ? (env.VITE_BACKEND_BASE_URL || 'https://babobambo.com/api/v3')
+  : 'http://localhost:5001/api/v3';
+
 // Create Axios instance with base URL
 const axiosInstance = axios.create({
-  baseURL: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api/v3'),
+  baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
 });
 
 
 
-// Add Authorization header with JWT token
+// Add Authorization and Language headers
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Add language header
+  config.headers['Accept-Language'] = i18n.language;
   return config;
 });
 
@@ -66,7 +75,7 @@ const config = {
   enableSessionTimeout: env.VITE_ENABLE_SESSION_TIMEOUT === 'true' || true, // Enable session timeout by default
   stripePublishableKey: env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_live_51SnCcBHESo6ilS6rK5foKr8nepQHXGsA0ejp5k76zptAltVmXzXtbMwAo7KVHdpotyRR8nUJY1nDtIG4duvjqjay00LEbx8OF1',
   // stripePublishableKey: env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51SnCcPHJCu1f3QDfwTHhA9LfqLgQ3OrKo5BUABX6okdIiwkb4A9h6YbcnH0CxfuUAbz3qVjdo5WZu9EVgQwiEz6l008bpB5Izm',
-  backendBaseUrl: env.VITE_BACKEND_BASE_URL || (isProduction ? 'https://babobambo.com/api/v3' : 'http://localhost:5001/api/v3'),
+  backendBaseUrl: apiBaseUrl,
   apiEndpoints: {
     auth: {
       signin: '/auth/signin',

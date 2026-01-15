@@ -288,42 +288,51 @@ router.get('/user', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch full user details from database
-    db.query('SELECT id, email, full_name, user_type, is_active, is_verified, phone_number FROM users WHERE id = ?', [decoded.id], (err, results) => {
-      if (err) {
-        console.error('Database error fetching user:', err);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
+    if (decoded.userType === 'admin') {
+      // Fetch admin details
+      db.query('SELECT id, email, full_name, user_type, is_active FROM admins WHERE id = ?', [decoded.id], (err, results) => {
+        if (err) {
+          console.error('Database error fetching admin:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
 
-      if (results.length === 0) {
-        // Check admins table if not found in users (optional, based on your logic)
-        db.query('SELECT id, email, full_name, user_type, is_active FROM admins WHERE id = ?', [decoded.id], (adminErr, adminResults) => {
-          if (adminErr || adminResults.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-          }
-          const admin = adminResults[0];
-          res.json({
-            id: admin.id,
-            email: admin.email,
-            full_name: admin.full_name,
-            userType: admin.user_type,
-            isActive: admin.is_active
-          });
+        if (results.length === 0) {
+          return res.status(404).json({ error: 'Admin user not found' });
+        }
+
+        const admin = results[0];
+        res.json({
+          id: admin.id,
+          email: admin.email,
+          full_name: admin.full_name,
+          userType: admin.user_type || 'admin',
+          isActive: admin.is_active
         });
-        return;
-      }
-
-      const user = results[0];
-      res.json({
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        phone_number: user.phone_number,
-        userType: user.user_type,
-        isActive: user.is_active,
-        isVerified: user.is_verified
       });
-    });
+    } else {
+      // Fetch regular user/company details
+      db.query('SELECT id, email, full_name, user_type, is_active, is_verified, phone_number FROM users WHERE id = ?', [decoded.id], (err, results) => {
+        if (err) {
+          console.error('Database error fetching user:', err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = results[0];
+        res.json({
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          phone_number: user.phone_number,
+          userType: user.user_type,
+          isActive: user.is_active,
+          isVerified: user.is_verified
+        });
+      });
+    }
 
   } catch (error) {
     console.error('Error verifying token:', error);
