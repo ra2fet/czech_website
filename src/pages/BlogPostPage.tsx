@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import { motion } from 'framer-motion';
 import { BookOpen, Calendar, User, ArrowLeft } from 'lucide-react';
@@ -26,6 +26,7 @@ export const BlogPostPage = () => {
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastIncrementedId = useRef<string | null>(null);
 
   useEffect(() => {
     const blogDataFromState = location.state?.blog;
@@ -66,7 +67,15 @@ export const BlogPostPage = () => {
           }
           data = supabaseData;
         } else {
-          const response = await config.axios.get(`${config.apiEndpoints.blogs}/${id}`);
+          // If this ID was already incremented, don't do it again
+          const shouldIncrement = lastIncrementedId.current !== id;
+          if (shouldIncrement) {
+            lastIncrementedId.current = id;
+          }
+
+          const response = await config.axios.get(`${config.apiEndpoints.blogs}/${id}`, {
+            params: { noIncrement: !shouldIncrement }
+          });
           data = response.data;
         }
 

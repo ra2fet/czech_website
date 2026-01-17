@@ -115,8 +115,10 @@ router.get('/:id', async (req, res) => {
   const languageCode = req.language;
 
   try {
-    // Increment views
-    await db.promise().query('UPDATE blogs SET views = views + 1 WHERE id = ?', [id]);
+    // Increment views unless explicitly told not to
+    if (req.query.noIncrement !== 'true') {
+      await db.promise().query('UPDATE blogs SET views = views + 1 WHERE id = ?', [id]);
+    }
 
     const [results] = await db.promise().query(
       `SELECT b.id, bt.title, bt.content, bt.excerpt, b.image_url, b.created_at, b.updated_at, b.views
