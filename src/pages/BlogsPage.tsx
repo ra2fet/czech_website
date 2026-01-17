@@ -296,9 +296,11 @@ export const BlogsPage = () => {
                           <h5 className="font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors leading-snug mb-1">
                             {post.title}
                           </h5>
-                          <span className="text-xs text-gray-500">
-                            {new Date(post.created_at).toLocaleDateString()}
-                          </span>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                            <span>{t('views_count', { count: (post as any).views || 0 })}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -343,7 +345,7 @@ export const BlogsPage = () => {
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <span>{new Date(post.created_at).toLocaleDateString()}</span>
                             <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                            <span>{post.views} views</span>
+                            <span>{t('views_count', { count: post.views || 0 })}</span>
                           </div>
                         </div>
                       </div>

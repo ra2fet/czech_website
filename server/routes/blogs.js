@@ -72,7 +72,7 @@ router.get('/sidebar', (req, res) => {
   const languageCode = req.language;
 
   const latestQuery = `
-    SELECT b.id, bt.title, b.image_url, b.created_at
+    SELECT b.id, bt.title, b.image_url, b.created_at, b.views
     FROM blogs b
     JOIN blogs_translations bt ON b.id = bt.blog_id
     WHERE bt.language_code = ?
