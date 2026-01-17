@@ -110,36 +110,35 @@ router.get('/sidebar', (req, res) => {
 });
 
 // GET a single blog post by ID with translations
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   const { id } = req.params;
   const languageCode = req.language;
 
-  // Increment views
-  db.query('UPDATE blogs SET views = views + 1 WHERE id = ?', [id]);
+  try {
+    // Increment views
+    await db.promise().query('UPDATE blogs SET views = views + 1 WHERE id = ?', [id]);
 
-  db.query(
-    `SELECT b.id, bt.title, bt.content, bt.excerpt, b.image_url, b.created_at, b.updated_at, b.views
-     FROM blogs b
-     JOIN blogs_translations bt ON b.id = bt.blog_id
-     WHERE b.id = ? AND bt.language_code = ?`,
-    [id, languageCode],
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching blog post:', err);
-        return res.status(500).json({
-          error: req.t('errors.resources.fetch_failed', { resource: req.getResource('blog') })
-        });
-      }
+    const [results] = await db.promise().query(
+      `SELECT b.id, bt.title, bt.content, bt.excerpt, b.image_url, b.created_at, b.updated_at, b.views
+       FROM blogs b
+       JOIN blogs_translations bt ON b.id = bt.blog_id
+       WHERE b.id = ? AND bt.language_code = ?`,
+      [id, languageCode]
+    );
 
-      if (results.length === 0) {
-        return res.status(404).json({
-          error: req.t('errors.resources.not_found', { resource: req.getResource('blog') })
-        });
-      }
-
-      res.json(results[0]);
+    if (results.length === 0) {
+      return res.status(404).json({
+        error: req.t('errors.resources.not_found', { resource: req.getResource('blog') })
+      });
     }
-  );
+
+    res.json(results[0]);
+  } catch (err) {
+    console.error('Error fetching blog post:', err);
+    res.status(500).json({
+      error: req.t('errors.resources.fetch_failed', { resource: req.getResource('blog') })
+    });
+  }
 });
 
 router.post('/', authenticateToken, adminProtect, async (req, res) => {

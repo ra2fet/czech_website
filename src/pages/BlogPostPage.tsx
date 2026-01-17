@@ -30,10 +30,9 @@ export const BlogPostPage = () => {
   useEffect(() => {
     const blogDataFromState = location.state?.blog;
 
-    if (blogDataFromState) {
+    if (blogDataFromState && !blog) {
       setBlog(blogDataFromState);
       setLoading(false);
-      return;
     }
 
     const fetchBlogPost = async () => {
@@ -43,7 +42,10 @@ export const BlogPostPage = () => {
         return;
       }
 
-      setLoading(true);
+      // Only show loading if we don't have existing blog data
+      if (!blog && !blogDataFromState) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
