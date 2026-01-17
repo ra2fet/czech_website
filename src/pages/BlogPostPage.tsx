@@ -157,8 +157,8 @@ export const BlogPostPage = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           {!blog.image_url && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <BookOpen size={64} className="text-white/60 drop-shadow-2xl" />
+            <div className="absolute inset-0 flex items-center justify-center bg-primary-50">
+              <BookOpen size={64} className="text-primary-200" />
             </div>
           )}
         </div>

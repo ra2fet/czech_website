@@ -274,12 +274,23 @@ export const BlogsPage = () => {
                         className="flex gap-4 group cursor-pointer"
                         onClick={() => navigate(`/blog/${post.id}`)}
                       >
-                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative">
                           <img
                             src={post.image_url || DEFAULT_BLOG_IMAGE}
                             alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== DEFAULT_BLOG_IMAGE) {
+                                target.src = DEFAULT_BLOG_IMAGE;
+                              }
+                            }}
                           />
+                          {!post.image_url && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary-50">
+                              <BookOpen size={24} className="text-primary-200" />
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col justify-center">
                           <h5 className="font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors leading-snug mb-1">
@@ -307,12 +318,23 @@ export const BlogsPage = () => {
                         className="flex gap-4 group cursor-pointer"
                         onClick={() => navigate(`/blog/${post.id}`)}
                       >
-                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative">
                           <img
                             src={post.image_url || DEFAULT_BLOG_IMAGE}
                             alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== DEFAULT_BLOG_IMAGE) {
+                                target.src = DEFAULT_BLOG_IMAGE;
+                              }
+                            }}
                           />
+                          {!post.image_url && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary-50">
+                              <BookOpen size={24} className="text-primary-200" />
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col justify-center">
                           <h5 className="font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors leading-snug mb-1">
