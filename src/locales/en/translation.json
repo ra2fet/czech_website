@@ -85,7 +85,7 @@
   "sidebar_search_title": "Search",
   "latest_posts_title": "Latest Posts",
   "popular_posts_title": "Popular Posts",
-  "views_count": "{{count}} views",
+  "views_count": "{count} views",
   "no_blog_posts_available_title": "No Blog Posts Available",
   "no_blog_posts_available_message": "We're currently preparing new content. Please check back soon!",
   "admin_label": "Admin",

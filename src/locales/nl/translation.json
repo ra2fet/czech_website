@@ -85,7 +85,7 @@
   "sidebar_search_title": "Zoeken",
   "latest_posts_title": "Nieuwste berichten",
   "popular_posts_title": "Populaire berichten",
-  "views_count": "{{count}} weergaven",
+  "views_count": "{count} weergaven",
   "no_blog_posts_available_title": "Geen Blogberichten Beschikbaar",
   "no_blog_posts_available_message": "We bereiden momenteel nieuwe inhoud voor. Kom snel terug!",
   "admin_label": "Beheerder",
