@@ -299,7 +299,7 @@ export const ProductsPage = () => {
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 p-4"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';

@@ -110,11 +110,11 @@ export const ProductsSection = () => {
                 variants={itemVariants}
                 className="card card-hover overflow-hidden"
               >
-                <div className="h-64 overflow-hidden bg-white flex items-center justify-center p-4">
+                <div className="h-64 overflow-hidden bg-white flex items-center justify-center">
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="max-w-full max-h-full object-contain transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
                   />
                 </div>
                 <div className="p-6">
