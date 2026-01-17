@@ -4,11 +4,14 @@ import {
   Pencil,
   Trash2,
   XCircle,
-  Loader2
+  Loader2,
+  BookOpen
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import config from '../../config';
 import { useLanguage } from '../../contexts/LanguageContext';
+
+const DEFAULT_BLOG_IMAGE = 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1000';
 
 interface Blog {
   id: number;
@@ -232,11 +235,24 @@ export function BlogsManager() {
                 blogs.map((blog) => (
                   <tr key={blog.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <img
-                        src={blog.image_url}
-                        alt={blog.title}
-                        className="h-12 w-12 object-cover rounded"
-                      />
+                      <div className="h-12 w-12 relative rounded overflow-hidden bg-primary-50">
+                        <img
+                          src={blog.image_url || DEFAULT_BLOG_IMAGE}
+                          alt={blog.title}
+                          className="h-full w-full object-cover"
+                          onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                            const target = e.target as HTMLImageElement;
+                            if (target.src !== DEFAULT_BLOG_IMAGE) {
+                              target.src = DEFAULT_BLOG_IMAGE;
+                            }
+                          }}
+                        />
+                        {!blog.image_url && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <BookOpen size={20} className="text-primary-200" />
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-accent-900">
