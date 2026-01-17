@@ -134,7 +134,7 @@ export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                               <img
                                 src={item.image_url}
                                 alt={item.name}
-                                className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl shadow-sm flex-shrink-0"
+                                className="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-xl shadow-sm flex-shrink-0 bg-gray-50 p-1"
                               />
                               <span
                                 className={`absolute -top-2 -right-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${item.type === 'wholesale'

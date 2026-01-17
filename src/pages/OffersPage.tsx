@@ -138,7 +138,7 @@ export const OffersPage = () => {
                         const discountedPrice = calculateDiscountedPrice(product.price, offer);
                         return (
                           <Link to={`/products/${product.id}`} key={product.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded-md" />
+                            <img src={product.image_url} alt={product.name} className="w-16 h-16 object-contain rounded-md bg-white border border-gray-100 p-0.5" />
                             <div className="flex-1">
                               <p className="font-medium text-gray-900">{product.name}</p>
                               <div className="flex items-baseline space-x-2">

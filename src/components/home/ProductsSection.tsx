@@ -17,16 +17,20 @@ export const ProductsSection = () => {
   const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
-  
+
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
     try {
+      if (!supabase) {
+        console.error('Supabase client is not initialized');
+        return;
+      }
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -41,7 +45,7 @@ export const ProductsSection = () => {
       setLoading(false);
     }
   };
-  
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -51,7 +55,7 @@ export const ProductsSection = () => {
       },
     },
   };
-  
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -65,7 +69,7 @@ export const ProductsSection = () => {
     <section ref={ref} className="section-padding bg-gradient-to-b from-white to-gray-50">
       <div className="container-custom">
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: -20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
@@ -73,7 +77,7 @@ export const ProductsSection = () => {
           >
             {t('products_section_title')}
           </motion.h2>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -88,13 +92,13 @@ export const ProductsSection = () => {
             {t('products_section_subtitle')}
           </motion.p>
         </div>
-        
+
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
@@ -106,18 +110,18 @@ export const ProductsSection = () => {
                 variants={itemVariants}
                 className="card card-hover overflow-hidden"
               >
-                <div className="h-64 overflow-hidden">
-                  <img 
-                    src={product.image_url} 
+                <div className="h-64 overflow-hidden bg-white flex items-center justify-center p-4">
+                  <img
+                    src={product.image_url}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="max-w-full max-h-full object-contain transition-transform duration-500 hover:scale-105"
                   />
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2">{product.name}</h3>
                   <p className="text-gray-600 mb-4">{product.description}</p>
-                  <Link 
-                    to={`/products`} 
+                  <Link
+                    to={`/products`}
                     className="inline-flex items-center text-primary-600 font-medium hover:text-secondary-500 transition-colors"
                   >
                     {t('buy_now_button')} <ArrowRight size={16} className="ml-1" />
@@ -127,7 +131,7 @@ export const ProductsSection = () => {
             ))}
           </motion.div>
         )}
-        
+
         <div className="text-center mt-12">
           <Link to="/products" className="bg-primary-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-primary-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
             {t('view_all_products_button')}

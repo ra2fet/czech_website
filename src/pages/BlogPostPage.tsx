@@ -19,7 +19,7 @@ interface Blog {
 }
 
 export const BlogPostPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation(); // Get location object to access state
@@ -87,7 +87,7 @@ export const BlogPostPage = () => {
     };
 
     fetchBlogPost();
-  }, [id, location.state?.blog]); // Depend on id and specific blog data from state
+  }, [id, i18n.language]); // Depend on id and language to refetch when language changes
 
   if (loading) {
     return (

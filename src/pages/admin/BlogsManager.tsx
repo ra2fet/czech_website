@@ -17,23 +17,26 @@ interface Blog {
   excerpt: string; // Default language excerpt
   image_url: string;
   created_at: string;
-  translations?: { 
-    [key: string]: { 
-      title: string; 
-      content: string; 
-      excerpt: string; 
-    } 
+  sort_order: number;
+  views: number;
+  translations?: {
+    [key: string]: {
+      title: string;
+      content: string;
+      excerpt: string;
+    }
   };
 }
 
 interface BlogFormState {
   image_url: string;
-  translations: { 
-    [key: string]: { 
-      title: string; 
-      content: string; 
-      excerpt: string; 
-    } 
+  sort_order: number;
+  translations: {
+    [key: string]: {
+      title: string;
+      content: string;
+      excerpt: string;
+    }
   };
 }
 
@@ -47,6 +50,7 @@ export function BlogsManager() {
 
   const [formState, setFormState] = useState<BlogFormState>({
     image_url: '',
+    sort_order: 0,
     translations: {},
   });
 
@@ -68,6 +72,7 @@ export function BlogsManager() {
       });
       setFormState({
         image_url: currentBlog.image_url || '',
+        sort_order: currentBlog.sort_order || 0,
         translations: existingTranslations,
       });
     } else if (languages.length > 0) {
@@ -77,6 +82,7 @@ export function BlogsManager() {
       });
       setFormState({
         image_url: '',
+        sort_order: 0,
         translations: initialTranslations,
       });
     }
@@ -108,6 +114,7 @@ export function BlogsManager() {
     try {
       const payload = {
         image_url: formState.image_url,
+        sort_order: formState.sort_order,
         title: formState.translations[defaultLanguage.code]?.title,
         content: formState.translations[defaultLanguage.code]?.content,
         excerpt: formState.translations[defaultLanguage.code]?.excerpt,
@@ -145,8 +152,11 @@ export function BlogsManager() {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormState(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    setFormState(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseInt(value) || 0 : value
+    }));
   };
 
   const handleTranslationChange = (langCode: string, field: 'title' | 'content' | 'excerpt', value: string) => {
@@ -195,6 +205,9 @@ export function BlogsManager() {
                   Excerpt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Order
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created At
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -233,6 +246,11 @@ export function BlogsManager() {
                     <td className="px-6 py-4 max-w-xs">
                       <div className="text-sm text-gray-900 truncate" title={blog.excerpt}>
                         {blog.excerpt}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-accent-900">
+                        {blog.sort_order}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -288,7 +306,7 @@ export function BlogsManager() {
                   <h4 className="font-semibold text-lg text-gray-800">{lang.name}</h4>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title ({lang.code.toUpperCase()}){lang.is_default ? '*':''}
+                      Title ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
                     </label>
                     <input
                       type="text"
@@ -301,7 +319,7 @@ export function BlogsManager() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Content ({lang.code.toUpperCase()}){lang.is_default ? '*':''}
+                      Content ({lang.code.toUpperCase()}){lang.is_default ? '*' : ''}
                     </label>
                     <textarea
                       name={`content-${lang.code}`}
@@ -326,17 +344,31 @@ export function BlogsManager() {
                   </div>
                 </div>
               ))}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  name="image_url"
-                  value={formState.image_url}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    name="image_url"
+                    value={formState.image_url}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Display Order (Low value first)
+                  </label>
+                  <input
+                    type="number"
+                    name="sort_order"
+                    value={formState.sort_order}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-3 pt-4">
                 <button

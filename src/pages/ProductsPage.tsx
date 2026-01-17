@@ -295,11 +295,11 @@ export const ProductsPage = () => {
                   className="card card-hover flex flex-col h-full scroll-mt-24 max-w-[340px] mx-auto w-full"
                 >
                   {/* Image Container */}
-                  <div className="relative aspect-[6/7] overflow-hidden group">
+                  <div className="relative aspect-[6/7] overflow-hidden group bg-white">
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 p-4"
                       onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';

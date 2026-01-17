@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, MapPin, PlusCircle,
     ChevronRight, ArrowLeft, CheckCircle2, ShieldCheck,
-    ShoppingBag, Truck, User
+    ShoppingBag, Truck
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -646,7 +646,7 @@ export const CheckoutModal = ({
                                 <div className="space-y-4 mb-8">
                                     {cartItems.map((item) => (
                                         <div key={item.id} className="flex space-x-3">
-                                            <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                                            <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded-lg object-contain bg-white p-0.5 border border-gray-100" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
                                                 <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
