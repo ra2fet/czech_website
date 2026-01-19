@@ -63,6 +63,7 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
   const [couponInput, setCouponInput] = useState(couponCode || '');
   const [hasAttemptedCoupon, setHasAttemptedCoupon] = useState(false); // Track if coupon was attempted
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
 
   const fetchAddresses = useCallback(async () => {
     try {
@@ -79,12 +80,15 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
   }, [user, setSavedAddresses, setSelectedAddressId]);
 
   const fetchProvinces = useCallback(async () => {
+    setLoadingProvinces(true);
     try {
       const response = await config.axios.get('provinces');
       setProvinces(response.data);
     } catch (err) {
       console.error('Error fetching provinces:', err);
       toast.error('Failed to load provinces.');
+    } finally {
+      setLoadingProvinces(false);
     }
   }, []);
 
@@ -448,21 +452,29 @@ export const PaymentForm = ({ onSuccess, onError, onBack, couponCode, couponId, 
                       <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
                         {t('dashboard_province_label')} *
                       </label>
-                      <select
-                        id="province"
-                        name="province"
-                        value={newAddress.province}
-                        onChange={(e) => handleNewAddressChange(e as React.ChangeEvent<HTMLSelectElement>)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
-                        required
-                      >
-                        <option value="">{t('checkout_select_province')}</option>
-                        {provinces.map((province) => (
-                          <option key={province.id} value={province.name}>
-                            {province.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          id="province"
+                          name="province"
+                          value={newAddress.province}
+                          onChange={(e) => handleNewAddressChange(e as React.ChangeEvent<HTMLSelectElement>)}
+                          className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${loadingProvinces ? 'appearance-none bg-gray-100 text-gray-400' : ''}`}
+                          required
+                          disabled={loadingProvinces}
+                        >
+                          <option value="">{loadingProvinces ? t('checkout_loading_provinces') || 'Loading...' : t('checkout_select_province')}</option>
+                          {provinces.map((province) => (
+                            <option key={province.id} value={province.name}>
+                              {province.name}
+                            </option>
+                          ))}
+                        </select>
+                        {loadingProvinces && (
+                          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="sm:col-span-2">
                       <label htmlFor="postcode" className="block text-sm font-medium text-gray-700 mb-2">

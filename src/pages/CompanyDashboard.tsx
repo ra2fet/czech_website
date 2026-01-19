@@ -54,14 +54,18 @@ export const CompanyDashboard = () => {
     postcode: '',
   });
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
 
   const fetchProvinces = async () => {
+    setLoadingProvinces(true);
     try {
       const response = await config.axios.get('provinces');
       setProvinces(response.data);
     } catch (err) {
       console.error('Error fetching provinces:', err);
       toast.error('Failed to load provinces.');
+    } finally {
+      setLoadingProvinces(false);
     }
   };
 
@@ -229,8 +233,8 @@ export const CompanyDashboard = () => {
             <button
               onClick={() => setActiveTab('orders')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'orders'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Order History
@@ -238,8 +242,8 @@ export const CompanyDashboard = () => {
             <button
               onClick={() => setActiveTab('addresses')}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'addresses'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               Saved Addresses
@@ -398,21 +402,29 @@ export const CompanyDashboard = () => {
                 </div>
                 <div>
                   <label htmlFor="province" className="block text-sm font-medium text-gray-700">Province</label>
-                  <select
-                    name="province"
-                    id="province"
-                    value={addressForm.province}
-                    onChange={handleAddressFormChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    required
-                  >
-                    <option value="">Select Province</option>
-                    {provinces.map((province) => (
-                      <option key={province.id} value={province.name}>
-                        {province.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="province"
+                      id="province"
+                      value={addressForm.province}
+                      onChange={handleAddressFormChange}
+                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${loadingProvinces ? 'appearance-none bg-gray-100 text-gray-400' : ''}`}
+                      required
+                      disabled={loadingProvinces}
+                    >
+                      <option value="">{loadingProvinces ? 'Loading...' : 'Select Province'}</option>
+                      {provinces.map((province) => (
+                        <option key={province.id} value={province.name}>
+                          {province.name}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingProvinces && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">Postcode</label>

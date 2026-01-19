@@ -54,14 +54,18 @@ export const CustomerDashboard = () => {
     postcode: '',
   });
   const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
 
   const fetchProvinces = async () => {
+    setLoadingProvinces(true);
     try {
       const response = await config.axios.get('provinces');
       setProvinces(response.data);
     } catch (err) {
       console.error('Error fetching provinces:', err);
       toast.error('Failed to load provinces.');
+    } finally {
+      setLoadingProvinces(false);
     }
   };
 
@@ -256,9 +260,9 @@ export const CustomerDashboard = () => {
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="font-semibold text-lg">Order #{order.id}</h3>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
+                        order.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'
                         }`}>
                         {order.status || 'prepared'}
                       </span>
@@ -399,21 +403,29 @@ export const CustomerDashboard = () => {
                 </div>
                 <div>
                   <label htmlFor="province" className="block text-sm font-medium text-gray-700">Province</label>
-                  <select
-                    name="province"
-                    id="province"
-                    value={addressForm.province}
-                    onChange={handleAddressFormChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    required
-                  >
-                    <option value="">Select Province</option>
-                    {provinces.map((province) => (
-                      <option key={province.id} value={province.name}>
-                        {province.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="province"
+                      id="province"
+                      value={addressForm.province}
+                      onChange={handleAddressFormChange}
+                      className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${loadingProvinces ? 'appearance-none bg-gray-100 text-gray-400' : ''}`}
+                      required
+                      disabled={loadingProvinces}
+                    >
+                      <option value="">{loadingProvinces ? 'Loading...' : 'Select Province'}</option>
+                      {provinces.map((province) => (
+                        <option key={province.id} value={province.name}>
+                          {province.name}
+                        </option>
+                      ))}
+                    </select>
+                    {loadingProvinces && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="postcode" className="block text-sm font-medium text-gray-700">Postcode</label>

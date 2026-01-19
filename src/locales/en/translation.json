@@ -1,4 +1,5 @@
 {
+  "loading": "Loading...",
   "welcome": "Welcome to our website!",
   "newsletter_title": "Join Our Newsletter",
   "newsletter_description": "Stay updated with our latest news and offers!",
@@ -454,5 +455,6 @@
   "details": "Details",
   "quantity": "Quantity",
   "show_more": "Show More",
-  "show_less": "Show Less"
+  "show_less": "Show Less",
+  "checkout_loading_provinces": "Loading provinces..."
 }

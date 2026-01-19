@@ -1,4 +1,5 @@
 {
+  "loading": "Laden...",
   "welcome": "Welkom op onze website!",
   "newsletter_title": "Meld u aan voor onze nieuwsbrief",
   "newsletter_description": "Blijf op de hoogte van ons laatste nieuws en aanbiedingen!",
@@ -454,5 +455,6 @@
   "details": "Details",
   "quantity": "Aantal",
   "show_more": "Toon meer",
-  "show_less": "Toon minder"
+  "show_less": "Toon minder",
+  "checkout_loading_provinces": "Provincies laden..."
 }

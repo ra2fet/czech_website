@@ -289,8 +289,8 @@ router.get('/user', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.userType === 'admin') {
-      // Fetch admin details
-      db.query('SELECT id, email, full_name, user_type, is_active FROM admins WHERE id = ?', [decoded.id], (err, results) => {
+      // Fetch admin details - Use literals for userType and isActive to be safe
+      db.query('SELECT id, email FROM admins WHERE id = ?', [decoded.id], (err, results) => {
         if (err) {
           console.error('Database error fetching admin:', err);
           return res.status(500).json({ error: 'Internal server error' });
@@ -304,9 +304,9 @@ router.get('/user', async (req, res) => {
         res.json({
           id: admin.id,
           email: admin.email,
-          full_name: admin.full_name,
+          full_name: admin.full_name || 'Admin',
           userType: admin.user_type || 'admin',
-          isActive: admin.is_active
+          isActive: true
         });
       });
     } else {

@@ -179,16 +179,21 @@ function App() {
 }
 
 function AuthAndCartHandler() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { clearCart } = useCart();
+  const [lastUser, setLastUser] = useState<any>(undefined);
 
   useEffect(() => {
-    if (user === null) {
-      // User has logged out (either manually or due to timeout)
-      clearCart();
-      console.log('Cart cleared due to user logout.');
+    // Only proceed if we're not loading the initial auth state
+    if (!loading) {
+      // If we had a user and now we don't, it's a logout
+      if (lastUser !== undefined && lastUser !== null && user === null) {
+        clearCart();
+        console.log('Cart cleared due to user logout.');
+      }
+      setLastUser(user);
     }
-  }, [user, clearCart]);
+  }, [user, loading, clearCart, lastUser]);
 
   return null; // This component doesn't render anything
 }

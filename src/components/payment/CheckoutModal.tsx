@@ -266,6 +266,7 @@ export const CheckoutModal = ({
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<number | 'new' | ''>('');
     const [provinces, setProvinces] = useState<{ id: number; name: string }[]>([]);
+    const [loadingProvinces, setLoadingProvinces] = useState(false);
 
     // Guest Info State
     const [guestInfo, setGuestInfo] = useState({
@@ -299,11 +300,14 @@ export const CheckoutModal = ({
     }, [user]);
 
     const fetchProvinces = useCallback(async () => {
+        setLoadingProvinces(true);
         try {
             const response = await config.axios.get('provinces');
             setProvinces(response.data);
         } catch (err) {
             console.error('Error fetching provinces:', err);
+        } finally {
+            setLoadingProvinces(false);
         }
     }, []);
 
@@ -534,14 +538,22 @@ export const CheckoutModal = ({
                                                             value={newAddress.city}
                                                             onChange={e => setNewAddress({ ...newAddress, city: e.target.value })}
                                                         />
-                                                        <select
-                                                            className="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
-                                                            value={newAddress.province}
-                                                            onChange={e => setNewAddress({ ...newAddress, province: e.target.value })}
-                                                        >
-                                                            <option value="">{t('checkout_select_province')}</option>
-                                                            {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
-                                                        </select>
+                                                        <div className="relative">
+                                                            <select
+                                                                className={`w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none appearance-none ${loadingProvinces ? 'bg-gray-100 text-gray-400' : ''}`}
+                                                                value={newAddress.province}
+                                                                onChange={e => setNewAddress({ ...newAddress, province: e.target.value })}
+                                                                disabled={loadingProvinces}
+                                                            >
+                                                                <option value="">{loadingProvinces ? t('checkout_loading_provinces') || 'Loading...' : t('checkout_select_province')}</option>
+                                                                {provinces.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                                                            </select>
+                                                            {loadingProvinces && (
+                                                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                         <input
                                                             placeholder={t('checkout_postcode_placeholder')}
                                                             className="col-span-2 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
