@@ -18,7 +18,7 @@ interface Blog {
 }
 
 export const NewsSection = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -26,7 +26,7 @@ export const NewsSection = () => {
 
   useEffect(() => {
     fetchBlogs();
-  }, []);
+  }, [i18n.language]);
 
   const fetchBlogs = async () => {
     try {
