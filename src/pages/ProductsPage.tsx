@@ -295,19 +295,35 @@ export const ProductsPage = () => {
                   className="card card-hover flex flex-col h-full scroll-mt-24 max-w-[340px] mx-auto w-full"
                 >
                   {/* Image Container */}
-                  <div className="relative aspect-[5/5] overflow-hidden group bg-white flex items-center justify-center">
+                  <div className="relative aspect-[5/5] overflow-hidden group bg-gray-100 flex items-center justify-center">
+                    {/* Skeleton loader while image is loading */}
+                    <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                      <Package size={48} className="text-gray-300" />
+                    </div>
+
                     <img
                       src={product.image_url}
                       alt={product.name}
-                      className=" h-full w-full object-fill transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                      decoding="async"
+                      className="relative h-full w-full object-fill transition-opacity duration-500 group-hover:scale-110 opacity-0"
+                      onLoad={(e) => {
+                        (e.target as HTMLImageElement).classList.remove('opacity-0');
+                        ((e.target as HTMLImageElement).previousSibling as HTMLElement).style.display = 'none';
+                      }}
                       onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                         (e.target as HTMLImageElement).style.display = 'none';
-                        ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'flex';
+                        ((e.target as HTMLImageElement).previousSibling as HTMLElement).style.display = 'none';
+                        const container = (e.target as HTMLImageElement).parentElement;
+                        if (container) {
+                          const placeholder = container.querySelector('.placeholder-fallback') as HTMLElement;
+                          if (placeholder) placeholder.style.display = 'flex';
+                        }
                       }}
                     />
+
                     <div
-                      className="absolute inset-0 bg-gradient-to-br from-primary-100/50 to-secondary-100/50 flex items-center justify-center"
-                      style={{ display: product.image_url ? 'none' : 'flex' }}
+                      className="placeholder-fallback absolute inset-0 bg-gradient-to-br from-primary-100/50 to-secondary-100/50 flex items-center justify-center hidden"
                     >
                       <Package size={64} className="text-primary-600/50" />
                     </div>
@@ -428,11 +444,21 @@ export const ProductsPage = () => {
             </button>
 
             {/* Left: Image */}
-            <div className="md:w-1/2 bg-gray-100 flex items-center justify-center p-8">
+            <div className="md:w-1/2 bg-gray-100 flex items-center justify-center p-8 relative min-h-[300px]">
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                <Package size={48} className="text-gray-300" />
+              </div>
               <img
                 src={quickViewProduct.image_url}
                 alt={quickViewProduct.name}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-inner"
+                decoding="async"
+                className="relative max-w-full max-h-full object-contain rounded-lg shadow-inner opacity-0 transition-opacity duration-300"
+                onLoad={(e) => {
+                  (e.target as HTMLImageElement).classList.remove('opacity-0');
+                  if ((e.target as HTMLImageElement).previousSibling) {
+                    ((e.target as HTMLImageElement).previousSibling as HTMLElement).style.display = 'none';
+                  }
+                }}
               />
             </div>
 

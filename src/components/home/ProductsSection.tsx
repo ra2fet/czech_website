@@ -110,11 +110,22 @@ export const ProductsSection = () => {
                 variants={itemVariants}
                 className="card card-hover overflow-hidden"
               >
-                <div className="h-64 overflow-hidden bg-white flex items-center justify-center p-4">
+                <div className="h-64 overflow-hidden bg-gray-50 flex items-center justify-center p-4 relative">
+                  <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full" />
+                  </div>
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="max-w-full max-h-full object-contain transition-transform duration-500 hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                    className="max-w-full max-h-full object-contain transition-all duration-500 hover:scale-105 opacity-0"
+                    onLoad={(e) => {
+                      (e.target as HTMLImageElement).classList.remove('opacity-0');
+                      if ((e.target as HTMLImageElement).previousSibling) {
+                        ((e.target as HTMLImageElement).previousSibling as HTMLElement).style.display = 'none';
+                      }
+                    }}
                   />
                 </div>
                 <div className="p-6">

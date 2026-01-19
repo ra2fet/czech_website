@@ -1,22 +1,30 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { X } from 'lucide-react';
-import { HomePage } from './pages/HomePage';
-import { ProductsPage } from './pages/ProductsPage';
-import { BlogsPage } from './pages/BlogsPage';
-// import { PortfolioPage } from './pages/PortfolioPage';
-import { LocationsPage } from './pages/LocationsPage';
-import { ContactPage } from './pages/ContactPage';
-import { AboutUsPage } from './pages/AboutUsPage';
-import { BlogPostPage } from './pages/BlogPostPage'; // Import the new blog post page
-import { LoginPage } from './pages/LoginPage'; // Import the new general LoginPage
-import { AdminLoginPage } from './pages/admin/AdminLoginPage'; // Import the admin LoginPage
-import { AdminDashboard } from './pages/admin/AdminDashboard';
+
+// Lazy load page components
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
+const ProductsPage = lazy(() => import('./pages/ProductsPage').then(m => ({ default: m.ProductsPage })));
+const BlogsPage = lazy(() => import('./pages/BlogsPage').then(m => ({ default: m.BlogsPage })));
+const LocationsPage = lazy(() => import('./pages/LocationsPage').then(m => ({ default: m.LocationsPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const AboutUsPage = lazy(() => import('./pages/AboutUsPage').then(m => ({ default: m.AboutUsPage })));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage').then(m => ({ default: m.BlogPostPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage').then(m => ({ default: m.AdminLoginPage })));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard').then(m => ({ default: m.CustomerDashboard })));
+const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard').then(m => ({ default: m.CompanyDashboard })));
+const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const RegistrationPendingPage = lazy(() => import('./pages/RegistrationPendingPage').then(m => ({ default: m.RegistrationPendingPage })));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
+const OffersPage = lazy(() => import('./pages/OffersPage').then(m => ({ default: m.OffersPage })));
+const RatingPage = lazy(() => import('./pages/RatingPage')); // Default export
+const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage').then(m => ({ default: m.PaymentCallbackPage })));
+
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { CustomerDashboard } from './pages/CustomerDashboard'; // Import CustomerDashboard
-import { CompanyDashboard } from './pages/CompanyDashboard'; // Import CompanyDashboard
 import { ScrollToTop } from './components/utils/ScrollToTop';
 import { ChatBot } from './components/chat/ChatBot';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -25,15 +33,17 @@ import { Toaster, ToastBar, toast } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import IntroScreen from './components/layout/IntroScreen'; // Import IntroScreen
 import NewsletterPopup from './components/layout/NewsletterPopup'; // Import NewsletterPopup
-import { RegisterPage } from './pages/RegisterPage'; // Import RegisterPage
 import { SiteLockOverlay } from './components/common/SiteLockOverlay';
-import { RegistrationPendingPage } from './pages/RegistrationPendingPage'; // Import RegistrationPendingPage
-import { VerifyEmailPage } from './pages/VerifyEmailPage'; // Import VerifyEmailPage
-import { OffersPage } from './pages/OffersPage'; // Import OffersPage
-import RatingPage from './pages/RatingPage'; // Import RatingPage
 import { LanguageProvider } from './contexts/LanguageContext'; // Import LanguageProvider
-import { PaymentCallbackPage } from './pages/PaymentCallbackPage'; // Import PaymentCallbackPage
 import { FeatureProvider, FeatureGuard } from './contexts/FeatureContext'; // Import FeatureProvider
+
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+  </div>
+);
 
 
 function App() {
@@ -85,48 +95,49 @@ function App() {
               <ScrollToTop />
               {!isAdminRoute && !isDashboardRoute && !showIntro && <Header scrollPosition={scrollPosition} />}
               <main>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/blogs" element={<BlogsPage />} />
-                  {/* <Route path="/portfolio" element={<PortfolioPage />} /> */}
-                  {/* <Route path="/locations" element={<LocationsPage />} /> */}
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/about-us" element={<AboutUsPage />} />
-                  <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
-                  <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
-                  <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}
-                  <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
-                  <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
-                  <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
-                  <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
-                  <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
-                  <Route path="/payment-callback" element={<PaymentCallbackPage />} /> {/* Stripe payment callback */}
-                  <Route
-                    path="/admin/*"
-                    element={
-                      <ProtectedRoute adminOnly={true}>
-                        <AdminDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <CustomerDashboard /> {/* Default dashboard for customers */}
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/company-dashboard"
-                    element={
-                      <ProtectedRoute companyOnly={true}> {/* Protect company dashboard */}
-                        <CompanyDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<ProductsPage />} />
+                    <Route path="/blogs" element={<BlogsPage />} />
+                    <Route path="/locations" element={<LocationsPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/about-us" element={<AboutUsPage />} />
+                    <Route path="/register" element={<RegisterPage />} /> {/* New route for registration */}
+                    <Route path="/registration-pending" element={<RegistrationPendingPage />} /> {/* New route for pending company registration */}
+                    <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* New route for email verification */}
+                    <Route path="/blog/:id" element={<BlogPostPage />} /> {/* New route for individual blog posts */}
+                    <Route path="/offers" element={<OffersPage />} /> {/* New route for offers page */}
+                    <Route path="/signin" element={<LoginPage />} /> {/* New route for general signin */}
+                    <Route path="/rate-order/:ratingToken" element={<RatingPage />} /> {/* New route for order rating */}
+                    <Route path="/admin/login" element={<AdminLoginPage />} /> {/* Admin login route */}
+                    <Route path="/payment-callback" element={<PaymentCallbackPage />} /> {/* Stripe payment callback */}
+                    <Route
+                      path="/admin/*"
+                      element={
+                        <ProtectedRoute adminOnly={true}>
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <CustomerDashboard /> {/* Default dashboard for customers */}
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/company-dashboard"
+                      element={
+                        <ProtectedRoute companyOnly={true}> {/* Protect company dashboard */}
+                          <CompanyDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </Suspense>
               </main>
               {!isAdminRoute && <Footer />}
               {!isAdminRoute && <ChatBot />}

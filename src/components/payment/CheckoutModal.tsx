@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, MapPin, PlusCircle,
     ChevronRight, ArrowLeft, CheckCircle2, ShieldCheck,
-    ShoppingBag, Truck, User
+    ShoppingBag, Truck
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -653,7 +653,7 @@ export const CheckoutModal = ({
                                                 <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
                                                 <p className="text-xs text-gray-500">{t('checkout_qty_label')} {item.quantity}</p>
                                             </div>
-                                            <p className="text-sm font-bold text-gray-900">{config.currencySymbol}${(item.price * item.quantity).toFixed(2)}</p>
+                                            <p className="text-sm font-bold text-gray-900">{config.currencySymbol}{(item.price * item.quantity).toFixed(2)}</p>
                                         </div>
                                     ))}
                                 </div>
