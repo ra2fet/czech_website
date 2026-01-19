@@ -144,8 +144,8 @@ export const NewsSection = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {!blog.image_url && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-primary-900/10">
-                      <BookOpen size={40} className="text-white/80 drop-shadow-lg" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary-50">
+                      <BookOpen size={48} className="text-primary-200" />
                     </div>
                   )}
                 </div>
