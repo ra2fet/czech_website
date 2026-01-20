@@ -218,8 +218,14 @@ export const ChatBot = () => {
             exit={{ opacity: 0, y: 20 }}
             className="bg-white rounded-lg shadow-xl w-80 mb-4"
           >
-            <div className="bg-primary-600 text-white p-4 rounded-t-lg flex justify-between items-center">
-              <h4 className="font-semibold">AI Chat Support (<span className='text-green-300 text-2xl'>•</span>online)</h4>
+            <div className="bg-primary-600 text-white px-4 py-3 rounded-t-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-sm md:text-base">Chat Support</h4>
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/60 px-2 py-0.5 text-xs md:text-sm">
+                  <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
+                  <span className="capitalize">online</span>
+                </span>
+              </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:text-gray-200 transition-colors"
