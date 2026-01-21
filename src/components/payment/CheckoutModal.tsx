@@ -191,9 +191,11 @@ const CheckoutForm = ({
                         }
                     }
                 }}
-                onLoadError={(event) => {
+                onLoadError={(event: any) => {
                     console.error('Stripe Payment Element load error:', event);
-                    setErrorMessage(t('checkout_error_country_not_supported'));
+                    // Use the actual error message if available, otherwise fallback to the country support message
+                    const stripeError = event?.error?.message;
+                    setErrorMessage(stripeError || t('checkout_error_country_not_supported'));
                 }}
             />
             {errorMessage && (
@@ -597,7 +599,7 @@ export const CheckoutModal = ({
                                             mode: 'payment',
                                             amount: Math.max(1, Math.round(calculateTotal() * 100)),
                                             currency: 'eur',
-                                            payment_method_types: ['card', 'ideal', 'klarna'],
+                                            // Let Stripe handle payment methods automatically from dashboard settings
                                         }}
                                     >
                                         <CheckoutForm

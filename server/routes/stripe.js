@@ -11,7 +11,9 @@ router.post('/create-payment-intent', async (req, res) => {
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(amount * 100),
             currency: currency || 'eur',
-            payment_method_types: ['card', 'ideal', 'klarna'],
+            automatic_payment_methods: {
+                enabled: true,
+            },
         });
 
         res.status(200).json({
