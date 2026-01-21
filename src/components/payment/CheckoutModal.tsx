@@ -183,7 +183,7 @@ const CheckoutForm = ({
         <form onSubmit={handleSubmit} className="space-y-6">
             <PaymentElement
                 options={{
-                    layout: 'tabs',
+                    layout: 'tabs', paymentMethodOrder: ['card', 'ideal', 'klarna'],
                     defaultValues: {
                         billingDetails: {
                             email: user?.email || guestInfo?.email || undefined,
