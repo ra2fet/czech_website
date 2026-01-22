@@ -30,8 +30,15 @@ interface Order {
   id: number;
   full_name: string;
   email: string;
+  user_email?: string;
   phone_number: string;
   address: string;
+  street_name?: string;
+  house_number?: string;
+  city?: string;
+  province?: string;
+  postcode?: string;
+  address_name?: string;
   total_amount: number;
   payment_status: string;
   order_date: string;
@@ -115,10 +122,21 @@ export function OrdersManager() {
 
   const filteredOrders = orders.filter((order: Order) => { // Explicitly type order here
     const lowerCaseQuery = searchQuery.toLowerCase();
+    const addressString = [
+      order.street_name,
+      order.house_number,
+      order.city,
+      order.province,
+      order.postcode,
+      order.address
+    ].filter(Boolean).join(' ').toLowerCase();
+
     return (
       (order.full_name?.toLowerCase() || '').includes(lowerCaseQuery) ||
       (order.email?.toLowerCase() || '').includes(lowerCaseQuery) ||
-      order.id.toString().includes(lowerCaseQuery)
+      (order.user_email?.toLowerCase() || '').includes(lowerCaseQuery) ||
+      order.id.toString().includes(lowerCaseQuery) ||
+      addressString.includes(lowerCaseQuery)
     );
   });
 
@@ -166,9 +184,9 @@ export function OrdersManager() {
                   <h3 className="text-xl font-semibold text-gray-900">Order #{order.id}</h3>
                   <div className="flex flex-col items-end">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'completed' ? 'bg-success-100 text-success-800' :
-                        order.status === 'rejected' ? 'bg-error-100 text-error-800' :
-                          order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
-                            'bg-warning-100 text-warning-800'
+                      order.status === 'rejected' ? 'bg-error-100 text-error-800' :
+                        order.status === 'on the way' ? 'bg-blue-100 text-blue-800' :
+                          'bg-warning-100 text-warning-800'
                       }`}>
                       {order.status || 'prepared'}
                     </span>
@@ -205,10 +223,10 @@ export function OrdersManager() {
                   <User size={16} className="mr-2 text-gray-500" />
                   <strong className='mr-1'>Customer: </strong> {order.full_name}
                 </p>
-                {order.email && (
+                {(order.email || order.user_email) && (
                   <p className="flex items-center text-sm">
                     <Mail size={16} className="mr-2 text-gray-500" />
-                    <strong>Email: </strong> {order.email}
+                    <strong>Email: </strong> {order.email || order.user_email}
                   </p>
                 )}
                 {order.phone_number && (
@@ -217,11 +235,21 @@ export function OrdersManager() {
                     <strong className='mr-1'>Phone: </strong> {order.phone_number}
                   </p>
                 )}
-                {order.address && (
-                  <p className="flex items-start text-sm">
+                {(order.address || order.street_name) && (
+                  <div className="flex items-start text-sm">
                     <MapPin size={16} className="mr-2 text-gray-500 flex-shrink-0 mt-1" />
-                    <strong className='mr-1'>Address: </strong> {order.address}
-                  </p>
+                    <div>
+                      <strong className='mr-1'>Address: </strong>
+                      {order.address_name && <span className="text-xs bg-gray-100 px-1 rounded mr-1">{order.address_name}</span>}
+                      {order.street_name ? (
+                        <span>
+                          {order.street_name} {order.house_number}, {order.city}, {order.province} {order.postcode}
+                        </span>
+                      ) : (
+                        <span>{order.address}</span>
+                      )}
+                    </div>
+                  </div>
                 )}
                 <p className="flex items-center text-sm">
                   <Euro size={16} className="mr-2 text-gray-500" />
