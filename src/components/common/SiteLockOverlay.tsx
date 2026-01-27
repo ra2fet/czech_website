@@ -36,12 +36,12 @@ export const SiteLockOverlay = () => {
                 </h2>
 
                 <p className="text-gray-600 mb-6">
-                    This website has been temporarily locked due to a billing issue.
+                    This website has been temporarily locked due to some technical issues.
                     Please contact the administrator to resolve this matter.
                 </p>
 
                 <p className="text-gray-600 mb-8" style={{ direction: 'rtl' }}>
-                    تم إيقاف الموقع مؤقتاً بسبب مشاكل في الدفع. يرجى التواصل مع الإدارة لحل المشكلة.
+                    تم إيقاف الموقع مؤقتاً بسبب بعض المشاكل التقنية. يرجى التواصل مع الإدارة لحل المشكلة.
                 </p>
 
                 <div className="border-t pt-4">
